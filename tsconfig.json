@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "allowJs": false,
+    "outDir": "./build",
+    "rootDir": "./src",
+    "strict": true,
+    "incremental": true,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"]
+}

@@ -1,0 +1,63 @@
+import * as test from 'tape';
+import {
+    remove,
+    findFirstAvailable,
+    replaceAsync,
+    localpart,
+    sanitizeMattermostUsername,
+    uniq,
+} from './Functions';
+
+test('remove', t => {
+    const x = [3, 5, 2, 6, 2];
+    remove(x, 2);
+    t.deepEqual(x, [3, 5, 6, 2]);
+
+    remove(x, 4);
+    t.deepEqual(x, [3, 5, 6, 2]);
+
+    t.end();
+});
+
+test('findFirstAvailable', async t => {
+    t.plan(2);
+
+    const values = [
+        'foo',
+        'foo_',
+        'bar',
+        'bar_',
+        'bar-',
+        'bar__',
+        'bar--',
+        'bar0',
+        'bar1',
+    ];
+    const check = async s => {
+        return !values.includes(s);
+    };
+
+    t.equal(await findFirstAvailable('foo', check), 'foo-');
+    t.equal(await findFirstAvailable('bar', check), 'bar2');
+
+    t.end();
+});
+
+test('localpart', t => {
+    t.equal(localpart('@foo:matrix.org'), 'foo');
+    t.end();
+});
+
+test('sanitizeMattermostUsername', t => {
+    t.equal(sanitizeMattermostUsername('test[irc]`-bot'), 'test_irc__-bot');
+    t.equal(sanitizeMattermostUsername('13Gda'), 'a13gda');
+    t.equal(sanitizeMattermostUsername('a'), 'a__');
+    t.equal(sanitizeMattermostUsername('foo-bar_12'), 'foo-bar_12');
+    t.equal(sanitizeMattermostUsername('a'.repeat(50)), 'a'.repeat(22));
+    t.end();
+});
+
+test('uniq', t => {
+    t.deepEqual(uniq(['5', '2', '2', '3', '4', '5']), ['5', '2', '3', '4']);
+    t.end();
+});

@@ -1,0 +1,74 @@
+homeserver:
+  # The url is the url used to talk to your server.
+  url: 'https://matrix.example.org/'
+
+  # The server_name is the part that shows up in @username:server_name. This
+  # is usually the domain of the url, but may be different if you use an SRV
+  # record.
+  server_name: 'matrix.example.org'
+
+appservice:
+  # The port the appservice uses to talk to the bridge. This can be an
+  # arbitrary unused port.
+  port: 9995
+
+  # The hostname the appservice uses to talk to the bridge. If they are on the
+  # same server, set it to localhost.
+  hostname: localhost
+  schema: http
+
+# URL to the mattermost instance.
+mattermost_url: https://mattermost.example.com/
+
+# Mappings between mattermost channels and matrix rooms.
+mappings:
+  - mattermost: '33fn4rrcpfrc8p3bwf67rb4kgo'
+    matrix: '!LfejJRTXvmiWngZSVt:matrix.cloudburst.srcf.net'
+  - mattermost: 'rfjyhimtmfff5npnte3qxnir9y'
+    matrix: '!rQvXDKcBzKttJEVWFH:matrix.cloudburst.srcf.net'
+  - mattermost: 'y4zrgsyns7b9dpau4jfjoyb16r'
+    matrix: '!iqOHbKFsYxKiRXFnwM:matrix.cloudburst.srcf.net'
+
+# A puppet matrix user of a real mattermost user with have matrix localpart
+# with this prefix.
+matrix_localpart_prefix: 'mm_'
+
+# The localpart of the corresponding matrix bot. This is automatically created
+# by the bridge.
+matrix_bot:
+  username: 'matterbot'
+  # Optional
+  display_name: 'Mattermost Bridge'
+
+# The mattermost bot used by the bridge. This has to be an existing user with
+# system administration privileges, in order to verify the emails of the puppet
+# users.
+mattermost_bot_userid: 'k87dknq3mprejnjjgc7zfb4gee'
+mattermost_bot_access_token: 'jjd8w9tbnb81ddgcknafor16cr'
+
+# Database configuration. Currently, only postgres and sqlite are supported.
+# The configuration is the arguments supplied to TypeORM's createConnection:
+# https://typeorm.io/#/connection/creating-a-new-connection
+database:
+  type: postgres
+  host: localhost
+  database: matrix-mattermost
+  username: matrix-mattermost
+  password: hunter2
+
+logging: DEBUG # Valid values are DEBUG, INFO, WARNING and ERROR
+
+# Matrix users that should not show up on the other side of the bridge. The bot
+# user (matterbot) is automatically included.
+ignored_matrix_users:
+  - '@appservice-irc:matrix.example.org'
+
+# Same as above. The mattermost bot is also automatically included.
+ignored_mattermost_users:
+  - 'gh39s3w2msae1a2jg67s2e4453'
+
+# Email template used for puppet users, with [USERNAME] replaced by the
+# puppet's username. These do not have to be valid emails, as the users have
+# their emails automatically verified. However, this can pose a security issue
+# if third parties can potentially control these email addresses.
+mattermost_email_template: 'devnull-[USERNAME]@example.org'

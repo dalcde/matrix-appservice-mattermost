@@ -1,0 +1,38 @@
+{
+  "name": "matrix-appservice-mattermost",
+  "version": "0.1.0-beta1",
+  "description": "",
+  "repository": "https://github.com/dalcde/matrix-appservice-mattermost",
+  "main": "index.js",
+  "engines": {
+    "node": ">=10.16"
+  },
+  "scripts": {
+    "preinstall": "git config core.hooksPath .githooks",
+    "build": "tsc",
+    "fmt": "prettier --write .",
+    "test": "npm run build && tape build/**/*.test.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node-fetch": "^2.5.7",
+    "bufferutil": "^4.0.1",
+    "form-data": "^3.0.0",
+    "marked": "^1.1.1",
+    "matrix-appservice-bridge": "^1.13.2",
+    "node-fetch": "^2.6.0",
+    "pg": "^8.3.0",
+    "turndown-performance-fixed": "^6.0.1",
+    "typeorm": "^0.2.25",
+    "utf-8-validate": "^5.0.2",
+    "ws": "^7.3.1"
+  },
+  "devDependencies": {
+    "@types/tape": "^4.13.0",
+    "prettier": "^2.0.5",
+    "sqlite3": "^5.0.0",
+    "tape": "^5.0.1",
+    "typescript": "^3.9.7"
+  }
+}

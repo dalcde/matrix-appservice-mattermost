@@ -69,9 +69,9 @@ grouped).
   - [x] /me
   - [x] Edits
   - [x] Replies
+  - [x] Redaction
   - [ ] Room substitutions
   - [ ] PMs
-  - [ ] Redaction
   - [ ] Presence
   - [ ] Attachment thumbnails
   - [ ] Correctly indicate remover when removing from channel
@@ -85,9 +85,9 @@ grouped).
   - [x] /me
   - [x] Edits
   - [x] Replies
+  - [x] Redaction
   - [ ] Room substitutions
   - [ ] PMs
-  - [ ] Redaction
   - [ ] Presence
   - [ ] Correctly indicate remover when removing from channel
   - [ ] Customize bridged username
@@ -101,9 +101,34 @@ grouped).
 
 ## Remarks
 
+### Town Square
+
 By design, every user in a team must join the Town Square room. If a matrix
 user joins a matrix room bridged to a mattermost channel, the puppet user would
 automatically join Town Square of the corresponding team.
 
 When the user leaves all channels of a team (i.e. all matrix rooms bridged to
 such channels), the puppet user would leave the team, hence leave Town Square.
+
+### Post deletion
+
+Mattermost and matrix "group" posts in different ways. For example, when
+deleting the root post of a thread in Mattermost, the entire thread is deleted.
+Similarly, attachments in Mattermost are part of a text message, whereas in
+Matrix they are separate events.
+
+Our implementation is based on the following two principles:
+
+1.  From the point of view of a single platform, the presence of a bridge
+    should not affect what happens when a post is deleted.
+
+2.  When a post is deleted on a platform, the contents must not be visible on
+    the other platform.
+
+In practice, this means if we delete a message on Matrix, there might be more
+posts deleted on Mattermost. These Mattermost deletions will not be reflected
+on the matrix side, so there will be more messages on Matrix than on
+Mattermost.
+
+Also, Mattermost does not remember who performed the deletion. Thus, on the
+matrix side, it is always displayed as the bot user deleting the message.

@@ -1,5 +1,5 @@
 import { Bridge, Intent } from 'matrix-appservice-bridge';
-import { Client, Method } from './mattermost/Client';
+import { Client, Method, ClientError } from './mattermost/Client';
 import * as Logger from './Logging';
 import { remove, uniq } from './utils/Functions';
 import Main from './Main';
@@ -11,9 +11,9 @@ import {
     matrixToMattermost,
     constructMatrixReply,
 } from './utils/Formatting';
-import { ClientError } from './mattermost/Client';
 import { config } from './Config';
 import fetch from 'node-fetch';
+import { getConnection } from 'typeorm';
 import * as FormData from 'form-data';
 
 const MAX_MEMBERS: number = 10000;
@@ -201,14 +201,18 @@ export default class Channel {
         intent: Intent,
         postid: string,
         message: MatrixMessage,
-        metadata: { replyTo?: string },
-        primary: boolean = true,
+        metadata: { replyTo?: { matrix: string; mattermost: string } },
     ) {
+        let rootid = postid;
         if (metadata.replyTo !== undefined) {
             const replyTo = metadata.replyTo;
+            rootid = replyTo.mattermost;
             let original: any = undefined;
             try {
-                original = await intent.getEvent(this.matrixRoom, replyTo);
+                original = await intent.getEvent(
+                    this.matrixRoom,
+                    replyTo.matrix,
+                );
             } catch (e) {}
             if (original !== undefined) {
                 constructMatrixReply(original, message);
@@ -217,8 +221,8 @@ export default class Channel {
         const event = await intent.sendMessage(this.matrixRoom, message);
         await Post.create({
             postid,
+            rootid,
             eventid: event.event_id,
-            primary,
         }).save();
         return event.event_id;
     }
@@ -240,7 +244,9 @@ export default class Channel {
             if (intent === undefined) {
                 return;
             }
-            const metadata: { replyTo?: string } = {};
+            const metadata: {
+                replyTo?: { matrix: string; mattermost: string };
+            } = {};
             if (post.root_id !== '') {
                 const threadResponse = await this.main.client.get(
                     `/posts/${post.root_id}/thread`,
@@ -253,7 +259,10 @@ export default class Channel {
                 const id = threads[threads.length - 2] as string;
                 const replyTo = await Post.findOne({ postid: id });
                 if (replyTo !== undefined) {
-                    metadata.replyTo = replyTo.eventid;
+                    metadata.replyTo = {
+                        matrix: replyTo.eventid,
+                        mattermost: post.root_id,
+                    };
                 }
             }
 
@@ -273,7 +282,7 @@ export default class Channel {
                 post.user_id,
             );
 
-            const matrix_event = await Post.findOne({
+            const matrixEvent = await Post.findOne({
                 postid: post.id,
             });
             const msgtype = post.type === '' ? 'm.text' : 'm.emote';
@@ -284,17 +293,47 @@ export default class Channel {
                 msg.formatted_body = `* ${msg.formatted_body}`;
             }
 
-            if (matrix_event !== undefined) {
+            if (matrixEvent !== undefined) {
                 msg['m.new_content'] = await mattermostToMatrix(
                     post.message,
                     msgtype,
                 );
                 msg['m.relates_to'] = {
-                    event_id: matrix_event.eventid,
+                    event_id: matrixEvent.eventid,
                     rel_type: 'm.replace',
                 };
             }
             await intent.sendMessage(this.matrixRoom, msg);
+        },
+        post_deleted: async function (this: Channel, m: any) {
+            // See the README for details on the logic.
+            const post = JSON.parse(m.data.post);
+
+            const client = this.main.bridge.getIntent().client;
+            // There can be multiple corresponding Matrix posts if it has
+            // attachments.
+            const matrixEvents = await Post.find({
+                where: [{ rootid: post.id }, { postid: post.id }],
+            });
+
+            const promises: Promise<any>[] = [
+                getConnection()
+                    .createQueryBuilder()
+                    .delete()
+                    .from(Post)
+                    .where('postid = :postid OR rootid = :postid', {
+                        postid: post.postid,
+                    })
+                    .execute(),
+            ];
+            // It is okay to redact an event already redacted.
+            for (const event of matrixEvents) {
+                promises.push(
+                    client.redactEvent(this.matrixRoom, event.eventid),
+                );
+                promises.push(event.remove());
+            }
+            await Promise.all(promises);
         },
         user_added: async function (this: Channel, m: any) {
             const intent = await this.main.mattermostUserStore.getOrCreateIntent(
@@ -337,7 +376,7 @@ export default class Channel {
             this: Channel,
             intent: Intent,
             post: any,
-            metadata: { replyTo?: string },
+            metadata: { replyTo?: { matrix: string; mattermost: string } },
         ) {
             await this.sendMatrixMessage(
                 intent,
@@ -384,7 +423,6 @@ export default class Channel {
                             },
                         },
                         metadata,
-                        false,
                     );
                 }
             }
@@ -394,7 +432,7 @@ export default class Channel {
             this: Channel,
             intent: Intent,
             post: any,
-            metadata: { replyTo?: string },
+            metadata: { replyTo?: { matrix: string; mattermost: string } },
         ) {
             await this.sendMatrixMessage(
                 intent,
@@ -457,6 +495,47 @@ export default class Channel {
             }
             await handler.bind(this)(event.state_key);
         },
+        'm.room.redaction': async function (this: Channel, event: any) {
+            const botid = this.main.bridge.getBot().getUserId();
+            // Matrix loop detection doesn't catch redactions.
+            if (event.sender === botid) {
+                return;
+            }
+            const post = await Post.findOne({
+                eventid: event.redacts,
+            });
+            if (post === undefined) {
+                return;
+            }
+
+            // Delete in database before sending the query, so that the
+            // Mattermost event doesn't get processed.
+            await getConnection()
+                .createQueryBuilder()
+                .delete()
+                .from(Post)
+                .where('postid = :postid OR rootid = :postid', {
+                    postid: post.postid,
+                })
+                .execute();
+
+            // The post might have been deleted already, either due to both
+            // sides deleting simultaneously, or the message being deleted
+            // while the bridge is down.
+            try {
+                await this.main.client.delete(`/posts/${post.postid}`);
+            } catch (e) {
+                if (
+                    !(
+                        e instanceof ClientError &&
+                        e.m.status_code === 403 &&
+                        e.m.id === 'api.context.permissions.app_error'
+                    )
+                ) {
+                    throw e;
+                }
+            }
+        },
     };
 
     static async uploadFile(
@@ -495,7 +574,7 @@ export default class Channel {
         await Post.create({
             postid: post.id,
             eventid: event.event_id,
-            primary: true,
+            rootid: metadata.root_id,
         }).save();
     }
 
@@ -522,7 +601,7 @@ export default class Channel {
             await Post.create({
                 postid: post.id,
                 eventid: event.event_id,
-                primary: true,
+                rootid: metadata.root_id,
             }).save();
         },
         'm.emote': async function (
@@ -559,7 +638,7 @@ export default class Channel {
                     await Post.create({
                         postid: postid,
                         eventid: event.event_id,
-                        primary: true,
+                        rootid: metadata.root_id,
                     }).save();
                     return;
                 }

@@ -359,7 +359,13 @@ export default class Channel {
                 m.data.user_id,
             );
             if (intent !== undefined) {
-                await intent.client.sendTyping(this.matrixRoom, true, 6000);
+                intent.client
+                    .sendTyping(this.matrixRoom, true, 6000)
+                    .catch(e =>
+                        Logger.error(
+                            `Error sending typing notification to ${this.matrixRoom}: ${e}`,
+                        ),
+                    );
             }
         },
         channel_viewed: () => {},
@@ -420,7 +426,13 @@ export default class Channel {
                     );
                 }
             }
-            await intent.client.sendTyping(this.matrixRoom, false);
+            intent.client
+                .sendTyping(this.matrixRoom, false)
+                .catch(e =>
+                    Logger.error(
+                        `Error sending typing notification to ${this.matrixRoom}: ${e}`,
+                    ),
+                );
         },
         me: async function (
             this: Channel,
@@ -434,7 +446,13 @@ export default class Channel {
                 await mattermostToMatrix(post.props.message, 'm.emote'),
                 metadata,
             );
-            await intent.client.sendTyping(this.matrixRoom, false);
+            intent.client
+                .sendTyping(this.matrixRoom, false)
+                .catch(e =>
+                    Logger.error(
+                        `Error sending typing notification to ${this.matrixRoom}: ${e}`,
+                    ),
+                );
         },
     };
 

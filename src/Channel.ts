@@ -255,8 +255,8 @@ export default class Channel {
                     // threadResponse.order often contains duplicate entries
                     const threads = uniq(threadResponse.order);
 
-                    // Last item is current post
-                    const id = threads[threads.length - 2] as string;
+                    const thisIndex = threads.indexOf(post.id);
+                    const id = threads[thisIndex - 1] as string;
                     const replyTo = await Post.findOne({ postid: id });
                     if (replyTo !== undefined) {
                         metadata.replyTo = {

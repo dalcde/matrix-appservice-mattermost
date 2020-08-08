@@ -1,4 +1,10 @@
-import { BaseEntity, Entity, PrimaryColumn, Column } from 'typeorm';
+import {
+    BaseEntity,
+    Entity,
+    PrimaryColumn,
+    Column,
+    getConnection,
+} from 'typeorm';
 
 /**
  * An row in Post corresponds to an event/post that exists on both sides of the
@@ -17,4 +23,15 @@ export class Post extends BaseEntity {
 
     @Column('character', { length: '26' })
     rootid!: string;
+
+    static async removeAll(postid: string) {
+        await getConnection()
+            .createQueryBuilder()
+            .delete()
+            .from(Post)
+            .where('postid = :postid OR rootid = :postid', {
+                postid: postid,
+            })
+            .execute();
+    }
 }

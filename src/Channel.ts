@@ -1,7 +1,7 @@
 import { Bridge, Intent } from 'matrix-appservice-bridge';
 import { Client, Method, ClientError } from './mattermost/Client';
 import * as Logger from './Logging';
-import { remove, uniq } from './utils/Functions';
+import { remove, uniq, handlePostError } from './utils/Functions';
 import Main from './Main';
 import { Post } from './entities/Post';
 import { MatrixMessage } from './Interfaces';
@@ -13,7 +13,6 @@ import {
 } from './utils/Formatting';
 import { config } from './Config';
 import fetch from 'node-fetch';
-import { getConnection } from 'typeorm';
 import * as FormData from 'form-data';
 
 const MAX_MEMBERS: number = 10000;
@@ -248,21 +247,25 @@ export default class Channel {
                 replyTo?: { matrix: string; mattermost: string };
             } = {};
             if (post.root_id !== '') {
-                const threadResponse = await this.main.client.get(
-                    `/posts/${post.root_id}/thread`,
-                );
+                try {
+                    const threadResponse = await this.main.client.get(
+                        `/posts/${post.root_id}/thread`,
+                    );
 
-                // threadResponse.order often contains duplicate entries
-                const threads = uniq(threadResponse.order);
+                    // threadResponse.order often contains duplicate entries
+                    const threads = uniq(threadResponse.order);
 
-                // Last item is current post
-                const id = threads[threads.length - 2] as string;
-                const replyTo = await Post.findOne({ postid: id });
-                if (replyTo !== undefined) {
-                    metadata.replyTo = {
-                        matrix: replyTo.eventid,
-                        mattermost: post.root_id,
-                    };
+                    // Last item is current post
+                    const id = threads[threads.length - 2] as string;
+                    const replyTo = await Post.findOne({ postid: id });
+                    if (replyTo !== undefined) {
+                        metadata.replyTo = {
+                            matrix: replyTo.eventid,
+                            mattermost: post.root_id,
+                        };
+                    }
+                } catch (e) {
+                    await handlePostError(e, post.root_id);
                 }
             }
 
@@ -316,16 +319,7 @@ export default class Channel {
                 where: [{ rootid: post.id }, { postid: post.id }],
             });
 
-            const promises: Promise<any>[] = [
-                getConnection()
-                    .createQueryBuilder()
-                    .delete()
-                    .from(Post)
-                    .where('postid = :postid OR rootid = :postid', {
-                        postid: post.postid,
-                    })
-                    .execute(),
-            ];
+            const promises: Promise<any>[] = [Post.removeAll(post.postid)];
             // It is okay to redact an event already redacted.
             for (const event of matrixEvents) {
                 promises.push(
@@ -470,10 +464,14 @@ export default class Channel {
                         eventid: relatesTo['m.in_reply_to'].event_id,
                     });
                     if (post !== undefined) {
-                        const props = await user.client.get(
-                            `/posts/${post.postid}`,
-                        );
-                        metadata.root_id = props.root_id || post.postid;
+                        try {
+                            const props = await user.client.get(
+                                `/posts/${post.postid}`,
+                            );
+                            metadata.root_id = props.root_id || post.postid;
+                        } catch (e) {
+                            await handlePostError(e, post.postid);
+                        }
                     }
                 }
             }
@@ -510,14 +508,7 @@ export default class Channel {
 
             // Delete in database before sending the query, so that the
             // Mattermost event doesn't get processed.
-            await getConnection()
-                .createQueryBuilder()
-                .delete()
-                .from(Post)
-                .where('postid = :postid OR rootid = :postid', {
-                    postid: post.postid,
-                })
-                .execute();
+            await Post.removeAll(post.postid);
 
             // The post might have been deleted already, either due to both
             // sides deleting simultaneously, or the message being deleted
@@ -574,7 +565,7 @@ export default class Channel {
         await Post.create({
             postid: post.id,
             eventid: event.event_id,
-            rootid: metadata.root_id,
+            rootid: metadata.root_id || post.id,
         }).save();
     }
 
@@ -586,11 +577,15 @@ export default class Channel {
             metadata: { edits?: string; root_id?: string },
         ) {
             if (metadata.edits) {
-                await user.client.put(`/posts/${metadata.edits}/patch`, {
-                    message: await matrixToMattermost(
-                        event.content['m.new_content'],
-                    ),
-                });
+                try {
+                    await user.client.put(`/posts/${metadata.edits}/patch`, {
+                        message: await matrixToMattermost(
+                            event.content['m.new_content'],
+                        ),
+                    });
+                } catch (e) {
+                    await handlePostError(e, metadata.edits);
+                }
                 return;
             }
             const post = await user.client.post('/posts', {
@@ -601,7 +596,7 @@ export default class Channel {
             await Post.create({
                 postid: post.id,
                 eventid: event.event_id,
-                rootid: metadata.root_id,
+                rootid: metadata.root_id || post.id,
             }).save();
         },
         'm.emote': async function (
@@ -614,12 +609,17 @@ export default class Channel {
                 const content = await matrixToMattermost(
                     event.content['m.new_content'],
                 );
-                await user.client.put(`/posts/${metadata.edits}/patch`, {
-                    message: `*${content}*`,
-                    props: {
-                        message: content,
-                    },
-                });
+                try {
+                    await user.client.put(`/posts/${metadata.edits}/patch`, {
+                        message: `*${content}*`,
+                        props: {
+                            message: content,
+                        },
+                    });
+                } catch (e) {
+                    await handlePostError(e, metadata.edits);
+                }
+
                 return;
             }
             const content = await matrixToMattermost(event.content);
@@ -638,7 +638,7 @@ export default class Channel {
                     await Post.create({
                         postid: postid,
                         eventid: event.event_id,
-                        rootid: metadata.root_id,
+                        rootid: metadata.root_id || post.id,
                     }).save();
                     return;
                 }

@@ -1,3 +1,6 @@
+import { Post } from '../entities/Post';
+import { ClientError } from '../mattermost/Client';
+
 export function remove<T>(a: T[], x: T) {
     const index = a.indexOf(x, 0);
     if (index > -1) {
@@ -63,4 +66,19 @@ export function sanitizeMattermostUsername(s: string): string {
 
 export function uniq<T>(a: T[]): T[] {
     return [...new Set(a)];
+}
+
+export async function handlePostError(e: any, postid: string) {
+    if (
+        e instanceof ClientError &&
+        ((e.m.status_code === 400 &&
+            e.m.id === 'api.context.invalid_url_param.app_error') ||
+            (e.m.status_code === 404 &&
+                e.m.id === 'store.sql_post.get.app_error'))
+    ) {
+        // The post we are replying to no longer exists. Delete the post from the database.
+        await Post.removeAll(postid);
+    } else {
+        throw e;
+    }
 }

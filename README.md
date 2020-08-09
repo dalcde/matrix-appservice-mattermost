@@ -70,11 +70,11 @@ grouped).
   - [x] Edits
   - [x] Replies
   - [x] Redaction
-  - [ ] Room substitutions
-  - [ ] PMs
-  - [ ] Presence
-  - [ ] Attachment thumbnails
-  - [ ] Correctly indicate remover when removing from channel
+  - [ ] Room substitutions (#9)
+  - [ ] PMs (#1)
+  - [ ] Presence (#8)
+  - [ ] Attachment thumbnails (#10)
+  - [ ] Correctly indicate remover when removing from channel (#7)
   - [x] Typing notification
 
 - Matrix -> Mattermost:
@@ -86,12 +86,12 @@ grouped).
   - [x] Edits
   - [x] Replies
   - [x] Redaction
-  - [ ] Room substitutions
-  - [ ] PMs
-  - [ ] Presence
-  - [ ] Correctly indicate remover when removing from channel
-  - [ ] Customize bridged username
-  - [ ] Typing notification
+  - [ ] Room substitutions (#9)
+  - [ ] PMs (#1)
+  - [ ] Presence (#8)
+  - [ ] Correctly indicate remover when removing from channel (#7)
+  - [ ] Customize bridged username (#12)
+  - [ ] Typing notification (#11)
 
 ## Common errors
 

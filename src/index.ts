@@ -9,7 +9,6 @@ import Main from './Main';
 import { User } from './entities/User';
 import { Post } from './entities/Post';
 
-const ACCESS_TOKEN = 'o57i1q3o8jbojnkkd8sbjqhuqr';
 const cli = new Cli({
     registrationPath: 'registration.yaml',
     generateRegistration(reg, callback) {

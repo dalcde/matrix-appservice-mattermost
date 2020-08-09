@@ -69,7 +69,7 @@ export default class MatrixUserStore {
             const username = await findFirstAvailable(
                 sanitizeMattermostUsername(displayname),
                 async s =>
-                    (await client.post('/users/usernames', [s])).length == 0,
+                    (await client.post('/users/usernames', [s])).length === 0,
             );
             user = await User.createMatrixUser(
                 client,

@@ -11,7 +11,7 @@
     "preinstall": "git config core.hooksPath .githooks",
     "build": "tsc",
     "fmt": "prettier --write .",
-    "test": "prettier -c . && npm run build && tape build/**/*.test.js"
+    "test": "./linter.sh && prettier -c . && npm run build && tape build/**/*.test.js"
   },
   "author": "",
   "license": "MIT",

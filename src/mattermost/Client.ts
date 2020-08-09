@@ -51,7 +51,7 @@ export class Client {
         // If we used password login and we got a 401, the session token might
         // have expired. Log in again and try the request.
         if (
-            response.status == 401 &&
+            response.status === 401 &&
             this.username !== undefined &&
             this.password !== undefined
         ) {

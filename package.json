@@ -41,6 +41,14 @@
       "config:base"
     ],
     "rebaseWhen": "behind-base-branch",
-    "rangeStrategy": "update-lockfile"
+    "rangeStrategy": "update-lockfile",
+    "packageRules": [
+      {
+        "packageNames": [
+          "node"
+        ],
+        "enabled": false
+      }
+    ]
   }
 }

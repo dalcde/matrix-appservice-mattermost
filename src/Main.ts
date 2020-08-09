@@ -67,6 +67,20 @@ export default class Main {
             this.channelsByMatrix.set(map.matrix, channel);
         }
         this.ws.on('message', m => this.onMattermostMessage(m));
+
+        this.ws.on('error', e => {
+            log.error(`Error when initializing websocket connection: ${e}`);
+        });
+
+        this.ws.on('close', async () => {
+            log.error('Mattermost websocket closed. Shutting down bridge');
+            try {
+                await this.bridge.appService.close();
+            } catch (e) {
+                log.error(`Error when shutting down matrix bridge: ${e}`);
+            }
+            process.exit(1);
+        });
     }
 
     async init() {

@@ -169,6 +169,8 @@ export class ClientWebsocket extends EventEmitter {
                 this.emit('message', ev);
             }
         });
+        this.ws.on('close', () => this.emit('close'));
+        this.ws.on('error', e => this.emit('error', e));
     }
 
     async close() {

@@ -29,7 +29,7 @@ async function setupDb() {
         mattermost_userid: 'abcdabcdabcdabcdabcdabcdab',
         access_token: '',
         is_matrix_user: true,
-        mattermost_username: 'bar',
+        mattermost_username: 'bar-_b',
         matrix_displayname: 'display',
     }).save();
 }
@@ -42,7 +42,7 @@ test.onFinish(async () => {
 
 test('mattermostToMatrix username translation', async t => {
     await db;
-    const message = await mattermostToMatrix('@bar... @foo @bar');
+    const message = await mattermostToMatrix('@bar-_b... @foo @bar-_b');
     t.deepEqual(message, {
         msgtype: 'm.text',
         body: 'display... @foo display',
@@ -86,7 +86,7 @@ test('matrixToMattermost username translation', async t => {
         formatted_body:
             "<a href='https://matrix.to/#/@mar:matrix.org'>display</a> <a href='https://matrix.to/#/@null:matrix.org'>non-existent</a> <a href='https://matrix.to/broken-link'>broken</a>",
     });
-    t.equal(message, '@bar non-existent broken');
+    t.equal(message, '@bar-_b non-existent broken');
     t.end();
 });
 

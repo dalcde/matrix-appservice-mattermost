@@ -37,7 +37,7 @@ turndown.addRule('mx-reply', {
     replacement: () => '',
 });
 async function translateMattermostUsername(body: string, html: boolean) {
-    return await replaceAsync(body, /@[a-z0-9\.-_]*/g, async s => {
+    return await replaceAsync(body, /@[a-z0-9\.\-_]*/g, async s => {
         let tail = '';
         while (true) {
             const user = await User.findOne({

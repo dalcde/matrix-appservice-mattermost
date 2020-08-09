@@ -49,23 +49,14 @@ const cli = new Cli({
         log.timeEnd.info('Bridge loaded');
         main.init();
 
-        const kill = async () => {
+        process.on('SIGTERM', () => {
             log.info('Received SIGTERM. Shutting down bridge.');
-            try {
-                log.debug('Closing websocket connection');
-                // Otherwise, closing the websocket connection will initiate
-                // the shutdown sequence again.
-                main.ws.removeAllListeners('close');
-                await main.ws.close();
-                log.debug('Closing appservice bridge');
-                await main.bridge.appService.close();
-            } catch (e) {
-                log.error('Failed to kill bridge, exiting anyway');
-            }
-            process.exit(1);
-        };
-        process.on('SIGTERM', kill);
-        process.on('SIGINT', kill);
+            main.killBridge();
+        });
+        process.on('SIGINT', () => {
+            log.info('Received SIGINT. Shutting down bridge.');
+            main.killBridge();
+        });
     },
 });
 cli.run();

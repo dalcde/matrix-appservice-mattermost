@@ -72,14 +72,9 @@ export default class Main {
             log.error(`Error when initializing websocket connection: ${e}`);
         });
 
-        this.ws.on('close', async () => {
+        this.ws.on('close', () => {
             log.error('Mattermost websocket closed. Shutting down bridge');
-            try {
-                await this.bridge.appService.close();
-            } catch (e) {
-                log.error(`Error when shutting down matrix bridge: ${e}`);
-            }
-            process.exit(1);
+            this.killBridge();
         });
     }
 
@@ -121,11 +116,31 @@ export default class Main {
         }
         await Promise.all(promises);
 
+        if (this.channelsByMattermost.size === 0) {
+            log.info('No channels bridged successfully. Shutting down bridge.');
+            await this.killBridge();
+        }
+
         this.mattermostMutex.unlock();
         this.matrixMutex.unlock();
 
         await botProfile;
         log.timeEnd.info('Bridge initialized');
+    }
+
+    async killBridge() {
+        try {
+            // Otherwise, closing the websocket connection will initiate
+            // the shutdown sequence again.
+            this.ws.removeAllListeners('close');
+            await Promise.all([
+                this.ws.close(),
+                this.bridge.appService.close(),
+            ]);
+        } catch (e) {
+            log.error(`Failed to kill bridge: ${e}. exiting anyway`);
+        }
+        process.exit(1);
     }
 
     async updateBotProfile() {

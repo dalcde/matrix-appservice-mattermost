@@ -174,6 +174,10 @@ export class ClientWebsocket extends EventEmitter {
     }
 
     async close() {
+        // If the websocket is already closed, we will not receive a close event.
+        if (this.ws.readyState === WebSocket.CLOSED) {
+            return;
+        }
         this.ws.close();
         await new Promise(resolve => this.ws.once('close', resolve));
     }

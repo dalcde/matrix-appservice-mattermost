@@ -1,3 +1,4 @@
+console.time('Bridge loaded');
 import { Bridge, Cli, AppServiceRegistration } from 'matrix-appservice-bridge';
 import { Client } from './mattermost/Client';
 import log from './Logging';
@@ -46,6 +47,7 @@ const cli = new Cli({
         await createConnection(db);
 
         const main = new Main(registration);
+        log.timeEnd.info('Bridge loaded');
         main.init();
 
         process.on('SIGTERM', async () => {

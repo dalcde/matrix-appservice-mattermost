@@ -70,6 +70,7 @@ export default class Main {
     }
 
     async init() {
+        log.time.info('Bridge initialized');
         const botProfile = this.updateBotProfile().catch(e =>
             log.error(`Error when updating bot profile: ${e}`),
         );
@@ -110,6 +111,7 @@ export default class Main {
         this.matrixMutex.unlock();
 
         await botProfile;
+        log.timeEnd.info('Bridge initialized');
     }
 
     async updateBotProfile() {

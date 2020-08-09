@@ -35,5 +35,12 @@
     "sqlite3": "^5.0.0",
     "tape": "^5.0.1",
     "typescript": "^3.9.7"
+  },
+  "renovate": {
+    "extends": [
+      "config:base"
+    ],
+    "rebaseWhen": "behind-base-branch",
+    "rangeStrategy": "update-lockfile"
   }
 }

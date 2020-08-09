@@ -362,7 +362,7 @@ export default class Channel {
                 intent.client
                     .sendTyping(this.matrixRoom, true, 6000)
                     .catch(e =>
-                        log.error(
+                        log.warn(
                             `Error sending typing notification to ${this.matrixRoom}: ${e}`,
                         ),
                     );
@@ -429,7 +429,7 @@ export default class Channel {
             intent.client
                 .sendTyping(this.matrixRoom, false)
                 .catch(e =>
-                    log.error(
+                    log.warn(
                         `Error sending typing notification to ${this.matrixRoom}: ${e}`,
                     ),
                 );
@@ -449,7 +449,7 @@ export default class Channel {
             intent.client
                 .sendTyping(this.matrixRoom, false)
                 .catch(e =>
-                    log.error(
+                    log.warn(
                         `Error sending typing notification to ${this.matrixRoom}: ${e}`,
                     ),
                 );
@@ -504,7 +504,7 @@ export default class Channel {
             const handler =
                 Channel.matrixMembershipHandler[event.content.membership];
             if (handler === undefined) {
-                log.error(
+                log.warn(
                     `Invalid membership state: ${event.content.membership}`,
                 );
                 return;

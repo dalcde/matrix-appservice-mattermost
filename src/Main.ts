@@ -72,7 +72,7 @@ export default class Main {
     async init() {
         log.time.info('Bridge initialized');
         const botProfile = this.updateBotProfile().catch(e =>
-            log.error(`Error when updating bot profile: ${e}`),
+            log.warn(`Error when updating bot profile: ${e}`),
         );
 
         await Promise.all([
@@ -181,7 +181,7 @@ export default class Main {
                 log.debug(`Unkown event type: ${m.event}`);
             }
         } catch (e) {
-            log.error(`Error when processing mattermost message: ${e}`);
+            log.warn(`Error when processing mattermost message: ${e}`);
         }
         log.timeEnd.debug('Process mattermost message');
 
@@ -216,7 +216,7 @@ export default class Main {
                 log.debug(`Message for unknown room: ${event.room_id}`);
             }
         } catch (e) {
-            log.error(`Error when processing matrix event: ${e}`);
+            log.warn(`Error when processing matrix event: ${e}`);
         }
         log.timeEnd.debug('Process matrix message');
 

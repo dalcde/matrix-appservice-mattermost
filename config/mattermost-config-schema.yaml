@@ -54,7 +54,7 @@ properties:
 
   logging:
     type: 'string'
-    enum: ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+    enum: ['trace', 'debug', 'info', 'warn', 'error', 'silent']
   homeserver:
     type: 'object'
     properties:

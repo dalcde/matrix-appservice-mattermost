@@ -1,7 +1,7 @@
 import { Intent, Bridge } from 'matrix-appservice-bridge';
 import { User } from './entities/User';
 import { getManager } from 'typeorm';
-import * as Logger from './Logging';
+import log from './Logging';
 import Mutex from './utils/Mutex';
 import Main from './Main';
 import { localpart, sanitizeMattermostUsername } from './utils/Functions';

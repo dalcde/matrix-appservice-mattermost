@@ -1,5 +1,3 @@
-import { LogLevelStrings } from './Logging';
-
 let _config: Config = (undefined as any) as Config;
 
 export function config(): Config {
@@ -40,7 +38,7 @@ export interface Config {
         password?: string;
         database: string;
     };
-    logging: LogLevelStrings;
+    logging: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'silent';
     ignored_mattermost_users: string[];
     ignored_matrix_users: string[];
     mattermost_email_template: string;

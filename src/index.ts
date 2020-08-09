@@ -1,13 +1,12 @@
 import { Bridge, Cli, AppServiceRegistration } from 'matrix-appservice-bridge';
 import { Client } from './mattermost/Client';
-import * as Logger from './Logging';
+import log from './Logging';
 import { setConfig, Config } from './Config';
 import { createConnection } from 'typeorm';
 import * as path from 'path';
 import Main from './Main';
 import { User } from './entities/User';
 import { Post } from './entities/Post';
-import { logger as mxLogger } from 'matrix-js-sdk/lib/logger';
 
 const ACCESS_TOKEN = 'o57i1q3o8jbojnkkd8sbjqhuqr';
 const cli = new Cli({
@@ -35,8 +34,7 @@ const cli = new Cli({
         affectsRegistration: true,
     },
     async run(port: number, config: Config, registration: any) {
-        Logger.setLogLevel(config.logging);
-        mxLogger.setLevel(config.logging);
+        log.setLevel(config.logging);
 
         setConfig(config);
 
@@ -51,11 +49,14 @@ const cli = new Cli({
         main.init();
 
         process.on('SIGTERM', async () => {
+            log.info('Received SIGTERM. Shutting down bridge.');
             try {
+                log.debug('Closing websocket connection');
                 await main.ws.close();
+                log.debug('Closing appservice bridge');
                 await main.bridge.appservice.close();
             } catch (e) {
-                Logger.error('Failed to kill bridge, exiting anyway');
+                log.error('Failed to kill bridge, exiting anyway');
             }
             process.exit(1);
         });

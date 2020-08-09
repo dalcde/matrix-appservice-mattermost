@@ -1,6 +1,6 @@
 import { Bridge, Intent } from 'matrix-appservice-bridge';
 import { Client, Method, ClientError } from './mattermost/Client';
-import * as Logger from './Logging';
+import log from './Logging';
 import { remove, uniq, handlePostError } from './utils/Functions';
 import Main from './Main';
 import { Post } from './entities/Post';
@@ -101,7 +101,7 @@ export default class Channel {
                 e instanceof ClientError &&
                 e.m.id === 'api.channel.remove.default.app_error'
             ) {
-                Logger.debug(
+                log.debug(
                     `Cannot remove user ${userid} from default town-square channel`,
                 );
             } else {
@@ -181,7 +181,7 @@ export default class Channel {
     async onMattermostMessage(m: any) {
         const handler = Channel.mattermostMessageHandlers[m.event];
         if (handler === undefined) {
-            Logger.debug(`Unknown matermost message type: ${m.event}`);
+            log.debug(`Unknown matermost message type: ${m.event}`);
         } else {
             await handler.bind(this)(m);
         }
@@ -190,7 +190,7 @@ export default class Channel {
     async onMatrixEvent(event: any) {
         const handler = Channel.matrixEventHandlers[event.type];
         if (handler === undefined) {
-            Logger.debug(`Unknown matrix event type: ${event.type}`);
+            log.debug(`Unknown matrix event type: ${event.type}`);
         } else {
             await handler.bind(this)(event);
         }
@@ -273,7 +273,7 @@ export default class Channel {
             if (handler !== undefined) {
                 await handler.bind(this)(intent, post, metadata);
             } else {
-                Logger.debug(`Unknown post type: ${post.type}`);
+                log.debug(`Unknown post type: ${post.type}`);
             }
         },
         post_edited: async function (this: Channel, m: any) {
@@ -362,7 +362,7 @@ export default class Channel {
                 intent.client
                     .sendTyping(this.matrixRoom, true, 6000)
                     .catch(e =>
-                        Logger.error(
+                        log.error(
                             `Error sending typing notification to ${this.matrixRoom}: ${e}`,
                         ),
                     );
@@ -429,7 +429,7 @@ export default class Channel {
             intent.client
                 .sendTyping(this.matrixRoom, false)
                 .catch(e =>
-                    Logger.error(
+                    log.error(
                         `Error sending typing notification to ${this.matrixRoom}: ${e}`,
                     ),
                 );
@@ -449,7 +449,7 @@ export default class Channel {
             intent.client
                 .sendTyping(this.matrixRoom, false)
                 .catch(e =>
-                    Logger.error(
+                    log.error(
                         `Error sending typing notification to ${this.matrixRoom}: ${e}`,
                     ),
                 );
@@ -461,7 +461,7 @@ export default class Channel {
             const content = event.content;
             const user = await this.main.matrixUserStore.get(event.sender);
             if (user === undefined) {
-                Logger.info(
+                log.info(
                     `Received message from untracked matrix user ${event.sender}`,
                 );
                 return;
@@ -504,7 +504,7 @@ export default class Channel {
             const handler =
                 Channel.matrixMembershipHandler[event.content.membership];
             if (handler === undefined) {
-                Logger.error(
+                log.error(
                     `Invalid membership state: ${event.content.membership}`,
                 );
                 return;
@@ -661,7 +661,7 @@ export default class Channel {
                     return;
                 }
             }
-            Logger.info(`Cannot find post for ${content}`);
+            log.info(`Cannot find post for ${content}`);
         },
         'm.file': Channel.uploadFile,
         'm.image': Channel.uploadFile,
@@ -688,7 +688,7 @@ export default class Channel {
 
             const user = await this.main.matrixUserStore.get(userid);
             if (user === undefined) {
-                Logger.info(`Removing untracked matrix user ${userid}`);
+                log.info(`Removing untracked matrix user ${userid}`);
                 return;
             }
             await this.leaveMattermost(user.mattermost_userid);

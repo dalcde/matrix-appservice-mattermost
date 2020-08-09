@@ -19,6 +19,7 @@
     "@types/node-fetch": "^2.5.7",
     "bufferutil": "^4.0.1",
     "form-data": "^3.0.0",
+    "loglevel": "^1.6.8",
     "marked": "^1.1.1",
     "matrix-appservice-bridge": "^1.13.2",
     "node-fetch": "^2.6.0",

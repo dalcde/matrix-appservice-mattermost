@@ -6,7 +6,7 @@ import MatrixUserStore from './MatrixUserStore';
 import MattermostUserStore from './MattermostUserStore';
 import Channel from './Channel';
 import Mutex from './utils/Mutex';
-import * as Logger from './Logging';
+import log from './Logging';
 
 export default class Main {
     readonly client: Client;
@@ -71,7 +71,7 @@ export default class Main {
 
     async init() {
         const botProfile = this.updateBotProfile().catch(e =>
-            Logger.error(`Error when updating bot profile: ${e}`),
+            log.error(`Error when updating bot profile: ${e}`),
         );
 
         await Promise.all([
@@ -94,7 +94,7 @@ export default class Main {
                         }
                     })
                     .catch(e => {
-                        Logger.error(
+                        log.error(
                             `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}: ${e}`,
                         );
                         this.channelsByMattermost.delete(
@@ -146,7 +146,7 @@ export default class Main {
                 }
             }
 
-            Logger.debug(`Mattermost message: ${JSON.stringify(m)}`);
+            log.debug(`Mattermost message: ${JSON.stringify(m)}`);
             const handler = Main.mattermostMessageHandlers[m.event];
             if (handler !== undefined) {
                 await handler.bind(this)(m);
@@ -158,7 +158,7 @@ export default class Main {
                 if (channel !== undefined) {
                     await channel.onMattermostMessage(m);
                 } else {
-                    Logger.debug(
+                    log.debug(
                         `Message for unknown channel_id: ${m.broadcast.channel_id}`,
                     );
                 }
@@ -175,10 +175,10 @@ export default class Main {
                 }
                 await Promise.all(promises);
             } else {
-                Logger.debug(`Unkown event type: ${m.event}`);
+                log.debug(`Unkown event type: ${m.event}`);
             }
         } catch (e) {
-            Logger.error(`Error when processing mattermost message: ${e}`);
+            log.error(`Error when processing mattermost message: ${e}`);
         }
 
         this.mattermostMutex.unlock();
@@ -189,7 +189,7 @@ export default class Main {
 
         try {
             const event = request.getData();
-            Logger.debug(`Matrix event: ${JSON.stringify(event)}`);
+            log.debug(`Matrix event: ${JSON.stringify(event)}`);
 
             const channel = this.channelsByMatrix.get(event.room_id);
             if (channel !== undefined) {
@@ -208,10 +208,10 @@ export default class Main {
                 });
                 await intent.leave();
             } else {
-                Logger.debug(`Message for unknown room: ${event.room_id}`);
+                log.debug(`Message for unknown room: ${event.room_id}`);
             }
         } catch (e) {
-            Logger.error(`Error when processing matrix event: ${e}`);
+            log.error(`Error when processing matrix event: ${e}`);
         }
 
         this.matrixMutex.unlock();

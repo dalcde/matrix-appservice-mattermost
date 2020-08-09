@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import * as WebSocket from 'ws';
 import { EventEmitter } from 'events';
-import * as Logger from '../Logging';
+import log from '../Logging';
 import * as FormData from 'form-data';
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -155,7 +155,7 @@ export class ClientWebsocket extends EventEmitter {
             if (ev.seq_reply !== undefined) {
                 const promise = this.promises[ev.seq_reply];
                 if (promise === null) {
-                    Logger.warning(
+                    log.warn(
                         `websocket: Received reply with unknown sequence number: ${m}`,
                     );
                 }

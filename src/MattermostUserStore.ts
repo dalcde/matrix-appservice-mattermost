@@ -3,7 +3,7 @@ import { User } from './entities/User';
 import { Client } from './mattermost/Client';
 import { getManager } from 'typeorm';
 import { config } from './Config';
-import * as Logger from './Logging';
+import log from './Logging';
 import Mutex from './utils/Mutex';
 import Main from './Main';
 import { findFirstAvailable } from './utils/Functions';

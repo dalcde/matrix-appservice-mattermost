@@ -132,6 +132,7 @@ export default class Main {
 
     async onMattermostMessage(m: any) {
         await this.mattermostMutex.lock();
+        log.time.debug('Process mattermost message');
 
         try {
             const userid = m.data.user_id ?? (m.data.user && m.data.user.id);
@@ -180,12 +181,14 @@ export default class Main {
         } catch (e) {
             log.error(`Error when processing mattermost message: ${e}`);
         }
+        log.timeEnd.debug('Process mattermost message');
 
         this.mattermostMutex.unlock();
     }
 
     async onMatrixEvent(request) {
         await this.matrixMutex.lock();
+        log.time.debug('Process matrix message');
 
         try {
             const event = request.getData();
@@ -213,6 +216,7 @@ export default class Main {
         } catch (e) {
             log.error(`Error when processing matrix event: ${e}`);
         }
+        log.timeEnd.debug('Process matrix message');
 
         this.matrixMutex.unlock();
     }

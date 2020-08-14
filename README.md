@@ -73,6 +73,7 @@ grouped).
   - [ ] Room substitutions (#9)
   - [ ] PMs (#1)
   - [ ] Presence (#8)
+  - [ ] Reactions (#13)
   - [ ] Attachment thumbnails (#10)
   - [ ] Correctly indicate remover when removing from channel (#7)
   - [x] Typing notification
@@ -89,6 +90,7 @@ grouped).
   - [ ] Room substitutions (#9)
   - [ ] PMs (#1)
   - [ ] Presence (#8)
+  - [ ] Reactions (#13)
   - [ ] Correctly indicate remover when removing from channel (#7)
   - [ ] Customize bridged username (#12)
   - [ ] Typing notification (#11)

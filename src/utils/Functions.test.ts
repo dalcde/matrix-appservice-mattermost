@@ -49,10 +49,14 @@ test('localpart', t => {
 });
 
 test('sanitizeMattermostUsername', t => {
-    t.equal(sanitizeMattermostUsername('test[irc]`-bot'), 'test_irc__-bot');
+    t.equal(sanitizeMattermostUsername('test[irc]`-bot'), 'test_irc_-bot');
     t.equal(sanitizeMattermostUsername('13Gda'), 'a13gda');
     t.equal(sanitizeMattermostUsername('a'), 'a__');
     t.equal(sanitizeMattermostUsername('foo-bar_12'), 'foo-bar_12');
+    t.equal(sanitizeMattermostUsername('foo`_`foo'), 'foo_foo');
+    t.equal(sanitizeMattermostUsername('foo`_`'), 'foo');
+    t.equal(sanitizeMattermostUsername('John Smith'), 'john_smith');
+    t.equal(sanitizeMattermostUsername('bar [irc]'), 'bar_irc');
     t.equal(sanitizeMattermostUsername('a'.repeat(50)), 'a'.repeat(22));
     t.end();
 });

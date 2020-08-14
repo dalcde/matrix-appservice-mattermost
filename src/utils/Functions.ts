@@ -52,9 +52,11 @@ export function localpart(s: string): string {
 export function sanitizeMattermostUsername(s: string): string {
     s = s.toLowerCase();
     s = s.replace(/[^a-z0-9_\-\.]/g, '_');
-    if (!s[0].match(/[a-zA-Z]/)) {
+    if (!s[0].match(/[a-z]/)) {
         s = 'a' + s;
     }
+    s = s.replace(/__+/g, '_');
+    s = s.replace(/_$/g, '');
     while (s.length < 3) {
         s += '_';
     }

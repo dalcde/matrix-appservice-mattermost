@@ -1,0 +1,86 @@
+import * as test from 'tape';
+import MattermostUserStore from './MattermostUserStore';
+import Main from './Main';
+
+import { setConfig, setupDb } from './utils/TestUtils';
+import { User } from './entities/User';
+
+test('display name', async t => {
+    await setupDb();
+    setConfig({
+        matrix_display_name_template: '[DISPLAY] [m]',
+    });
+    const store = new MattermostUserStore((undefined as any) as Main);
+    let displayName: string = '';
+
+    store.intent = () => {
+        return {
+            setDisplayName: (name: string) => {
+                displayName = name;
+            },
+        };
+    };
+
+    const user = (await User.findOne({
+        matrix_userid: '@mm_mmuser:matrix.org',
+    })) as User;
+    const check = async (name: string) => {
+        t.equal(displayName, name);
+        const dbUser = (await User.findOne({
+            matrix_userid: '@mm_mmuser:matrix.org',
+        })) as User;
+        t.equal(dbUser.matrix_displayname, name);
+    };
+    await store.updateUser(
+        {
+            username: 'mmuser',
+            first_name: 'Foo',
+            last_name: 'Bar',
+        },
+        user,
+    );
+    await check('Foo Bar [m]');
+    await store.updateUser(
+        {
+            username: 'mmuser',
+            first_name: 'Foo',
+            last_name: '',
+        },
+        user,
+    );
+    await check('Foo [m]');
+    await store.updateUser(
+        {
+            username: 'mmuser',
+            first_name: '',
+            last_name: 'Bar',
+        },
+        user,
+    );
+    await check('Bar [m]');
+    await store.updateUser(
+        {
+            username: 'mmuser',
+            first_name: '',
+            last_name: '',
+        },
+        user,
+    );
+    await check('mmuser [m]');
+    await store.updateUser(
+        {
+            username: 'mmuser2',
+            first_name: '',
+            last_name: '',
+        },
+        user,
+    );
+    await check('mmuser2 [m]');
+
+    const dbUser = (await User.findOne({
+        matrix_userid: '@mm_mmuser:matrix.org',
+    })) as User;
+    t.equal(dbUser.mattermost_username, 'mmuser2');
+
+    t.end();
+});

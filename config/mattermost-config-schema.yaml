@@ -43,6 +43,9 @@ properties:
   matrix_localpart_prefix:
     type: 'string'
     default: 'mm_'
+  matrix_display_name_template:
+    type: 'string'
+    default: '[DISPLAY]'
   matrix_bot:
     type: object
     properties:

@@ -1,60 +1,35 @@
 import * as test from 'tape';
+import { setConfig, setupDb } from './TestUtils';
 import {
     mattermostToMatrix,
     matrixToMattermost,
     constructMatrixReply,
 } from './Formatting';
 
-import { User } from '../entities/User';
-import { createConnection, getConnection } from 'typeorm';
-
-import { setConfig, Config } from '../Config';
-setConfig(({
-    homeserver: {
-        server_name: 'matrix.org',
-        url: 'https://matrix.org',
-    },
-} as any) as Config);
-async function setupDb() {
-    await createConnection({
-        type: 'sqlite',
-        database: ':memory:',
-        dropSchema: true,
-        entities: [User],
-        synchronize: true,
-        logging: false,
+test('setup formatting config', async t => {
+    await setupDb();
+    setConfig({
+        homeserver: {
+            server_name: 'matrix.org',
+            url: 'https://matrix.org',
+        },
     });
-    await User.create({
-        matrix_userid: '@mar:matrix.org',
-        mattermost_userid: 'abcdabcdabcdabcdabcdabcdab',
-        access_token: '',
-        is_matrix_user: true,
-        mattermost_username: 'bar-_b',
-        matrix_displayname: 'display',
-    }).save();
-}
-
-const db = setupDb();
-
-test.onFinish(async () => {
-    (await getConnection()).close();
+    t.end();
 });
 
 test('mattermostToMatrix username translation', async t => {
-    await db;
-    const message = await mattermostToMatrix('@bar-_b... @foo @bar-_b');
+    const message = await mattermostToMatrix('@b-_b... @foo @b-_b');
     t.deepEqual(message, {
         msgtype: 'm.text',
         body: 'display... @foo display',
         format: 'org.matrix.custom.html',
         formatted_body:
-            "<a href='https://matrix.to/#/@mar:matrix.org'>display</a>... @foo <a href='https://matrix.to/#/@mar:matrix.org'>display</a>",
+            "<a href='https://matrix.to/#/@bar:matrix.org'>display</a>... @foo <a href='https://matrix.to/#/@bar:matrix.org'>display</a>",
     });
     t.end();
 });
 
 test('mattermostToMatrix markdown', async t => {
-    await db;
     const message = await mattermostToMatrix('_emph_ **bold**\nline');
     t.deepEqual(message, {
         msgtype: 'm.text',
@@ -66,7 +41,6 @@ test('mattermostToMatrix markdown', async t => {
 });
 
 test('mattermostToMatrix double linebreak', async t => {
-    await db;
     const message = await mattermostToMatrix('a\n\nb');
     t.deepEqual(message, {
         msgtype: 'm.text',
@@ -78,20 +52,18 @@ test('mattermostToMatrix double linebreak', async t => {
 });
 
 test('matrixToMattermost username translation', async t => {
-    await db;
     const message = await matrixToMattermost({
         msgtype: 'm.text',
         body: 'empty',
         format: 'org.matrix.custom.html',
         formatted_body:
-            "<a href='https://matrix.to/#/@mar:matrix.org'>display</a> <a href='https://matrix.to/#/@null:matrix.org'>non-existent</a> <a href='https://matrix.to/broken-link'>broken</a>",
+            "<a href='https://matrix.to/#/@bar:matrix.org'>display</a> <a href='https://matrix.to/#/@null:matrix.org'>non-existent</a> <a href='https://matrix.to/broken-link'>broken</a>",
     });
-    t.equal(message, '@bar-_b non-existent broken');
+    t.equal(message, '@b-_b non-existent broken');
     t.end();
 });
 
 test('matrixToMattermost formatting', async t => {
-    await db;
     const message = await matrixToMattermost({
         msgtype: 'm.text',
         body: 'empty',

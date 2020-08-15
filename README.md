@@ -6,6 +6,9 @@ Mattermost _user_ for each Matrix user. It uses an actual user instead of a bot
 to provide a superior user experience (e.g. consecutive bot messages aren't
 grouped).
 
+This is currently in beta, but is sufficiently usable that it is used in a
+production system (with understanding users) by the author.
+
 ## Requirements
 
 - Mattermost **5.26.0** and above.

@@ -21,6 +21,7 @@ export interface Config {
     };
     matrix_localpart_prefix: string;
     matrix_display_name_template: string;
+    mattermost_username_template: string;
     matrix_bot: {
         username: string;
         display_name?: string;

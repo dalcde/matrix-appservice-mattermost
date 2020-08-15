@@ -85,10 +85,9 @@ export default class MattermostUserStore {
         if (data.first_name || data.last_name) {
             displayName = `${data.first_name} ${data.last_name}`.trim();
         }
-        displayName = config().matrix_display_name_template.replace(
-            '[DISPLAY]',
-            displayName,
-        );
+        displayName = config()
+            .matrix_display_name_template.replace('[DISPLAY]', displayName)
+            .replace('[USERNAME]', data.username);
 
         if (
             user.mattermost_username !== data.username ||

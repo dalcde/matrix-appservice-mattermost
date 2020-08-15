@@ -46,6 +46,9 @@ properties:
   matrix_display_name_template:
     type: 'string'
     default: '[DISPLAY]'
+  mattermost_username_template:
+    type: 'string'
+    default: '[DISPLAY]'
   matrix_bot:
     type: object
     properties:

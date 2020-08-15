@@ -32,13 +32,23 @@ mappings:
 # A puppet matrix user of a real mattermost user with have matrix localpart
 # with this prefix.
 matrix_localpart_prefix: 'mm_'
-# Template for the matrix display name of puppet users, with [DISPLAY] replaced
-# by the Mattermost display name (which itself is the concatenation of first
-# and last names if either is set, or the username otherwise). This is useful
-# for adding a prefix or suffix to disambiguate bridged users.
+# Template for the matrix display name of puppet users. The following
+# variables are available:
+# - [USERNAME] is the mattermost username
+# - [DISPLAY] is the Mattermost display name. This is the concatenation of first
+#   and last names if either is set, or the username otherwise.
 #
 # This is optional and defaults to [DISPLAY]
 matrix_display_name_template: '[DISPLAY] [mm]'
+
+# Template for the mattermost usernames of puppet users. The following
+# variables are available:
+#  - [LOCALPART] is the localpart of the user's id
+#  - [DISPLAY] is the matrix display name. If this is not available, the
+#    localpart is used.
+#
+# This is optional and defaults to [DISPLAY]
+mattermost_username_template: '[LOCALPART] [mm]'
 
 # The localpart of the corresponding matrix bot. This is automatically created
 # by the bridge.

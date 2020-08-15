@@ -8,7 +8,7 @@ import { User } from './entities/User';
 test('display name', async t => {
     await setupDb();
     setConfig({
-        matrix_display_name_template: '[DISPLAY] [m]',
+        matrix_display_name_template: '[DISPLAY] [USERNAME] [m]',
     });
     const store = new MattermostUserStore((undefined as any) as Main);
     let displayName: string = '';
@@ -39,7 +39,7 @@ test('display name', async t => {
         },
         user,
     );
-    await check('Foo Bar [m]');
+    await check('Foo Bar mmuser [m]');
     await store.updateUser(
         {
             username: 'mmuser',
@@ -48,7 +48,7 @@ test('display name', async t => {
         },
         user,
     );
-    await check('Foo [m]');
+    await check('Foo mmuser [m]');
     await store.updateUser(
         {
             username: 'mmuser',
@@ -57,7 +57,7 @@ test('display name', async t => {
         },
         user,
     );
-    await check('Bar [m]');
+    await check('Bar mmuser [m]');
     await store.updateUser(
         {
             username: 'mmuser',
@@ -66,7 +66,7 @@ test('display name', async t => {
         },
         user,
     );
-    await check('mmuser [m]');
+    await check('mmuser mmuser [m]');
     await store.updateUser(
         {
             username: 'mmuser2',
@@ -75,7 +75,7 @@ test('display name', async t => {
         },
         user,
     );
-    await check('mmuser2 [m]');
+    await check('mmuser2 mmuser2 [m]');
 
     const dbUser = (await User.findOne({
         matrix_userid: '@mm_mmuser:matrix.org',

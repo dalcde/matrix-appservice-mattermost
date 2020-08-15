@@ -5,6 +5,7 @@ import log from './Logging';
 import Mutex from './utils/Mutex';
 import Main from './Main';
 import { localpart, sanitizeMattermostUsername } from './utils/Functions';
+import { config } from './Config';
 import { Client } from './mattermost/Client';
 import { findFirstAvailable } from './utils/Functions';
 
@@ -53,21 +54,30 @@ export default class MatrixUserStore {
             await this.updateUser(user);
         } else {
             const client = this.main.client;
-            let displayname = localpart(matrix_userid);
+            const localpart_ = localpart(matrix_userid);
+            const template = config().mattermost_username_template;
 
-            try {
-                const resp = await this.main.bridge
-                    .getIntent()
-                    .getProfileInfo(matrix_userid, 'displayname');
-                if (resp.displayname) {
-                    displayname = resp.displayname;
+            let displayname = '';
+
+            if (template.includes('[DISPLAY]')) {
+                try {
+                    const resp = await this.main.bridge
+                        .getIntent()
+                        .getProfileInfo(matrix_userid, 'displayname');
+                    if (resp.displayname) {
+                        displayname = resp.displayname;
+                    }
+                } catch (e) {
+                    // Some users have no display name
                 }
-            } catch (e) {
-                // Some users have no display name
             }
 
+            const defaultUsername = template
+                .replace('[DISPLAY]', displayname)
+                .replace('[LOCALPART]', localpart_);
+
             const username = await findFirstAvailable(
-                sanitizeMattermostUsername(displayname),
+                sanitizeMattermostUsername(defaultUsername),
                 async s =>
                     (await client.post('/users/usernames', [s])).length === 0,
             );

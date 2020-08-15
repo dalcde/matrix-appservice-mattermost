@@ -61,7 +61,7 @@ async function run(argv: string[]) {
 
     log.info('Updating mattermost user');
     try {
-        user.client.put(`/users/${user.mattermost_userid}/patch`, {
+        await user.client.put(`/users/${user.mattermost_userid}/patch`, {
             username: newName,
         });
     } catch (e) {

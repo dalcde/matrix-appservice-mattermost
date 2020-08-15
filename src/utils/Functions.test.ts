@@ -51,6 +51,9 @@ test('localpart', t => {
 test('sanitizeMattermostUsername', t => {
     t.equal(sanitizeMattermostUsername('test[irc]`-bot'), 'test_irc_-bot');
     t.equal(sanitizeMattermostUsername('13Gda'), 'a13gda');
+    t.equal(sanitizeMattermostUsername('_13Gda'), 'a13gda');
+    t.equal(sanitizeMattermostUsername('[b]Gda'), 'b_gda');
+    t.equal(sanitizeMattermostUsername('_bGda'), 'bgda');
     t.equal(sanitizeMattermostUsername('a'), 'a__');
     t.equal(sanitizeMattermostUsername('foo-bar_12'), 'foo-bar_12');
     t.equal(sanitizeMattermostUsername('foo`_`foo'), 'foo_foo');

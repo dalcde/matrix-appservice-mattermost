@@ -52,6 +52,7 @@ export function localpart(s: string): string {
 export function sanitizeMattermostUsername(s: string): string {
     s = s.toLowerCase();
     s = s.replace(/[^a-z0-9_\-\.]/g, '_');
+    s = s.replace(/^_*/, '');
     if (!s[0].match(/[a-z]/)) {
         s = 'a' + s;
     }

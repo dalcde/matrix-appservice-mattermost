@@ -106,6 +106,16 @@ production system (with understanding users) by the author.
 
 ## Remarks
 
+### Changing mattermost username
+
+The username of the mattermost puppet of a real matrix user is set when the
+puppet is created, and not modified afterwards. A script is available to rename
+existing puppets. After building the repository, the script can be run via
+
+```
+node build/rename.js path/to/config old_username new_username
+```
+
 ### Town Square
 
 By design, every user in a team must join the Town Square room. If a matrix

@@ -32,6 +32,11 @@ const cli = new Cli({
     bridgeConfig: {
         schema: path.join(__dirname, '../config/mattermost-config-schema.yaml'),
         affectsRegistration: true,
+        defaults: {
+            matrix_localpart_suffix: 'mm_',
+            matrix_display_name_template: '[DISPLAY]',
+            mattermost_username_template: '[DISPLAY]',
+        },
     },
     async run(port: number, config: Config, registration: any) {
         log.setLevel(config.logging);

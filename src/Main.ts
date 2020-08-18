@@ -74,7 +74,7 @@ export default class Main {
 
         this.ws.on('close', () => {
             log.error('Mattermost websocket closed. Shutting down bridge');
-            this.killBridge();
+            this.killBridge().then(() => process.exit(1));
         });
     }
 
@@ -119,6 +119,7 @@ export default class Main {
         if (this.channelsByMattermost.size === 0) {
             log.info('No channels bridged successfully. Shutting down bridge.');
             await this.killBridge();
+            process.exit(0);
         }
 
         this.mattermostMutex.unlock();
@@ -138,9 +139,8 @@ export default class Main {
                 this.bridge.appService.close(),
             ]);
         } catch (e) {
-            log.error(`Failed to kill bridge: ${e}. exiting anyway`);
+            log.error(`Failed to kill bridge: ${e}. Exiting anyway`);
         }
-        process.exit(1);
     }
 
     async updateBotProfile() {

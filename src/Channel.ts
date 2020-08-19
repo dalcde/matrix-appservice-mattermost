@@ -363,7 +363,7 @@ export default class Channel {
                     .sendTyping(this.matrixRoom, true, 6000)
                     .catch(e =>
                         log.warn(
-                            `Error sending typing notification to ${this.matrixRoom}: ${e}`,
+                            `Error sending typing notification to ${this.matrixRoom}\n${e.stack}`,
                         ),
                     );
             }
@@ -430,7 +430,7 @@ export default class Channel {
                 .sendTyping(this.matrixRoom, false)
                 .catch(e =>
                     log.warn(
-                        `Error sending typing notification to ${this.matrixRoom}: ${e}`,
+                        `Error sending typing notification to ${this.matrixRoom}\n${e.stack}`,
                     ),
                 );
         },
@@ -450,7 +450,7 @@ export default class Channel {
                 .sendTyping(this.matrixRoom, false)
                 .catch(e =>
                     log.warn(
-                        `Error sending typing notification to ${this.matrixRoom}: ${e}`,
+                        `Error sending typing notification to ${this.matrixRoom}\n${e.stack}`,
                     ),
                 );
         },

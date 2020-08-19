@@ -65,7 +65,7 @@ async function run(argv: string[]) {
             username: newName,
         });
     } catch (e) {
-        log.error(`Failed to change username: ${e}`);
+        log.error(`Failed to change username\n${e.stack}`);
         process.exit(1);
     }
     log.info('Updating database');

@@ -69,7 +69,9 @@ export default class Main {
         this.ws.on('message', m => this.onMattermostMessage(m));
 
         this.ws.on('error', e => {
-            log.error(`Error when initializing websocket connection: ${e}`);
+            log.error(
+                `Error when initializing websocket connection ${e.stack}`,
+            );
         });
 
         this.ws.on('close', () => {
@@ -81,7 +83,7 @@ export default class Main {
     async init() {
         log.time.info('Bridge initialized');
         const botProfile = this.updateBotProfile().catch(e =>
-            log.warn(`Error when updating bot profile: ${e}`),
+            log.warn(`Error when updating bot profile\n${e.stack}`),
         );
 
         await Promise.all([
@@ -105,7 +107,7 @@ export default class Main {
                     })
                     .catch(e => {
                         log.error(
-                            `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}: ${e}`,
+                            `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}\n${e.stack}`,
                         );
                         this.channelsByMattermost.delete(
                             channel.mattermostChannel,
@@ -139,7 +141,7 @@ export default class Main {
                 this.bridge.appService.close(),
             ]);
         } catch (e) {
-            log.error(`Failed to kill bridge: ${e}. Exiting anyway`);
+            log.error(`Failed to kill bridge. Exiting anyway\n${e.stack}`);
         }
     }
 
@@ -210,7 +212,7 @@ export default class Main {
                 log.debug(`Unkown event type: ${m.event}`);
             }
         } catch (e) {
-            log.warn(`Error when processing mattermost message: ${e}`);
+            log.warn(`Error when processing mattermost message\n${e.stack}`);
         }
         log.timeEnd.debug('Process mattermost message');
 
@@ -245,7 +247,7 @@ export default class Main {
                 log.debug(`Message for unknown room: ${event.room_id}`);
             }
         } catch (e) {
-            log.warn(`Error when processing matrix event: ${e}`);
+            log.warn(`Error when processing matrix event\n${e.stack}`);
         }
         log.timeEnd.debug('Process matrix message');
 

@@ -1,3 +1,9 @@
+# Unreleased
+
+Bug fixes:
+
+- Return correct error code when killed
+
 # 0.1.1 (2020-08-16)
 
 Bug fixes:

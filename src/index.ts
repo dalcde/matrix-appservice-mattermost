@@ -56,11 +56,11 @@ const cli = new Cli({
 
         process.on('SIGTERM', () => {
             log.info('Received SIGTERM. Shutting down bridge.');
-            main.killBridge(143);
+            main.killBridge(0);
         });
         process.on('SIGINT', () => {
             log.info('Received SIGINT. Shutting down bridge.');
-            main.killBridge(130);
+            main.killBridge(0);
         });
     },
 });

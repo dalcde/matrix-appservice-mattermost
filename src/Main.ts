@@ -139,10 +139,11 @@ export default class Main {
                 this.ws.close(),
                 this.bridge.appService.close(),
             ]);
+            process.exit(exitCode);
         } catch (e) {
             log.error(`Failed to kill bridge. Exiting anyway\n${e.stack}`);
+            process.exit(1);
         }
-        process.exit(exitCode);
     }
 
     async updateBotProfile() {

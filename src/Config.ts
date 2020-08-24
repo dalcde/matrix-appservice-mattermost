@@ -45,3 +45,5 @@ export interface Config {
     ignored_matrix_users: string[];
     mattermost_email_template: string;
 }
+
+export const RELOADABLE_CONFIG: Set<string> = new Set(['logging']);

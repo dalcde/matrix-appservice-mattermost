@@ -1,6 +1,7 @@
 import { Bridge, AppServiceRegistration } from 'matrix-appservice-bridge';
 import { Client, Method, ClientWebsocket } from './mattermost/Client';
-import { Config, config } from './Config';
+import { Config, setConfig, config, RELOADABLE_CONFIG } from './Config';
+import { deepEqual } from './utils/Functions';
 import { User } from './entities/User';
 import MatrixUserStore from './MatrixUserStore';
 import MattermostUserStore from './MattermostUserStore';
@@ -143,6 +144,19 @@ export default class Main {
         } catch (e) {
             log.error(`Failed to kill bridge. Exiting anyway\n${e.stack}`);
             process.exit(1);
+        }
+    }
+
+    async updateConfig(oldConfig: Config, newConfig: Config) {
+        for (let key of Object.keys(oldConfig)) {
+            if (
+                !RELOADABLE_CONFIG.has(key) &&
+                !deepEqual(oldConfig[key], newConfig[key])
+            ) {
+                log.error('Cannot hot reload config ');
+            }
+            log.setLevel(newConfig.logging);
+            setConfig(newConfig);
         }
     }
 

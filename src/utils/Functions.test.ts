@@ -6,6 +6,7 @@ import {
     localpart,
     sanitizeMattermostUsername,
     uniq,
+    deepEqual,
 } from './Functions';
 
 test('remove', t => {
@@ -66,5 +67,15 @@ test('sanitizeMattermostUsername', t => {
 
 test('uniq', t => {
     t.deepEqual(uniq(['5', '2', '2', '3', '4', '5']), ['5', '2', '3', '4']);
+    t.end();
+});
+
+test('deepEqual', t => {
+    t.true(deepEqual({ x: 3, y: 5 }, { y: 5, x: 3 }));
+    t.true(deepEqual({ x: 3, y: { z: 5 } }, { y: { z: 5 }, x: 3 }));
+    t.true(deepEqual('a', 'a'));
+    t.true(deepEqual([1, 3, 'a'], [1, 3, 'a']));
+    t.false(deepEqual({ x: 3, y: 5 }, { y: 5, x: '3' }));
+    t.false(deepEqual([1, 3, 'a'], ['a', 1, 3]));
     t.end();
 });

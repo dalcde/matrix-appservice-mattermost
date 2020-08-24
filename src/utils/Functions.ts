@@ -1,5 +1,6 @@
 import { Post } from '../entities/Post';
 import { ClientError } from '../mattermost/Client';
+import * as assert from 'assert';
 
 export function remove<T>(a: T[], x: T) {
     const index = a.indexOf(x, 0);
@@ -83,5 +84,14 @@ export async function handlePostError(e: any, postid: string) {
         await Post.removeAll(postid);
     } else {
         throw e;
+    }
+}
+
+export function deepEqual(a: any, b: any) {
+    try {
+        assert.deepStrictEqual(a, b);
+        return true;
+    } catch (e) {
+        return false;
     }
 }

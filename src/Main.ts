@@ -80,6 +80,19 @@ export default class Main {
         this.mattermostUserStore = new MattermostUserStore(this);
         this.matrixUserStore = new MatrixUserStore(this);
         for (let map of config().mappings) {
+            if (this.mappingsByMattermost.has(map.mattermost)) {
+                log.error(
+                    `Mattermost channel ${map.mattermost} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
+                );
+                continue;
+            }
+            if (this.mappingsByMatrix.has(map.matrix)) {
+                log.error(
+                    `Matrix channel ${map.matrix} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
+                );
+                continue;
+            }
+
             const channel = new Channel(this, map.matrix, map.mattermost);
             this.channelsByMattermost.set(map.mattermost, channel);
             this.channelsByMatrix.set(map.matrix, channel);

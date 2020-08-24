@@ -3,6 +3,7 @@
 Bug fixes:
 
 - Return correct error code when killed
+- Don't allow bridging the same channel or room twice
 
 New features:
 

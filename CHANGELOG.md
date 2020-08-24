@@ -8,6 +8,7 @@ New features:
 
 - Improve error logging by printing stack trace
 - Mattermost bot should reject direct messages too
+- Leave channels when removed from bridge
 
 # 0.1.1 (2020-08-16)
 

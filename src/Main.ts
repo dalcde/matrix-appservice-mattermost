@@ -119,6 +119,8 @@ export default class Main {
         }
         await Promise.all(promises);
 
+        await this.leaveUnbridgedChannels();
+
         if (this.channelsByMattermost.size === 0) {
             log.info('No channels bridged successfully. Shutting down bridge.');
             await this.killBridge(0);
@@ -129,6 +131,95 @@ export default class Main {
 
         await botProfile;
         log.timeEnd.info('Bridge initialized');
+    }
+
+    async leaveUnbridgedChannels() {
+        const mattermostChannels: Set<string> = new Set();
+        const matrixRooms: Set<string> = new Set();
+        for (let map of config().mappings) {
+            mattermostChannels.add(map.mattermost);
+            matrixRooms.add(map.matrix);
+        }
+
+        await Promise.all([
+            this.leaveUnbridgedMattermostChannels(mattermostChannels),
+            this.leaveUnbridgedMatrixRooms(matrixRooms),
+        ]);
+    }
+
+    async leaveUnbridgedMatrixRooms(bridged: Set<string>) {
+        const bot = this.bridge.getBot();
+        const botIntent = this.bridge.getIntent();
+        const rooms = await bot.getJoinedRooms();
+
+        await Promise.all(
+            rooms.map(async room => {
+                if (bridged.has(room)) {
+                    return;
+                }
+                const members = Object.keys(
+                    (await botIntent.client.getJoinedRoomMembers(room)).joined,
+                );
+                await Promise.all(
+                    members.map(async userid => {
+                        if (bot.isRemoteUser(userid)) {
+                            await this.bridge.getIntent(userid).leave(room);
+                        }
+                    }),
+                );
+                await botIntent.leave(room);
+            }),
+        );
+    }
+
+    async leaveUnbridgedMattermostChannels(bridged: Set<string>) {
+        const mattermostTeams = await this.client.get(
+            `/users/${this.client.userid}/teams`,
+        );
+
+        const leaveMattermost = async (type: string, id: string) => {
+            const members = await this.client.get(
+                `/${type}s/${id}/members?page=0&per_page=10000`,
+            );
+            await Promise.all(
+                members.map(async member => {
+                    const user = await this.getPuppetMatrixUser(member.user_id);
+                    if (user !== null) {
+                        await user.client.delete(
+                            `/${type}s/${id}/members/${member.user_id}`,
+                        );
+                    }
+                }),
+            );
+            await this.client.delete(
+                `/${type}s/${id}/members/${this.client.userid}`,
+            );
+        };
+
+        await Promise.all(
+            mattermostTeams.map(async team => {
+                const teamId = team.id;
+                const channels = await this.client.get(
+                    `/users/${this.client.userid}/teams/${teamId}/channels`,
+                );
+
+                if (!channels.some(c => bridged.has(c.id))) {
+                    await leaveMattermost('team', teamId);
+                    return;
+                }
+
+                for (const channel of channels) {
+                    if (bridged.has(channel.id)) {
+                        continue;
+                    }
+                    if (channel.name === 'town-square') {
+                        // cannot leave town square
+                        continue;
+                    }
+                    await leaveMattermost('channel', channel.id);
+                }
+            }),
+        );
     }
 
     async killBridge(exitCode: number) {
@@ -272,14 +363,25 @@ export default class Main {
         this.matrixMutex.unlock();
     }
 
-    async isMattermostUser(userid): Promise<boolean> {
-        if (this.matrixUserStore.byMattermostUserId.get(userid) !== undefined) {
-            return false;
+    async isMattermostUser(userid: string): Promise<boolean> {
+        return (await this.getPuppetMatrixUser(userid)) === null;
+    }
+
+    async getPuppetMatrixUser(mattermostUserId: string): Promise<User | null> {
+        const cached = this.matrixUserStore.byMattermostUserId.get(
+            mattermostUserId,
+        );
+        if (cached !== undefined) {
+            return cached;
         }
         const response = await User.findOne({
-            mattermost_userid: userid,
+            mattermost_userid: mattermostUserId,
         });
-        return response === undefined || response.is_matrix_user === false;
+        if (response === undefined || response.is_matrix_user === false) {
+            return null;
+        } else {
+            return response;
+        }
     }
 
     skipMattermostUser(userid: string): boolean {

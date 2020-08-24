@@ -6,12 +6,19 @@ import { MatrixMessage } from './Interfaces';
 import { uniq, handlePostError } from './utils/Functions';
 import { mattermostToMatrix, constructMatrixReply } from './utils/Formatting';
 
+interface Metadata {
+    replyTo?: {
+        matrix: string;
+        mattermost: string;
+    };
+}
+
 async function sendMatrixMessage(
     intent: Intent,
     room: string,
     postid: string,
     message: MatrixMessage,
-    metadata: { replyTo?: { matrix: string; mattermost: string } },
+    metadata: Metadata,
 ) {
     let rootid = postid;
     if (metadata.replyTo !== undefined) {
@@ -39,7 +46,7 @@ const MattermostPostHandlers = {
         this: Channel,
         intent: Intent,
         post: any,
-        metadata: { replyTo?: { matrix: string; mattermost: string } },
+        metadata: Metadata,
     ) {
         await sendMatrixMessage(
             intent,
@@ -100,7 +107,7 @@ const MattermostPostHandlers = {
         this: Channel,
         intent: Intent,
         post: any,
-        metadata: { replyTo?: { matrix: string; mattermost: string } },
+        metadata: Metadata,
     ) {
         await sendMatrixMessage(
             intent,
@@ -134,9 +141,7 @@ const MattermostHandlers = {
         if (intent === undefined) {
             return;
         }
-        const metadata: {
-            replyTo?: { matrix: string; mattermost: string };
-        } = {};
+        const metadata: Metadata = {};
         if (post.root_id !== '') {
             try {
                 const threadResponse = await this.main.client.get(

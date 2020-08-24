@@ -7,11 +7,15 @@ import { matrixToMattermost } from './utils/Formatting';
 import log from './Logging';
 import fetch from 'node-fetch';
 
+interface Metadata {
+    edits?: string;
+    root_id?: string;
+}
 async function uploadFile(
     this: Channel,
     user: User,
     event: any,
-    metadata: { edits?: string; root_id?: string },
+    metadata: Metadata,
 ) {
     const mxc = event.content.url;
 
@@ -57,7 +61,7 @@ const MatrixMessageHandlers = {
         this: Channel,
         user: User,
         event: any,
-        metadata: { edits?: string; root_id?: string },
+        metadata: Metadata,
     ) {
         if (metadata.edits) {
             try {
@@ -86,7 +90,7 @@ const MatrixMessageHandlers = {
         this: Channel,
         user: User,
         event: any,
-        metadata: { edits?: string; root_id?: string },
+        metadata: Metadata,
     ) {
         if (metadata.edits) {
             const content = await matrixToMattermost(
@@ -193,7 +197,7 @@ const MatrixHandlers = {
         }
 
         const relatesTo = event.content['m.relates_to'];
-        const metadata: { edits?: string; root_id?: string } = {};
+        const metadata: Metadata = {};
         if (relatesTo !== undefined) {
             if (relatesTo.rel_type === 'm.replace') {
                 const post = await Post.findOne({

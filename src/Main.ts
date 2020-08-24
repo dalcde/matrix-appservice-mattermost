@@ -1,6 +1,12 @@
 import { Bridge, AppServiceRegistration } from 'matrix-appservice-bridge';
 import { Client, Method, ClientWebsocket } from './mattermost/Client';
-import { Config, setConfig, config, RELOADABLE_CONFIG } from './Config';
+import {
+    Config,
+    Mapping,
+    setConfig,
+    config,
+    RELOADABLE_CONFIG,
+} from './Config';
 import { deepEqual } from './utils/Functions';
 import { User } from './entities/User';
 import MatrixUserStore from './MatrixUserStore';
@@ -14,9 +20,16 @@ export default class Main {
     readonly ws: ClientWebsocket;
     readonly mattermostUserStore: MattermostUserStore;
     readonly matrixUserStore: MatrixUserStore;
+
+    // Channels include successfully bridge channels.
     readonly channelsByMattermost: Map<string, Channel>;
     readonly channelsByMatrix: Map<string, Channel>;
     readonly channelsByTeam: Map<string, Channel[]>;
+
+    // Mappings are ones that are specified in the config file
+    readonly mappingsByMattermost: Map<string, Mapping>;
+    readonly mappingsByMatrix: Map<string, Mapping>;
+
     readonly bridge: Bridge;
     mattermostMutex: Mutex;
     matrixMutex: Mutex;
@@ -58,6 +71,10 @@ export default class Main {
         this.channelsByMatrix = new Map();
         this.channelsByMattermost = new Map();
         this.channelsByTeam = new Map();
+
+        this.mappingsByMatrix = new Map();
+        this.mappingsByMattermost = new Map();
+
         this.mattermostMutex = new Mutex();
         this.matrixMutex = new Mutex();
         this.mattermostUserStore = new MattermostUserStore(this);
@@ -66,6 +83,9 @@ export default class Main {
             const channel = new Channel(this, map.matrix, map.mattermost);
             this.channelsByMattermost.set(map.mattermost, channel);
             this.channelsByMatrix.set(map.matrix, channel);
+
+            this.mappingsByMattermost.set(map.mattermost, map);
+            this.mappingsByMatrix.set(map.matrix, map);
         }
         this.ws.on('message', m => this.onMattermostMessage(m));
 
@@ -134,27 +154,20 @@ export default class Main {
     }
 
     async leaveUnbridgedChannels() {
-        const mattermostChannels: Set<string> = new Set();
-        const matrixRooms: Set<string> = new Set();
-        for (let map of config().mappings) {
-            mattermostChannels.add(map.mattermost);
-            matrixRooms.add(map.matrix);
-        }
-
         await Promise.all([
-            this.leaveUnbridgedMattermostChannels(mattermostChannels),
-            this.leaveUnbridgedMatrixRooms(matrixRooms),
+            this.leaveUnbridgedMattermostChannels(),
+            this.leaveUnbridgedMatrixRooms(),
         ]);
     }
 
-    async leaveUnbridgedMatrixRooms(bridged: Set<string>) {
+    async leaveUnbridgedMatrixRooms() {
         const bot = this.bridge.getBot();
         const botIntent = this.bridge.getIntent();
         const rooms = await bot.getJoinedRooms();
 
         await Promise.all(
             rooms.map(async room => {
-                if (bridged.has(room)) {
+                if (this.mappingsByMatrix.has(room)) {
                     return;
                 }
                 const members = Object.keys(
@@ -172,7 +185,7 @@ export default class Main {
         );
     }
 
-    async leaveUnbridgedMattermostChannels(bridged: Set<string>) {
+    async leaveUnbridgedMattermostChannels() {
         const mattermostTeams = await this.client.get(
             `/users/${this.client.userid}/teams`,
         );
@@ -203,13 +216,13 @@ export default class Main {
                     `/users/${this.client.userid}/teams/${teamId}/channels`,
                 );
 
-                if (!channels.some(c => bridged.has(c.id))) {
+                if (!channels.some(c => this.mappingsByMattermost.has(c.id))) {
                     await leaveMattermost('team', teamId);
                     return;
                 }
 
                 for (const channel of channels) {
-                    if (bridged.has(channel.id)) {
+                    if (this.mappingsByMattermost.has(channel.id)) {
                         continue;
                     }
                     if (channel.name === 'town-square') {

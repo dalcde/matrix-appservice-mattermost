@@ -10,10 +10,7 @@ export function setConfig(c: Config) {
 
 export interface Config {
     mattermost_url: string;
-    mappings: {
-        mattermost: string;
-        matrix: string;
-    }[];
+    mappings: Mapping[];
     appservice: {
         port: number;
         hostname: string;
@@ -46,4 +43,8 @@ export interface Config {
     mattermost_email_template: string;
 }
 
+export interface Mapping {
+    mattermost: string;
+    matrix: string;
+}
 export const RELOADABLE_CONFIG: Set<string> = new Set(['logging']);

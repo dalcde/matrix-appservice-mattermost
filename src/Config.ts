@@ -47,4 +47,8 @@ export interface Mapping {
     mattermost: string;
     matrix: string;
 }
-export const RELOADABLE_CONFIG: Set<string> = new Set(['logging']);
+export const RELOADABLE_CONFIG: Set<string> = new Set([
+    'logging',
+    'mattermost_email_template',
+    'mattermost_username_template',
+]);

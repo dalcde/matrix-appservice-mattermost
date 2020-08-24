@@ -7,6 +7,7 @@ Bug fixes:
 New features:
 
 - Improve error logging by printing stack trace
+- Mattermost bot should reject direct messages too
 
 # 0.1.1 (2020-08-16)
 

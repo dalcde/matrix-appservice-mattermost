@@ -239,6 +239,7 @@ export default class Main {
         log.time.debug('Process matrix message');
 
         try {
+            const bot = this.bridge.getBot();
             const event = request.getData();
             log.debug(`Matrix event: ${JSON.stringify(event)}`);
 
@@ -247,8 +248,10 @@ export default class Main {
                 await channel.onMatrixEvent(event);
             } else if (
                 event.type === 'm.room.member' &&
+                event.content.membership === 'invite' &&
                 event.state_key &&
-                this.bridge.getBot().isRemoteUser(event.state_key) &&
+                (event.state_key === bot.getUserId() ||
+                    bot.isRemoteUser(event.state_key)) &&
                 event.content.is_direct
             ) {
                 const intent = this.bridge.getIntent(event.state_key);
@@ -257,7 +260,7 @@ export default class Main {
                         'Private messaging is not supported for this bridged user',
                     msgtype: 'm.notice',
                 });
-                await intent.leave();
+                await intent.leave(event.room_id);
             } else {
                 log.debug(`Message for unknown room: ${event.room_id}`);
             }

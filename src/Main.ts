@@ -228,16 +228,18 @@ export default class Main {
                     return;
                 }
 
-                for (const channel of channels) {
-                    if (this.mappingsByMattermost.has(channel.id)) {
-                        continue;
-                    }
-                    if (channel.name === 'town-square') {
-                        // cannot leave town square
-                        continue;
-                    }
-                    await leaveMattermost('channel', channel.id);
-                }
+                await Promise.all(
+                    channels.map(async channel => {
+                        if (this.mappingsByMattermost.has(channel.id)) {
+                            return;
+                        }
+                        if (channel.name === 'town-square') {
+                            // cannot leave town square
+                            return;
+                        }
+                        await leaveMattermost('channel', channel.id);
+                    }),
+                );
             }),
         );
     }

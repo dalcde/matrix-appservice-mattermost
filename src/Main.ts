@@ -125,32 +125,26 @@ export default class Main {
             this.matrixMutex.lock(),
         ]);
 
-        const promises: Promise<void>[] = [];
-        for (let channel of this.channelsByMattermost.values()) {
-            promises.push(
-                channel
-                    .syncChannel()
-                    .then(() => channel.getTeam())
-                    .then(team => {
-                        const channels = this.channelsByTeam.get(team);
-                        if (channels === undefined) {
-                            this.channelsByTeam.set(team, [channel]);
-                        } else {
-                            channels.push(channel);
-                        }
-                    })
-                    .catch(e => {
-                        log.error(
-                            `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}\n${e.stack}`,
-                        );
-                        this.channelsByMattermost.delete(
-                            channel.mattermostChannel,
-                        );
-                        this.channelsByMatrix.delete(channel.matrixRoom);
-                    }),
-            );
-        }
-        await Promise.all(promises);
+        await Promise.all(
+            Array.from(this.channelsByMattermost, async ([id, channel]) => {
+                try {
+                    await channel.syncChannel();
+                    const team = await channel.getTeam();
+                    const channels = this.channelsByTeam.get(team);
+                    if (channels === undefined) {
+                        this.channelsByTeam.set(team, [channel]);
+                    } else {
+                        channels.push(channel);
+                    }
+                } catch (e) {
+                    log.error(
+                        `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}\n${e.stack}`,
+                    );
+                    this.channelsByMattermost.delete(channel.mattermostChannel);
+                    this.channelsByMatrix.delete(channel.matrixRoom);
+                }
+            }),
+        );
 
         await this.leaveUnbridgedChannels();
 
@@ -329,17 +323,16 @@ export default class Main {
                     );
                 }
             } else if (m.broadcast.team_id !== '') {
-                const channels = await this.client.get(
-                    `/teams/${m.broadcast.team_id}/channels`,
-                );
-                const promises: Promise<void>[] = [];
-                for (const channel of channels) {
-                    const c = this.channelsByMattermost.get(channel.id);
-                    if (c !== undefined) {
-                        promises.push(c.onMattermostMessage(m));
-                    }
+                const channels = this.channelsByTeam.get(m.broadcast.team_id);
+                if (channels === undefined) {
+                    log.debug(
+                        `Message for unknown team: ${m.broadcast.team_id}`,
+                    );
+                } else {
+                    await Promise.all(
+                        channels.map(c => c.onMattermostMessage(m)),
+                    );
                 }
-                await Promise.all(promises);
             } else {
                 log.debug(`Unkown event type: ${m.event}`);
             }

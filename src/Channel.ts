@@ -126,56 +126,45 @@ export default class Channel {
         const ignoredMatrixUsers = config().ignored_matrix_users;
         const ignoredMattermostUsers = config().ignored_matrix_users;
 
-        const promises: Promise<void>[] = [];
-        for (const matrix_userid of matrixUsers.real) {
-            if (this.main.skipMatrixUser(matrix_userid)) {
-                continue;
-            }
-            promises.push(
-                this.main.matrixUserStore
-                    .getOrCreate(matrix_userid, true)
-                    .then(user => {
-                        mattermostUsers.delete(user.mattermost_userid);
-                        return this.joinMattermost(user.mattermost_userid);
-                    }),
-            );
-        }
-        await Promise.all(promises);
-        promises.length = 0;
+        await Promise.all(
+            Array.from(matrixUsers.real, async matrix_userid => {
+                if (this.main.skipMatrixUser(matrix_userid)) {
+                    return;
+                }
+                const user = await this.main.matrixUserStore.getOrCreate(
+                    matrix_userid,
+                    true,
+                );
+                mattermostUsers.delete(user.mattermost_userid);
+                await this.joinMattermost(user.mattermost_userid);
+            }),
+        );
 
-        for (const userid of mattermostUsers) {
-            if (this.main.skipMattermostUser(userid)) {
-                continue;
-            }
-            promises.push(
-                (async () => {
-                    if (!(await this.main.isMattermostUser(userid))) {
-                        this.leaveMattermost(userid);
-                    } else {
-                        const user = await this.main.mattermostUserStore.getOrCreate(
-                            userid,
-                            true,
-                        );
-                        matrixUsers.remote.delete(user.matrix_userid);
-                        const intent = bridge.getIntent(user.matrix_userid);
-                        await intent.join(this.matrixRoom);
-                    }
-                })(),
-            );
-        }
+        await Promise.all(
+            Array.from(mattermostUsers, async userid => {
+                if (this.main.skipMattermostUser(userid)) {
+                    return;
+                }
+                if (!(await this.main.isMattermostUser(userid))) {
+                    this.leaveMattermost(userid);
+                } else {
+                    const user = await this.main.mattermostUserStore.getOrCreate(
+                        userid,
+                        true,
+                    );
+                    matrixUsers.remote.delete(user.matrix_userid);
+                    const intent = bridge.getIntent(user.matrix_userid);
+                    await intent.join(this.matrixRoom);
+                }
+            }),
+        );
 
-        await Promise.all(promises);
-        promises.length = 0;
-
-        for (const matrix_userid of matrixUsers.remote) {
-            promises.push(
-                (async () => {
-                    const intent = bridge.getIntent(matrix_userid);
-                    await intent.leave(this.matrixRoom);
-                })(),
-            );
-        }
-        await Promise.all(promises);
+        await Promise.all(
+            Array.from(matrixUsers.remote, async matrix_userid => {
+                const intent = bridge.getIntent(matrix_userid);
+                await intent.leave(this.matrixRoom);
+            }),
+        );
     }
 
     async onMattermostMessage(m: any) {
@@ -699,20 +688,18 @@ export default class Channel {
             const team = await this.getTeam();
             const channels = this.main.channelsByTeam.get(team) as Channel[];
 
-            const promises: Promise<boolean>[] = [];
-            for (const channel of channels) {
-                promises.push(
-                    bot.client
-                        .getJoinedRoomMembers(channel.matrixRoom)
-                        .then(members =>
-                            Object.keys(members.joined).includes(
-                                user.matrix_userid,
-                            ),
-                        ),
-                );
-            }
+            const joined = await Promise.all(
+                channels.map(async channel => {
+                    const members = await bot.client.getJoinedRoomMembers(
+                        channel.matrixRoom,
+                    );
+                    return Object.keys(members.joined).includes(
+                        user.matrix_userid,
+                    );
+                }),
+            );
 
-            if (!(await Promise.all(promises)).some(x => x)) {
+            if (!joined.some(x => x)) {
                 await user.client.delete(
                     `/teams/${team}/members/${user.mattermost_userid}`,
                 );

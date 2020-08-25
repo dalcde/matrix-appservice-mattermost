@@ -5,6 +5,7 @@ import { ClientError } from './mattermost/Client';
 import { handlePostError, none } from './utils/Functions';
 import { matrixToMattermost } from './utils/Formatting';
 import { MatrixEvent } from './Interfaces';
+import * as FormData from 'form-data';
 import log from './Logging';
 import fetch from 'node-fetch';
 
@@ -28,8 +29,7 @@ async function uploadFile(
         throw new Error(`Downloaded empty file: ${mxc}`);
     }
 
-    // FormData doesn't type very well
-    const form: any = new FormData();
+    const form = new FormData();
     form.append('files', body.body, {
         filename: event.content.body,
         contentType: event.content.info?.mimetype,

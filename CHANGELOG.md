@@ -11,6 +11,10 @@ New features:
 - Mattermost bot should reject direct messages too
 - Leave channels when removed from bridge
 
+Others:
+
+- Code cleanup and use eslint
+
 # 0.1.1 (2020-08-16)
 
 Bug fixes:

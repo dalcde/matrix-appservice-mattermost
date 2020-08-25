@@ -1,12 +1,8 @@
-import { Intent, Bridge } from 'matrix-appservice-bridge';
 import { User } from './entities/User';
-import { getManager } from 'typeorm';
-import log from './Logging';
 import Mutex from './utils/Mutex';
 import Main from './Main';
 import { localpart, sanitizeMattermostUsername } from './utils/Functions';
 import { config } from './Config';
-import { Client } from './mattermost/Client';
 import { findFirstAvailable } from './utils/Functions';
 
 export default class MatrixUserStore {
@@ -19,7 +15,7 @@ export default class MatrixUserStore {
         this.byMattermostUserId = new Map();
     }
 
-    public get(matrix_userid): User | undefined {
+    public get(matrix_userid: string): User | undefined {
         return this.byMatrixUserId.get(matrix_userid);
     }
 
@@ -96,7 +92,7 @@ export default class MatrixUserStore {
         return user;
     }
 
-    async updateUser(user: User) {
+    async updateUser(user: User): Promise<void> {
         let displayname = localpart(user.matrix_userid);
 
         try {

@@ -2,8 +2,8 @@ import Channel from './Channel';
 import { Intent } from 'matrix-appservice-bridge';
 import { Post } from './entities/Post';
 import log from './Logging';
-import { MatrixMessage } from './Interfaces';
-import { uniq, handlePostError } from './utils/Functions';
+import { MattermostMessage, MatrixMessage } from './Interfaces';
+import { uniq, handlePostError, none } from './utils/Functions';
 import { mattermostToMatrix, constructMatrixReply } from './utils/Formatting';
 
 interface Metadata {
@@ -127,7 +127,10 @@ const MattermostPostHandlers = {
 };
 
 const MattermostHandlers = {
-    posted: async function (this: Channel, m: any) {
+    posted: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         const post = JSON.parse(m.data.post);
         if (post.type.startsWith('system_')) {
             return;
@@ -172,7 +175,10 @@ const MattermostHandlers = {
             log.debug(`Unknown post type: ${post.type}`);
         }
     },
-    post_edited: async function (this: Channel, m: any) {
+    post_edited: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         const post = JSON.parse(m.data.post);
         if (!(await this.main.isMattermostUser(post.user_id))) {
             return;
@@ -204,7 +210,10 @@ const MattermostHandlers = {
         }
         await intent.sendMessage(this.matrixRoom, msg);
     },
-    post_deleted: async function (this: Channel, m: any) {
+    post_deleted: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         // See the README for details on the logic.
         const post = JSON.parse(m.data.post);
 
@@ -223,28 +232,43 @@ const MattermostHandlers = {
         }
         await Promise.all(promises);
     },
-    user_added: async function (this: Channel, m: any) {
+    user_added: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         const intent = await this.main.mattermostUserStore.getOrCreateIntent(
             m.data.user_id,
         );
         await intent.join(this.matrixRoom);
     },
-    user_removed: async function (this: Channel, m: any) {
+    user_removed: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         const intent = this.main.mattermostUserStore.getIntent(m.data.user_id);
         if (intent !== undefined) {
             await intent.leave(this.matrixRoom);
         }
     },
-    user_updated: async function (this: Channel, m: any) {
+    user_updated: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         const user = await this.main.mattermostUserStore.get(m.data.user.id);
         if (user !== undefined) {
             this.main.mattermostUserStore.updateUser(m.data.user, user);
         }
     },
-    leave_team: async function (this: Channel, m: any) {
+    leave_team: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         await MattermostHandlers.user_removed.bind(this)(m);
     },
-    typing: async function (this: Channel, m: any) {
+    typing: async function (
+        this: Channel,
+        m: MattermostMessage,
+    ): Promise<void> {
         const intent = this.main.mattermostUserStore.getIntent(m.data.user_id);
         if (intent !== undefined) {
             intent.client
@@ -256,6 +280,6 @@ const MattermostHandlers = {
                 );
         }
     },
-    channel_viewed: () => {},
+    channel_viewed: none,
 };
 export default MattermostHandlers;

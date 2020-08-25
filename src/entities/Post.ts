@@ -24,7 +24,7 @@ export class Post extends BaseEntity {
     @Column('character', { length: '26' })
     rootid!: string;
 
-    static async removeAll(postid: string) {
+    static async removeAll(postid: string): Promise<void> {
         await getConnection()
             .createQueryBuilder()
             .delete()

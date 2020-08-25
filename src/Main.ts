@@ -1,5 +1,9 @@
-import { Bridge, AppServiceRegistration } from 'matrix-appservice-bridge';
-import { Client, Method, ClientWebsocket } from './mattermost/Client';
+import {
+    Bridge,
+    AppServiceRegistration,
+    Request,
+} from 'matrix-appservice-bridge';
+import { Client, ClientWebsocket } from './mattermost/Client';
 import {
     Config,
     Mapping,
@@ -7,8 +11,9 @@ import {
     config,
     RELOADABLE_CONFIG,
 } from './Config';
-import { deepEqual } from './utils/Functions';
+import { deepEqual, none } from './utils/Functions';
 import { User } from './entities/User';
+import { MattermostMessage } from './Interfaces';
 import MatrixUserStore from './MatrixUserStore';
 import MattermostUserStore from './MattermostUserStore';
 import Channel from './Channel';
@@ -40,7 +45,7 @@ export default class Main {
             domain: config().homeserver.server_name,
             registration,
             controller: {
-                onUserQuery: queriedUser => {
+                onUserQuery: () => {
                     return {};
                 },
                 onEvent: request => {
@@ -79,7 +84,7 @@ export default class Main {
         this.matrixMutex = new Mutex();
         this.mattermostUserStore = new MattermostUserStore(this);
         this.matrixUserStore = new MatrixUserStore(this);
-        for (let map of config().mappings) {
+        for (const map of config().mappings) {
             if (this.mappingsByMattermost.has(map.mattermost)) {
                 log.error(
                     `Mattermost channel ${map.mattermost} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
@@ -114,7 +119,7 @@ export default class Main {
         });
     }
 
-    async init() {
+    async init(): Promise<void> {
         log.time.info('Bridge initialized');
         const botProfile = this.updateBotProfile().catch(e =>
             log.warn(`Error when updating bot profile\n${e.stack}`),
@@ -126,7 +131,7 @@ export default class Main {
         ]);
 
         await Promise.all(
-            Array.from(this.channelsByMattermost, async ([id, channel]) => {
+            Array.from(this.channelsByMattermost, async ([, channel]) => {
                 try {
                     await channel.syncChannel();
                     const team = await channel.getTeam();
@@ -160,14 +165,14 @@ export default class Main {
         log.timeEnd.info('Bridge initialized');
     }
 
-    async leaveUnbridgedChannels() {
+    async leaveUnbridgedChannels(): Promise<void> {
         await Promise.all([
             this.leaveUnbridgedMattermostChannels(),
             this.leaveUnbridgedMatrixRooms(),
         ]);
     }
 
-    async leaveUnbridgedMatrixRooms() {
+    async leaveUnbridgedMatrixRooms(): Promise<void> {
         const bot = this.bridge.getBot();
         const botIntent = this.bridge.getIntent();
         const rooms = await bot.getJoinedRooms();
@@ -192,7 +197,7 @@ export default class Main {
         );
     }
 
-    async leaveUnbridgedMattermostChannels() {
+    async leaveUnbridgedMattermostChannels(): Promise<void> {
         const mattermostTeams = await this.client.get(
             `/users/${this.client.userid}/teams`,
         );
@@ -244,7 +249,7 @@ export default class Main {
         );
     }
 
-    async killBridge(exitCode: number) {
+    async killBridge(exitCode: number): Promise<never> {
         try {
             // Otherwise, closing the websocket connection will initiate
             // the shutdown sequence again.
@@ -260,8 +265,8 @@ export default class Main {
         }
     }
 
-    async updateConfig(oldConfig: Config, newConfig: Config) {
-        for (let key of Object.keys(oldConfig)) {
+    async updateConfig(oldConfig: Config, newConfig: Config): Promise<void> {
+        for (const key of Object.keys(oldConfig)) {
             if (
                 !RELOADABLE_CONFIG.has(key) &&
                 !deepEqual(oldConfig[key], newConfig[key])
@@ -273,7 +278,7 @@ export default class Main {
         }
     }
 
-    async updateBotProfile() {
+    async updateBotProfile(): Promise<void> {
         const intent = this.bridge.getIntent();
         // The bot believes itelf to always be registered, even when it isn't.
         // This part is copied from matrix-appservice-slack.
@@ -291,7 +296,7 @@ export default class Main {
         }
     }
 
-    async onMattermostMessage(m: any) {
+    async onMattermostMessage(m: MattermostMessage): Promise<void> {
         await this.mattermostMutex.lock();
         log.time.debug('Process mattermost message');
 
@@ -346,7 +351,7 @@ export default class Main {
         this.mattermostMutex.unlock();
     }
 
-    async onMatrixEvent(request) {
+    async onMatrixEvent(request: Request): Promise<void> {
         await this.matrixMutex.lock();
         log.time.debug('Process matrix message');
 
@@ -421,20 +426,26 @@ export default class Main {
     }
 
     static readonly mattermostMessageHandlers = {
-        hello: () => {},
-        added_to_team: () => {},
-        new_user: () => {},
-        status_change: () => {},
-        channel_viewed: () => {},
-        preferences_changed: () => {},
-        sidebar_category_updated: () => {},
-        direct_added: async function (this: Main, m: any) {
+        hello: none,
+        added_to_team: none,
+        new_user: none,
+        status_change: none,
+        channel_viewed: none,
+        preferences_changed: none,
+        sidebar_category_updated: none,
+        direct_added: async function (
+            this: Main,
+            m: MattermostMessage,
+        ): Promise<void> {
             await this.client.post('/posts', {
                 channel_id: m.broadcast.channel_id,
                 message: 'This is a bot. You will not get a reply',
             });
         },
-        user_updated: async function (this: Main, m: any) {
+        user_updated: async function (
+            this: Main,
+            m: MattermostMessage,
+        ): Promise<void> {
             const user = this.mattermostUserStore.get(m.data.user.id);
             if (user !== undefined) {
                 await this.mattermostUserStore.updateUser(m.data.user, user);

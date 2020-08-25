@@ -1,6 +1,5 @@
 console.time('Bridge loaded');
-import { Bridge, Cli, AppServiceRegistration } from 'matrix-appservice-bridge';
-import { Client } from './mattermost/Client';
+import { Cli, AppServiceRegistration } from 'matrix-appservice-bridge';
 import log from './Logging';
 import { setConfig, Config } from './Config';
 import { createConnection } from 'typeorm';

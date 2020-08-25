@@ -1,8 +1,7 @@
-import { Bridge } from 'matrix-appservice-bridge';
 import { ClientError } from './mattermost/Client';
+import { MatrixEvent, MattermostMessage } from './Interfaces';
 import log from './Logging';
 import Main from './Main';
-import { config } from './Config';
 import MatrixHandlers from './MatrixHandler';
 import MattermostHandlers from './MattermostHandler';
 
@@ -49,7 +48,7 @@ export default class Channel {
             `/channels/${this.mattermostChannel}/members?page=0&per_page=${MAX_MEMBERS}`,
         );
 
-        for (let member of query) {
+        for (const member of query) {
             mattermostUsers.add(member.user_id);
         }
         return mattermostUsers;
@@ -66,7 +65,7 @@ export default class Channel {
         return this.team;
     }
 
-    async joinMattermost(userid: string) {
+    async joinMattermost(userid: string): Promise<void> {
         const team = await this.getTeam();
         try {
             await this.main.client.post(`/teams/${team}/members`, {
@@ -82,7 +81,7 @@ export default class Channel {
         );
     }
 
-    async leaveMattermost(userid: string) {
+    async leaveMattermost(userid: string): Promise<void> {
         try {
             await this.main.client.delete(
                 `/channels/${this.mattermostChannel}/members/${userid}`,
@@ -113,9 +112,6 @@ export default class Channel {
             this.getMatrixUsers(),
             this.getMattermostUsers(),
         ]);
-
-        const ignoredMatrixUsers = config().ignored_matrix_users;
-        const ignoredMattermostUsers = config().ignored_matrix_users;
 
         await Promise.all(
             Array.from(matrixUsers.real, async matrix_userid => {
@@ -158,7 +154,7 @@ export default class Channel {
         );
     }
 
-    async onMattermostMessage(m: any) {
+    async onMattermostMessage(m: MattermostMessage): Promise<void> {
         const handler = MattermostHandlers[m.event];
         if (handler === undefined) {
             log.debug(`Unknown matermost message type: ${m.event}`);
@@ -167,7 +163,7 @@ export default class Channel {
         }
     }
 
-    async onMatrixEvent(event: any) {
+    async onMatrixEvent(event: MatrixEvent): Promise<void> {
         const handler = MatrixHandlers[event.type];
         if (handler === undefined) {
             log.debug(`Unknown matrix event type: ${event.type}`);

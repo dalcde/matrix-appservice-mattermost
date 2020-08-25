@@ -16,7 +16,7 @@ export default class Mutex {
         }
     }
 
-    public unlock() {
+    public unlock(): void {
         const resolve = this.queue.shift();
         if (resolve === undefined) {
             this.locked = false;

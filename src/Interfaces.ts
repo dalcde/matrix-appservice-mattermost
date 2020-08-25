@@ -1,3 +1,15 @@
+export interface MattermostMessage {
+    event: string;
+    data: any;
+    broadcast: {
+        omit_user: string[] | null;
+        user_id: string;
+        channel_id: string;
+        team_id: string;
+    };
+    seq: number;
+}
+
 export interface MatrixMessage {
     body: string;
     msgtype: string;
@@ -7,16 +19,24 @@ export interface MatrixMessage {
     [propName: string]: any;
 }
 
-export interface MatrixRoomEvent {
+export interface MatrixEvent {
     content: any;
     type: string;
     event_id: string;
     sender: string;
     origin_server_ts: number;
     room_id: string;
-    unsigned: any;
+    unsigned?: UnsignedData;
+    state_key?: string;
+    prev_content?: any;
 
     [propName: string]: any;
+}
+
+export interface UnsignedData {
+    age?: number;
+    redacted_because?: MatrixEvent;
+    transaction_id?: string;
 }
 
 export interface MattermostUserInfo {

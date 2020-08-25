@@ -16,7 +16,7 @@ export class Client {
     public async send_raw(
         method: Method,
         endpoint: string,
-        data?: object | FormData,
+        data?: any | FormData,
         auth: boolean = true,
     ): Promise<any> {
         if (auth && this.token === undefined) {
@@ -44,7 +44,7 @@ export class Client {
     public async send(
         method: Method,
         endpoint: string,
-        data?: object,
+        data?: any,
         auth: boolean = true,
     ): Promise<any> {
         let response = await this.send_raw(method, endpoint, data, auth);
@@ -73,34 +73,34 @@ export class Client {
 
     public async get(
         endpoint: string,
-        data?: object,
+        data?: any,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('GET', endpoint, data, auth);
     }
     public async post(
         endpoint: string,
-        data?: object,
+        data?: any,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('POST', endpoint, data, auth);
     }
     public async put(
         endpoint: string,
-        data?: object,
+        data?: any,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('PUT', endpoint, data, auth);
     }
     public async delete(
         endpoint: string,
-        data?: object,
+        data?: any,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('DELETE', endpoint, data, auth);
     }
 
-    public async login(username: string, password: string) {
+    public async login(username: string, password: string): Promise<void> {
         const r = await this.send_raw(
             'POST',
             '/users/login',
@@ -115,7 +115,7 @@ export class Client {
         this.token = r.headers.get('Token') || undefined;
     }
 
-    public loginWithToken(token: string) {
+    public loginWithToken(token: string): void {
         this.token = token;
     }
 
@@ -173,7 +173,7 @@ export class ClientWebsocket extends EventEmitter {
         this.ws.on('error', e => this.emit('error', e));
     }
 
-    async close() {
+    async close(): Promise<void> {
         // If the websocket is already closed, we will not receive a close event.
         if (this.ws.readyState === WebSocket.CLOSED) {
             return;
@@ -181,7 +181,7 @@ export class ClientWebsocket extends EventEmitter {
         this.ws.close();
         await new Promise(resolve => this.ws.once('close', resolve));
     }
-    async send(action: string, data: object): Promise<any> {
+    async send(action: string, data: any): Promise<any> {
         this.seq += 1;
         this.ws.send(
             JSON.stringify({
@@ -204,7 +204,7 @@ export class ClientError extends Error {
     constructor(
         readonly method: Method,
         readonly endpoint: string,
-        readonly data: object | undefined,
+        readonly data: any,
         readonly m: ErrorObject,
     ) {
         super();

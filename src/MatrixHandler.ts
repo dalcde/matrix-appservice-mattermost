@@ -4,6 +4,7 @@ import { Post } from './entities/Post';
 import { ClientError } from './mattermost/Client';
 import { handlePostError } from './utils/Functions';
 import { matrixToMattermost } from './utils/Formatting';
+import { MatrixEvent } from './Interfaces';
 import log from './Logging';
 import fetch from 'node-fetch';
 
@@ -14,7 +15,7 @@ interface Metadata {
 async function uploadFile(
     this: Channel,
     user: User,
-    event: any,
+    event: MatrixEvent,
     metadata: Metadata,
 ) {
     const mxc = event.content.url;
@@ -60,7 +61,7 @@ const MatrixMessageHandlers = {
     'm.text': async function (
         this: Channel,
         user: User,
-        event: any,
+        event: MatrixEvent,
         metadata: Metadata,
     ) {
         if (metadata.edits) {
@@ -89,7 +90,7 @@ const MatrixMessageHandlers = {
     'm.emote': async function (
         this: Channel,
         user: User,
-        event: any,
+        event: MatrixEvent,
         metadata: Metadata,
     ) {
         if (metadata.edits) {
@@ -119,7 +120,7 @@ const MatrixMessageHandlers = {
         const posts = await user.client.get(
             `/channels/${this.mattermostChannel}/posts`,
         );
-        for (let postid of posts.order) {
+        for (const postid of posts.order) {
             const post = posts.posts[postid];
             if (post.type === 'me' && post.props.message === content) {
                 await Post.create({
@@ -141,7 +142,7 @@ const MatrixMessageHandlers = {
 const MatrixMembershipHandler = {
     invite: () => {},
     knock: () => {},
-    join: async function (this: Channel, userid: string) {
+    join: async function (this: Channel, userid: string): Promise<void> {
         if (this.main.skipMatrixUser(userid)) {
             return;
         }
@@ -180,13 +181,16 @@ const MatrixMembershipHandler = {
             );
         }
     },
-    ban: async function (this: Channel, userid: string) {
+    ban: async function (this: Channel, userid: string): Promise<void> {
         await MatrixMembershipHandler.leave.bind(this)(userid);
     },
 };
 
 const MatrixHandlers = {
-    'm.room.message': async function (this: Channel, event: any) {
+    'm.room.message': async function (
+        this: Channel,
+        event: MatrixEvent,
+    ): Promise<void> {
         const content = event.content;
         const user = await this.main.matrixUserStore.get(event.sender);
         if (user === undefined) {
@@ -229,7 +233,10 @@ const MatrixHandlers = {
         }
         await handler.bind(this)(user, event, metadata);
     },
-    'm.room.member': async function (this: Channel, event: any) {
+    'm.room.member': async function (
+        this: Channel,
+        event: MatrixEvent,
+    ): Promise<void> {
         const handler = MatrixMembershipHandler[event.content.membership];
         if (handler === undefined) {
             log.warn(`Invalid membership state: ${event.content.membership}`);
@@ -237,7 +244,10 @@ const MatrixHandlers = {
         }
         await handler.bind(this)(event.state_key);
     },
-    'm.room.redaction': async function (this: Channel, event: any) {
+    'm.room.redaction': async function (
+        this: Channel,
+        event: MatrixEvent,
+    ): Promise<void> {
         const botid = this.main.bridge.getBot().getUserId();
         // Matrix loop detection doesn't catch redactions.
         if (event.sender === botid) {

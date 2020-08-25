@@ -1,9 +1,6 @@
-import { Intent, Bridge } from 'matrix-appservice-bridge';
+import { Intent } from 'matrix-appservice-bridge';
 import { User } from './entities/User';
-import { Client } from './mattermost/Client';
-import { getManager } from 'typeorm';
 import { config } from './Config';
-import log from './Logging';
 import Mutex from './utils/Mutex';
 import Main from './Main';
 import { findFirstAvailable } from './utils/Functions';
@@ -74,7 +71,10 @@ export default class MattermostUserStore {
         return user;
     }
 
-    async updateUser(data: MattermostUserInfo | undefined, user: User) {
+    async updateUser(
+        data: MattermostUserInfo | undefined,
+        user: User,
+    ): Promise<void> {
         if (data === undefined) {
             data = (await this.main.client.get(
                 `/users/${user.mattermost_userid}`,

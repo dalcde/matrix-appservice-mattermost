@@ -1,6 +1,6 @@
 import { User } from '../entities/User';
 import { Post } from '../entities/Post';
-import { createConnection, getConnection } from 'typeorm';
+import { createConnection } from 'typeorm';
 
 const entities = [User, Post];
 const connection = createConnection({
@@ -12,7 +12,7 @@ const connection = createConnection({
     logging: false,
 });
 
-export async function setupDb() {
+export async function setupDb(): Promise<void> {
     await connection;
 
     await Promise.all([
@@ -37,6 +37,6 @@ export async function setupDb() {
 
 import { Config, setConfig as realSetConfig } from '../Config';
 
-export function setConfig(c) {
+export function setConfig(c: Record<string, unknown>): void {
     realSetConfig((c as any) as Config);
 }

@@ -2,7 +2,6 @@ import * as test from 'tape';
 import {
     remove,
     findFirstAvailable,
-    replaceAsync,
     localpart,
     sanitizeMattermostUsername,
     uniq,

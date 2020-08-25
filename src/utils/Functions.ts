@@ -2,7 +2,7 @@ import { Post } from '../entities/Post';
 import { ClientError } from '../mattermost/Client';
 import * as assert from 'assert';
 
-export function remove<T>(a: T[], x: T) {
+export function remove<T>(a: T[], x: T): void {
     const index = a.indexOf(x, 0);
     if (index > -1) {
         a.splice(index, 1);
@@ -72,7 +72,10 @@ export function uniq<T>(a: T[]): T[] {
     return [...new Set(a)];
 }
 
-export async function handlePostError(e: any, postid: string) {
+export async function handlePostError(
+    e: unknown,
+    postid: string,
+): Promise<void> {
     if (
         e instanceof ClientError &&
         ((e.m.status_code === 400 &&
@@ -87,7 +90,7 @@ export async function handlePostError(e: any, postid: string) {
     }
 }
 
-export function deepEqual(a: any, b: any) {
+export function deepEqual(a: unknown, b: unknown): boolean {
     try {
         assert.deepStrictEqual(a, b);
         return true;
@@ -95,3 +98,5 @@ export function deepEqual(a: any, b: any) {
         return false;
     }
 }
+
+export async function none(): Promise<void> {}

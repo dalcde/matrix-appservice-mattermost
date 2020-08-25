@@ -4,7 +4,6 @@
 import { User } from './entities/User';
 import * as fs from 'fs';
 import { setConfig, Config } from './Config';
-import { sanitizeMattermostUsername } from './utils/Functions';
 import { createConnection } from 'typeorm';
 import * as yaml from 'js-yaml';
 import log from './Logging';
@@ -32,9 +31,7 @@ async function run(argv: string[]) {
     }
 
     log.info('Parsing config file');
-    const config = (yaml.safeLoad(
-        fs.readFileSync(configPath, 'utf8'),
-    ) as any) as Config;
+    const config = yaml.safeLoad(fs.readFileSync(configPath, 'utf8')) as Config;
 
     log.setLevel(config.logging);
     setConfig(config);

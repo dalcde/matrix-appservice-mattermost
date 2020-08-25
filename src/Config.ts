@@ -4,7 +4,7 @@ export function config(): Config {
     return _config;
 }
 
-export function setConfig(c: Config) {
+export function setConfig(c: Config): void {
     _config = c;
 }
 

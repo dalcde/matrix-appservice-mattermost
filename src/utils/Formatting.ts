@@ -1,11 +1,11 @@
-import { MatrixMessage, MatrixRoomEvent } from '../Interfaces';
+import { MatrixMessage, MatrixEvent } from '../Interfaces';
 import { User } from '../entities/User';
-import { replaceAsync, localpart } from './Functions';
+import { replaceAsync } from './Functions';
 import { config } from '../Config';
 import * as marked from 'marked';
 import * as Turndown from 'turndown-performance-fixed';
 
-const MARKED_OPTIONS: object = {
+const MARKED_OPTIONS = {
     gfm: true,
     headerIds: false,
     breaks: true,
@@ -117,9 +117,9 @@ export async function mattermostToMatrix(
 }
 
 export function constructMatrixReply(
-    original: MatrixRoomEvent,
+    original: MatrixEvent,
     message: MatrixMessage,
-) {
+): void {
     message['m.relates_to'] = {
         'm.in_reply_to': {
             event_id: original.event_id,

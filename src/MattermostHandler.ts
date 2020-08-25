@@ -2,7 +2,12 @@ import Channel from './Channel';
 import { Intent } from 'matrix-appservice-bridge';
 import { Post } from './entities/Post';
 import log from './Logging';
-import { MattermostMessage, MatrixMessage } from './Interfaces';
+import {
+    MattermostMessage,
+    MattermostPost,
+    MatrixMessage,
+    MatrixEvent,
+} from './Interfaces';
 import { uniq, handlePostError, none } from './utils/Functions';
 import { mattermostToMatrix, constructMatrixReply } from './utils/Formatting';
 
@@ -24,7 +29,7 @@ async function sendMatrixMessage(
     if (metadata.replyTo !== undefined) {
         const replyTo = metadata.replyTo;
         rootid = replyTo.mattermost;
-        let original: any = undefined;
+        let original: MatrixEvent | undefined = undefined;
         try {
             original = await intent.getEvent(room, replyTo.matrix);
         } catch (e) {}
@@ -45,7 +50,7 @@ const MattermostPostHandlers = {
     '': async function (
         this: Channel,
         intent: Intent,
-        post: any,
+        post: MattermostPost,
         metadata: Metadata,
     ) {
         await sendMatrixMessage(
@@ -106,7 +111,7 @@ const MattermostPostHandlers = {
     me: async function (
         this: Channel,
         intent: Intent,
-        post: any,
+        post: MattermostPost,
         metadata: Metadata,
     ) {
         await sendMatrixMessage(
@@ -131,7 +136,7 @@ const MattermostHandlers = {
         this: Channel,
         m: MattermostMessage,
     ): Promise<void> {
-        const post = JSON.parse(m.data.post);
+        const post: MattermostPost = JSON.parse(m.data.post) as MattermostPost;
         if (post.type.startsWith('system_')) {
             return;
         }
@@ -224,7 +229,7 @@ const MattermostHandlers = {
             where: [{ rootid: post.id }, { postid: post.id }],
         });
 
-        const promises: Promise<any>[] = [Post.removeAll(post.postid)];
+        const promises: Promise<unknown>[] = [Post.removeAll(post.postid)];
         // It is okay to redact an event already redacted.
         for (const event of matrixEvents) {
             promises.push(client.redactEvent(this.matrixRoom, event.eventid));

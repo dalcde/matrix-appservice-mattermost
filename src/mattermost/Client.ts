@@ -16,7 +16,7 @@ export class Client {
     public async send_raw(
         method: Method,
         endpoint: string,
-        data?: any | FormData,
+        data?: unknown | FormData,
         auth: boolean = true,
     ): Promise<any> {
         if (auth && this.token === undefined) {
@@ -44,7 +44,7 @@ export class Client {
     public async send(
         method: Method,
         endpoint: string,
-        data?: any,
+        data?: unknown,
         auth: boolean = true,
     ): Promise<any> {
         let response = await this.send_raw(method, endpoint, data, auth);
@@ -73,28 +73,28 @@ export class Client {
 
     public async get(
         endpoint: string,
-        data?: any,
+        data?: unknown,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('GET', endpoint, data, auth);
     }
     public async post(
         endpoint: string,
-        data?: any,
+        data?: unknown,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('POST', endpoint, data, auth);
     }
     public async put(
         endpoint: string,
-        data?: any,
+        data?: unknown,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('PUT', endpoint, data, auth);
     }
     public async delete(
         endpoint: string,
-        data?: any,
+        data?: unknown,
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('DELETE', endpoint, data, auth);
@@ -181,7 +181,7 @@ export class ClientWebsocket extends EventEmitter {
         this.ws.close();
         await new Promise(resolve => this.ws.once('close', resolve));
     }
-    async send(action: string, data: any): Promise<any> {
+    async send(action: string, data: unknown): Promise<any> {
         this.seq += 1;
         this.ws.send(
             JSON.stringify({
@@ -204,7 +204,7 @@ export class ClientError extends Error {
     constructor(
         readonly method: Method,
         readonly endpoint: string,
-        readonly data: any,
+        readonly data: unknown,
         readonly m: ErrorObject,
     ) {
         super();

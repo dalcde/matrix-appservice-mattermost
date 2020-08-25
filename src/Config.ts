@@ -1,4 +1,4 @@
-let _config: Config = (undefined as any) as Config;
+let _config: Config = (undefined as unknown) as Config;
 
 export function config(): Config {
     return _config;

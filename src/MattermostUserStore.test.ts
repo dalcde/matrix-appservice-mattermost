@@ -10,7 +10,7 @@ test('display name', async t => {
     setConfig({
         matrix_display_name_template: '[DISPLAY] [USERNAME] [m]',
     });
-    const store = new MattermostUserStore((undefined as any) as Main);
+    const store = new MattermostUserStore((undefined as unknown) as Main);
     let displayName: string = '';
 
     store.intent = () => {

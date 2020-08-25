@@ -2,7 +2,7 @@ console.time('Bridge loaded');
 import { Cli, AppServiceRegistration } from 'matrix-appservice-bridge';
 import log from './Logging';
 import { setConfig, Config } from './Config';
-import { createConnection } from 'typeorm';
+import { createConnection, ConnectionOptions } from 'typeorm';
 import * as path from 'path';
 import Main from './Main';
 import { User } from './entities/User';
@@ -37,17 +37,21 @@ const cli = new Cli({
             mattermost_username_template: '[DISPLAY]',
         },
     },
-    async run(port: number, config: Config, registration: any) {
+    async run(
+        port: number,
+        config: Config,
+        registration: AppServiceRegistration,
+    ) {
         log.setLevel(config.logging);
 
         setConfig(config);
 
-        const db: any = config.database;
+        const db = config.database;
         db['entities'] = [User, Post];
         db['synchronize'] = true;
         db['logging'] = false;
 
-        await createConnection(db);
+        await createConnection(db as ConnectionOptions);
 
         const main = new Main(registration);
         log.timeEnd.info('Bridge loaded');

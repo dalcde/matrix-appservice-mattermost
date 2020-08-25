@@ -254,7 +254,7 @@ const MatrixHandlers = {
             return;
         }
         const post = await Post.findOne({
-            eventid: event.redacts,
+            eventid: event.redacts as string,
         });
         if (post === undefined) {
             return;

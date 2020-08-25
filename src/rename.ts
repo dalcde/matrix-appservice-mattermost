@@ -4,7 +4,7 @@
 import { User } from './entities/User';
 import * as fs from 'fs';
 import { setConfig, Config } from './Config';
-import { createConnection } from 'typeorm';
+import { createConnection, ConnectionOptions } from 'typeorm';
 import * as yaml from 'js-yaml';
 import log from './Logging';
 
@@ -36,13 +36,13 @@ async function run(argv: string[]) {
     log.setLevel(config.logging);
     setConfig(config);
 
-    const db: any = config.database;
+    const db = config.database;
     db['entities'] = [User];
     db['synchronize'] = false;
     db['logging'] = false;
 
     log.info('Connecting to database');
-    await createConnection(db);
+    await createConnection(db as ConnectionOptions);
 
     log.info('Finding user in database');
     const user = await User.findOne({

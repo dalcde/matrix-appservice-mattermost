@@ -10,13 +10,51 @@ export interface MattermostMessage {
     seq: number;
 }
 
+export interface MattermostPost {
+    id: string;
+    create_at: number;
+    update_at: number;
+    edit_at: number;
+    delete_at: number;
+    is_pinned: boolean;
+    user_id: string;
+    channel_id: string;
+    root_id: string;
+    parent_id: string;
+    original_id: string;
+    message: string;
+    type: string;
+    props: any;
+    hashtags: string;
+    pending_post_id: string;
+    reply_count: number;
+    metadata: {
+        files?: MattermostFileInfo[];
+        [propName: string]: unknown;
+    };
+}
+
+export interface MattermostFileInfo {
+    id: string;
+    user_id: string;
+    post_id: string;
+    create_at: number;
+    update_at: number;
+    delete_at: number;
+    name: string;
+    extension: string;
+    size: number;
+    mime_type: string;
+
+    [propName: string]: unknown;
+}
 export interface MatrixMessage {
     body: string;
     msgtype: string;
     format?: string;
     formatted_body?: string;
 
-    [propName: string]: any;
+    [propName: string]: unknown;
 }
 
 export interface MatrixEvent {
@@ -30,7 +68,7 @@ export interface MatrixEvent {
     state_key?: string;
     prev_content?: any;
 
-    [propName: string]: any;
+    [propName: string]: unknown;
 }
 
 export interface UnsignedData {
@@ -44,5 +82,5 @@ export interface MattermostUserInfo {
     first_name: string;
     last_name: string;
 
-    [propName: string]: any;
+    [propName: string]: unknown;
 }

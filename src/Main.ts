@@ -11,7 +11,8 @@ import {
     config,
     RELOADABLE_CONFIG,
 } from './Config';
-import { deepEqual, none } from './utils/Functions';
+import { isDeepStrictEqual } from 'util';
+import { none } from './utils/Functions';
 import { User } from './entities/User';
 import { MattermostMessage } from './Interfaces';
 import MatrixUserStore from './MatrixUserStore';
@@ -269,7 +270,7 @@ export default class Main {
         for (const key of Object.keys(oldConfig)) {
             if (
                 !RELOADABLE_CONFIG.has(key) &&
-                !deepEqual(oldConfig[key], newConfig[key])
+                !isDeepStrictEqual(oldConfig[key], newConfig[key])
             ) {
                 log.error('Cannot hot reload config ');
             }

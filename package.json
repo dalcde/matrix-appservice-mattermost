@@ -15,7 +15,7 @@
     "fmt": "prettier --write .",
     "fix": "eslint '*/**/*.ts' --fix"
   },
-  "author": "",
+  "author": "Dexter Chua",
   "license": "MIT",
   "dependencies": {
     "@types/node-fetch": "^2.5.7",

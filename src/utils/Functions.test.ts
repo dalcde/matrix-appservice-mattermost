@@ -5,6 +5,7 @@ import {
     localpart,
     sanitizeMattermostUsername,
     uniq,
+    randomString,
 } from './Functions';
 
 test('remove', t => {
@@ -65,5 +66,16 @@ test('sanitizeMattermostUsername', t => {
 
 test('uniq', t => {
     t.deepEqual(uniq(['5', '2', '2', '3', '4', '5']), ['5', '2', '3', '4']);
+    t.end();
+});
+
+test('randomString', t => {
+    for (const n of [5, 10, 12, 13, 14, 15]) {
+        t.equal(randomString(n).length, n);
+    }
+    const rand = randomString(65);
+    t.false(rand.includes('+'));
+    t.false(rand.includes('='));
+    t.false(rand.includes('/'));
     t.end();
 });

@@ -1,5 +1,6 @@
 import { Post } from '../entities/Post';
 import { ClientError } from '../mattermost/Client';
+import { randomBytes } from 'crypto';
 
 export function remove<T>(a: T[], x: T): void {
     const index = a.indexOf(x, 0);
@@ -91,3 +92,13 @@ export async function handlePostError(
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export async function none(): Promise<void> {}
+
+// Generates a random string of length n.
+export function randomString(n: number): string {
+    return randomBytes(1 + (n * 3) / 4)
+        .toString('base64')
+        .replace(/\+/g, '.')
+        .replace(/\//g, '-')
+        .replace(/=/g, '')
+        .slice(0, n);
+}

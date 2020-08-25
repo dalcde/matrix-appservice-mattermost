@@ -1,3 +1,10 @@
+# Unreleased
+
+Bug fixes:
+
+- Don't use username in mattermost email template, since usernames are not
+  immutable. Use a random string instead.
+
 # 0.1.2 (2020-08-25)
 
 Bug fixes:

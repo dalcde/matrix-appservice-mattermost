@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, BaseEntity } from 'typeorm';
 import { Client } from '../mattermost/Client';
 import { config } from '../Config';
-import { randomBytes } from 'crypto';
+import { randomString } from '../utils/Functions';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -44,12 +44,14 @@ export class User extends BaseEntity {
     ): Promise<User> {
         await client.post('/users', {
             username: username,
-            password: randomBytes(32).toString('base64'),
+            password: randomString(45),
             first_name: displayname,
-            email: config().mattermost_email_template.replace(
-                '[USERNAME]',
-                username,
-            ),
+            email: config()
+                .mattermost_email_template.replace(
+                    '[USERNAME]',
+                    randomString(16),
+                )
+                .replace('[RANDOM]', randomString(16)),
         });
         const resp = (await client.post('/users/usernames', [username]))[0];
         await client.post(`/users/${resp.id}/email/verify/member`);

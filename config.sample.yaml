@@ -84,8 +84,13 @@ ignored_matrix_users:
 ignored_mattermost_users:
   - 'gh39s3w2msae1a2jg67s2e4453'
 
-# Email template used for puppet users, with [USERNAME] replaced by the
-# puppet's username. These do not have to be valid emails, as the users have
-# their emails automatically verified. However, this can pose a security issue
-# if third parties can potentially control these email addresses.
-mattermost_email_template: 'devnull-[USERNAME]@example.org'
+# Email template used for puppet users, with [RANDOM] replaced by a random
+# string. These do not have to be valid emails, as the users have their emails
+# automatically verified. However, this can pose a security issue if third
+# parties can potentially control these email addresses.
+#
+# In earlier versions of the bridge, we used the username instead of a random
+# string, with variable [USERNAME]. However, since usernames are not immutable,
+# this can potentially conflict. Currently, [USERNAME] is still accepted but
+# will be replaced by a random string as well.
+mattermost_email_template: 'devnull-[RANDOM]@example.org'

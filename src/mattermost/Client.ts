@@ -20,7 +20,7 @@ export class Client {
         auth: boolean = true,
     ): Promise<any> {
         if (auth && this.token === undefined) {
-            throw 'Cannot send request without access token';
+            throw new Error('Cannot send request without access token');
         }
         const options = {
             method: method,
@@ -137,7 +137,7 @@ export class ClientWebsocket extends EventEmitter {
     constructor(private client: Client) {
         super();
         if (this.client.token === null) {
-            throw 'Cannot open websocket without access token';
+            throw new Error('Cannot open websocket without access token');
         }
         this.ws = new WebSocket(
             `ws${this.client.domain.slice(4)}/api/v4/websocket`,

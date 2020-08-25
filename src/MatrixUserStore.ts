@@ -45,7 +45,9 @@ export default class MatrixUserStore {
         if (user !== undefined) {
             this.mutex.unlock();
             if (!user.is_matrix_user) {
-                throw 'Trying to get Mattermost user from MatrixUserStore';
+                throw new Error(
+                    'Trying to get Mattermost user from MatrixUserStore',
+                );
             }
             await this.updateUser(user);
         } else {

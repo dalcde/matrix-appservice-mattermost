@@ -99,4 +99,5 @@ export function deepEqual(a: unknown, b: unknown): boolean {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export async function none(): Promise<void> {}

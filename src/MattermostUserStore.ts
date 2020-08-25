@@ -42,8 +42,10 @@ export default class MattermostUserStore {
         user = await User.findOne({
             mattermost_userid: userid,
         });
-        if (user !== undefined && user.is_matrix_user) {
-            throw 'Trying to get Matrix user from MattermostUserStore';
+        if (user?.is_matrix_user) {
+            throw new Error(
+                'Trying to get Matrix user from MattermostUserStore',
+            );
         }
         const data = await data_promise;
         const server_name = config().homeserver.server_name;

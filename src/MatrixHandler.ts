@@ -2,7 +2,7 @@ import Channel from './Channel';
 import { User } from './entities/User';
 import { Post } from './entities/Post';
 import { ClientError } from './mattermost/Client';
-import { handlePostError } from './utils/Functions';
+import { handlePostError, none } from './utils/Functions';
 import { matrixToMattermost } from './utils/Formatting';
 import { MatrixEvent } from './Interfaces';
 import log from './Logging';
@@ -140,8 +140,8 @@ const MatrixMessageHandlers = {
 };
 
 const MatrixMembershipHandler = {
-    invite: () => {},
-    knock: () => {},
+    invite: none,
+    knock: none,
     join: async function (this: Channel, userid: string): Promise<void> {
         if (this.main.skipMatrixUser(userid)) {
             return;

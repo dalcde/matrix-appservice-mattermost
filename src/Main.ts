@@ -301,7 +301,7 @@ export default class Main {
         log.time.debug('Process mattermost message');
 
         try {
-            const userid = m.data.user_id ?? (m.data.user && m.data.user.id);
+            const userid = m.data.user_id ?? m.data.user?.id;
 
             if (userid) {
                 if (

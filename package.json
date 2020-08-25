@@ -11,7 +11,7 @@
     "preinstall": "git config core.hooksPath .githooks",
     "build": "tsc",
     "test": "npm run lint && npm run build && tape build{,/**}/*.test.js",
-    "lint": "prettier -c . && eslint '*/**/*.ts'",
+    "lint": "prettier -c . && eslint --max-warnings=0 '*/**/*.ts'",
     "fmt": "prettier --write .",
     "fix": "eslint '*/**/*.ts' --fix"
   },

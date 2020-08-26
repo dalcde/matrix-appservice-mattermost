@@ -20,6 +20,10 @@ properties:
     type: string
     format: uri
     required: true
+  admin_port:
+    type: number
+    minimum: 0
+    maximum: 65535
   mattermost_bot_userid:
     type: 'string'
     required: true

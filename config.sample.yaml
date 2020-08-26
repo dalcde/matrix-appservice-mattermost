@@ -20,6 +20,10 @@ appservice:
 # URL to the mattermost instance.
 mattermost_url: https://mattermost.example.com/
 
+# The port the admin endpoint listens to, which lets the administrator interact
+# with the bridge. If unset, there will not be an admin endpoint.
+# admin_port: 9000
+
 # Mappings between mattermost channels and matrix rooms.
 mappings:
   - mattermost: '33fn4rrcpfrc8p3bwf67rb4kgo'

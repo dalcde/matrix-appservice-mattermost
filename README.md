@@ -106,17 +106,34 @@ production system (with understanding users) by the author.
   matrix. Make sure you followed the last three steps of the set up
   instructions carefully. In particular, remember to restart synapse.
 
+## Admin endpoint
+
+There is an admin endpoint that lets users interact with the bridge. The port
+is set by the `admin_port` config item.
+
+### Status endpoint
+
+```
+GET /status
+```
+
+The possible replies are
+
+- `initializing` - The bridge is initializing
+- `running` - The bridge is running
+
+Of course, if the request is made too early in the initialization stage, there
+would be no response at all.
+
+### Rename endpoint
+
+```
+POST /rename/:oldName/:newName
+```
+
+This renames the mattermost puppet with username `:oldName` to `:newName`.
+
 ## Remarks
-
-### Changing mattermost username
-
-The username of the mattermost puppet of a real matrix user is set when the
-puppet is created, and not modified afterwards. A script is available to rename
-existing puppets. After building the repository, the script can be run via
-
-```
-node build/rename.js path/to/config old_username new_username
-```
 
 ### Town Square
 

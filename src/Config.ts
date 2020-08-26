@@ -16,6 +16,7 @@ export interface Config {
         hostname: string;
         schema: string;
     };
+    admin_port?: number;
     matrix_localpart_prefix: string;
     matrix_display_name_template: string;
     mattermost_username_template: string;

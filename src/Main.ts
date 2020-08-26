@@ -15,6 +15,7 @@ import { isDeepStrictEqual } from 'util';
 import { none } from './utils/Functions';
 import { User } from './entities/User';
 import { MattermostMessage } from './Interfaces';
+import AdminEndpoint from './AdminEndpoint';
 import MatrixUserStore from './MatrixUserStore';
 import MattermostUserStore from './MattermostUserStore';
 import Channel from './Channel';
@@ -39,6 +40,8 @@ export default class Main {
     readonly bridge: Bridge;
     mattermostMutex: Mutex;
     matrixMutex: Mutex;
+    initialized: boolean;
+    adminEndpoint?: AdminEndpoint;
 
     constructor(registration: AppServiceRegistration) {
         this.bridge = new Bridge({
@@ -66,6 +69,8 @@ export default class Main {
             undefined,
             config().appservice.hostname,
         );
+
+        this.initialized = false;
 
         this.client = new Client(
             config().mattermost_url,
@@ -118,6 +123,10 @@ export default class Main {
             log.error('Mattermost websocket closed. Shutting down bridge');
             this.killBridge(1);
         });
+
+        if (config().admin_port !== undefined) {
+            this.adminEndpoint = new AdminEndpoint(this);
+        }
     }
 
     async init(): Promise<void> {
@@ -165,6 +174,8 @@ export default class Main {
         await this.ws.openPromise;
         await botProfile;
         log.timeEnd.info('Bridge initialized');
+
+        this.initialized = true;
     }
 
     async leaveUnbridgedChannels(): Promise<void> {

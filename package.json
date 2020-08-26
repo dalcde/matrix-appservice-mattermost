@@ -20,6 +20,7 @@
   "dependencies": {
     "@types/node-fetch": "^2.5.7",
     "bufferutil": "^4.0.1",
+    "express": "^4.17.1",
     "form-data": "^3.0.0",
     "js-yaml": "^3.14.0",
     "loglevel": "^1.6.8",

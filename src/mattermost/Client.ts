@@ -133,6 +133,7 @@ export class ClientWebsocket extends EventEmitter {
     ws: WebSocket;
     seq: number;
     promises: PromiseCallbacks[];
+    openPromise: Promise<void>;
 
     constructor(private client: Client) {
         super();
@@ -144,11 +145,14 @@ export class ClientWebsocket extends EventEmitter {
         );
         this.seq = 0;
         this.promises = [];
+        let resolve;
+        this.openPromise = new Promise(r => (resolve = r));
 
-        this.ws.on('open', () => {
-            this.send('authentication_challenge', {
+        this.ws.on('open', async () => {
+            await this.send('authentication_challenge', {
                 token: this.client.token,
             });
+            resolve();
         });
         this.ws.on('message', m => {
             const ev = JSON.parse(m);

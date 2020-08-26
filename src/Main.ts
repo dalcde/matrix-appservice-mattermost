@@ -162,6 +162,7 @@ export default class Main {
         this.mattermostMutex.unlock();
         this.matrixMutex.unlock();
 
+        await this.ws.openPromise;
         await botProfile;
         log.timeEnd.info('Bridge initialized');
     }

@@ -212,17 +212,13 @@ export class ClientError extends Error {
         readonly m: ErrorObject,
     ) {
         super();
-    }
-
-    public toString = (): string => {
-        let string = `${this.m.status_code} ${this.method} ${
+        this.message = `${this.m.status_code} ${this.method} ${
             this.endpoint
         }: ${JSON.stringify(this.m)}`;
         if (this.data !== undefined) {
-            string += `\nData: ${JSON.stringify(this.data)}`;
+            this.message += `\nData: ${JSON.stringify(this.data)}`;
         }
-        return string;
-    };
+    }
 }
 
 export interface ErrorObject {

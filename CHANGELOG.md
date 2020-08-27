@@ -4,6 +4,7 @@ Bug fixes:
 
 - Don't use username in mattermost email template, since usernames are not
   immutable. Use a random string instead.
+- Fix error formatting when failing to connect to mattermost.
 
 New features:
 

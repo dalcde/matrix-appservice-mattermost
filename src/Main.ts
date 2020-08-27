@@ -115,7 +115,7 @@ export default class Main {
 
         this.ws.on('error', e => {
             log.error(
-                `Error when initializing websocket connection ${e.stack}`,
+                `Error when initializing websocket connection\n${e.stack}`,
             );
         });
 

@@ -1,6 +1,7 @@
 import { Post } from '../entities/Post';
 import { ClientError } from '../mattermost/Client';
 import { randomBytes } from 'crypto';
+import { spawn } from 'child_process';
 
 export function remove<T>(a: T[], x: T): void {
     const index = a.indexOf(x, 0);
@@ -101,4 +102,16 @@ export function randomString(n: number): string {
         .replace(/\//g, '-')
         .replace(/=/g, '')
         .slice(0, n);
+}
+
+export async function notifySystemd(): Promise<void> {
+    await new Promise(resolve => {
+        const proc = spawn('systemd-notify', [
+            '--ready',
+            `--pid=${process.pid}`,
+        ]);
+        proc.on('exit', resolve);
+        // systemd might not exist, etc. We've tried out best
+        proc.on('error', resolve);
+    });
 }

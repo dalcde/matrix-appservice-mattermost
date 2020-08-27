@@ -9,6 +9,7 @@ New features:
 
 - New admin endpoint for user to interact with the bridge. Migrate rename
   script to the admin endpoint
+- The bridge notifies systemd when it is initialized
 
 Breaking changes:
 

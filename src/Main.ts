@@ -12,7 +12,7 @@ import {
     RELOADABLE_CONFIG,
 } from './Config';
 import { isDeepStrictEqual } from 'util';
-import { none } from './utils/Functions';
+import { none, notifySystemd } from './utils/Functions';
 import { User } from './entities/User';
 import { MattermostMessage } from './Interfaces';
 import AdminEndpoint from './AdminEndpoint';
@@ -165,6 +165,8 @@ export default class Main {
 
         if (this.channelsByMattermost.size === 0) {
             log.info('No channels bridged successfully. Shutting down bridge.');
+            // If we exit before notifying systemd, it is considered a failure
+            await notifySystemd();
             await this.killBridge(0);
         }
 
@@ -175,6 +177,7 @@ export default class Main {
         await botProfile;
         log.timeEnd.info('Bridge initialized');
 
+        notifySystemd();
         this.initialized = true;
     }
 

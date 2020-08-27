@@ -61,6 +61,27 @@ production system (with understanding users) by the author.
    node build/index.js -c config.yaml -f registration.yaml
    ```
 
+### sd_notify
+
+The bridge attempts to notify `systemd` when it has initialized.
+This ensures `systemctl start matrix-appservice-mattermost` will not return
+until the bridge is initialized. To configure this, add the following lines to
+the `Service` section of the systemd service file:
+
+```
+Type=notify
+NotifyAccess=all
+```
+
+The second line is necessary since we spawn `systemd-notify` to perform the
+notification; node doesn't natively support this.
+
+_Note:_ The bridge is considered initialized when all mattermost and matrix
+messages in the bridged channels from that point on will be received by the
+bridge (barring, e.g. connection issues). Specifically, the bridge is
+considered initialized after the mattermost websocket is connected and the
+bridge has joined all channels to be bridged.
+
 ## Supported features
 
 - Mattermost -> Matrix:

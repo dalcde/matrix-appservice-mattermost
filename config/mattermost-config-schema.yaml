@@ -30,6 +30,9 @@ properties:
   mattermost_bot_access_token:
     type: 'string'
     required: true
+  forbid_bridge_failure:
+    type: boolean
+    default: false
   mappings:
     type: 'array'
     required: true

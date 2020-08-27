@@ -24,6 +24,10 @@ mattermost_url: https://mattermost.example.com/
 # with the bridge. If unset, there will not be an admin endpoint.
 # admin_port: 9000
 
+# If true, the bridge exits if it fails to bridge any channel. Otherwise, it
+# will go on bridging the channels it can bridge.
+forbid_bridge_failure: false
+
 # Mappings between mattermost channels and matrix rooms.
 mappings:
   - mattermost: '33fn4rrcpfrc8p3bwf67rb4kgo'

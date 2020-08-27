@@ -95,12 +95,20 @@ export default class Main {
                 log.error(
                     `Mattermost channel ${map.mattermost} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
                 );
+                if (config().forbid_bridge_failure) {
+                    this.killBridge(1);
+                    return;
+                }
                 continue;
             }
             if (this.mappingsByMatrix.has(map.matrix)) {
                 log.error(
                     `Matrix channel ${map.matrix} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
                 );
+                if (config().forbid_bridge_failure) {
+                    this.killBridge(1);
+                    return;
+                }
                 continue;
             }
 
@@ -155,6 +163,9 @@ export default class Main {
                     log.error(
                         `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}\n${e.stack}`,
                     );
+                    if (config().forbid_bridge_failure) {
+                        await this.killBridge(1);
+                    }
                     this.channelsByMattermost.delete(channel.mattermostChannel);
                     this.channelsByMatrix.delete(channel.matrixRoom);
                 }

@@ -10,6 +10,7 @@ export function setConfig(c: Config): void {
 
 export interface Config {
     mattermost_url: string;
+    forbid_bridge_failure: boolean;
     mappings: Mapping[];
     appservice: {
         port: number;

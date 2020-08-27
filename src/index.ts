@@ -35,6 +35,7 @@ const cli = new Cli({
             matrix_localpart_suffix: 'mm_',
             matrix_display_name_template: '[DISPLAY]',
             mattermost_username_template: '[DISPLAY]',
+            forbid_bridge_failure: false,
         },
     },
     async run(

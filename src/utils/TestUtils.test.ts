@@ -5,7 +5,7 @@ import { setupDb, setConfig } from './TestUtils';
 import { config } from '../Config';
 
 test('test testutils setupDb', async t => {
-    await setupDb;
+    await setupDb();
 
     const user = await User.findOne({
         matrix_userid: '@mm_mmuser:matrix.org',

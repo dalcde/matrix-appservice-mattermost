@@ -23,7 +23,7 @@ async function uploadFile(
 
     const bot = this.main.bridge.getBot();
     const body = await fetch(
-        `${bot.client.baseUrl}/_matrix/media/r0/download/${mxc.slice(6)}`,
+        `${bot.getClient().baseUrl}/_matrix/media/r0/download/${mxc.slice(6)}`,
     );
     if (body.body === null) {
         throw new Error(`Downloaded empty file: ${mxc}`);
@@ -168,10 +168,8 @@ const MatrixMembershipHandler = {
 
         const joined = await Promise.all(
             channels.map(async channel => {
-                const members = await bot.client.getJoinedRoomMembers(
-                    channel.matrixRoom,
-                );
-                return Object.keys(members.joined).includes(user.matrix_userid);
+                const members = await bot.getJoinedMembers(channel.matrixRoom);
+                return Object.keys(members).includes(user.matrix_userid);
             }),
         );
 

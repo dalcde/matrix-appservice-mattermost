@@ -68,7 +68,7 @@ const MattermostPostHandlers = {
                 ).body;
                 const mimetype = file.mime_type;
 
-                const url = await intent.client.uploadContent(body, {
+                const url = await intent.getClient().uploadContent(body, {
                     name: file.name,
                     type: mimetype,
                     rawResponse: false,
@@ -100,7 +100,8 @@ const MattermostPostHandlers = {
                 );
             }
         }
-        intent.client
+        intent
+            .getClient()
             .sendTyping(this.matrixRoom, false)
             .catch(e =>
                 log.warn(
@@ -121,7 +122,8 @@ const MattermostPostHandlers = {
             await mattermostToMatrix(post.props.message, 'm.emote'),
             metadata,
         );
-        intent.client
+        intent
+            .getClient()
             .sendTyping(this.matrixRoom, false)
             .catch(e =>
                 log.warn(
@@ -276,7 +278,8 @@ const MattermostHandlers = {
     ): Promise<void> {
         const intent = this.main.mattermostUserStore.getIntent(m.data.user_id);
         if (intent !== undefined) {
-            intent.client
+            intent
+                .getClient()
                 .sendTyping(this.matrixRoom, true, 6000)
                 .catch(e =>
                     log.warn(

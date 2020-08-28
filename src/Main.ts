@@ -209,9 +209,7 @@ export default class Main {
                 if (this.mappingsByMatrix.has(room)) {
                     return;
                 }
-                const members = Object.keys(
-                    (await botIntent.client.getJoinedRoomMembers(room)).joined,
-                );
+                const members = Object.keys(await bot.getJoinedMembers(room));
                 await Promise.all(
                     members.map(async userid => {
                         if (bot.isRemoteUser(userid)) {

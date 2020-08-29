@@ -98,7 +98,7 @@ export async function none(): Promise<void> {}
 export function randomString(n: number): string {
     return randomBytes(1 + (n * 3) / 4)
         .toString('base64')
-        .replace(/\+/g, '.')
+        .replace(/\+/g, '_')
         .replace(/\//g, '-')
         .replace(/=/g, '')
         .slice(0, n);

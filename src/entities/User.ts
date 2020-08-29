@@ -44,7 +44,7 @@ export class User extends BaseEntity {
     ): Promise<User> {
         await client.post('/users', {
             username: username,
-            password: randomString(45),
+            password: randomString(45) + 'aA#2',
             first_name: displayname,
             email: config()
                 .mattermost_email_template.replace(

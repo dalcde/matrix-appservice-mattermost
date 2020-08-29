@@ -282,6 +282,7 @@ export default class Main {
             await Promise.all([
                 this.ws.close(),
                 this.bridge.appService.close(),
+                this.adminEndpoint?.kill(),
             ]);
             process.exit(exitCode);
         } catch (e) {

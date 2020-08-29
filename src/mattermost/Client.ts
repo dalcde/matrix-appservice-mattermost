@@ -11,7 +11,9 @@ export class Client {
     username?: string;
     token?: string;
 
-    constructor(public domain: string, public userid: string) {}
+    constructor(public domain: string, public userid: string) {
+        this.domain = domain.replace(/\/*$/, '');
+    }
 
     public async send_raw(
         method: Method,

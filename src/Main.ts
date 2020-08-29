@@ -335,6 +335,8 @@ export default class Main {
                     this.skipMattermostUser(userid) ||
                     !(await this.isMattermostUser(userid))
                 ) {
+                    log.debug(`Skipping echoed message from ${userid}`);
+                    log.timeEnd.debug('Process mattermost message');
                     this.mattermostMutex.unlock();
                     return;
                 }

@@ -279,6 +279,7 @@ export default class Main {
             // Otherwise, closing the websocket connection will initiate
             // the shutdown sequence again.
             this.ws.removeAllListeners('close');
+            clearTimeout(this.bridge._intentLastAccessedTimeout);
             await Promise.all([
                 this.ws.close(),
                 this.bridge.appService.close(),

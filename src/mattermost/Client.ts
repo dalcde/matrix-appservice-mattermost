@@ -142,6 +142,9 @@ export class ClientWebsocket extends EventEmitter {
         }
         this.ws = new WebSocket(
             `ws${this.client.domain.slice(4)}/api/v4/websocket`,
+            {
+                followRedirects: true,
+            },
         );
         this.seq = 0;
         this.promises = [];

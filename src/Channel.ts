@@ -73,12 +73,38 @@ export default class Channel {
                 team_id: team,
             });
         } catch (e) {}
-        await this.main.client.post(
-            `/channels/${this.mattermostChannel}/members`,
-            {
-                user_id: userid,
-            },
-        );
+        try {
+            await this.main.client.post(
+                `/channels/${this.mattermostChannel}/members`,
+                {
+                    user_id: userid,
+                },
+            );
+        } catch (e) {
+            // Mattermost has a race condition where if a member is added twice
+            // in quick succession, then it returns an error. If we receive an
+            // error, we check if the member is in the member. If so, we do
+            // nothing.  c.f.
+            // https://github.com/mattermost/mattermost-server/issues/15366 .
+            // This would be triggered by default channels, where two different
+            // join events end up causing the user to join the same channel
+            // twice.
+            if (
+                e instanceof ClientError &&
+                e.m.id === 'api.channel.add_user.to.channel.failed.app_error' &&
+                e.m.status_code === 500
+            ) {
+                try {
+                    await this.main.client.delete(
+                        `/channels/${this.mattermostChannel}/members/${userid}`,
+                    );
+                } catch (e_) {
+                    throw e;
+                }
+            } else {
+                throw e;
+            }
+        }
     }
 
     async leaveMattermost(userid: string): Promise<void> {

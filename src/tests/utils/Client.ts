@@ -4,6 +4,7 @@ import { Client } from '../../mattermost/Client';
 import {
     MATTERMOST_TOKENS,
     MATRIX_TOKENS,
+    MATRIX_ROOM_IDS,
     MATTERMOST_CHANNEL_IDS,
     MATTERMOST_TEAM_ID,
     SYNAPSE_PORT,
@@ -30,14 +31,15 @@ export function getMatrixClient(username: MatrixUsername): any {
 }
 
 export async function getMatrixMessage(
-    room: string,
+    room: Channels,
     n: number = 1,
 ): Promise<any> {
+    const roomId = MATRIX_ROOM_IDS[room];
     const filter = {
         presence: { types: [] },
         account_data: { types: [] },
         room: {
-            rooms: [room],
+            rooms: [roomId],
             account_data: { types: [] },
             state: { types: [] },
             timeline: {
@@ -54,7 +56,7 @@ export async function getMatrixMessage(
             filter: JSON.stringify(filter),
         },
     );
-    return response.rooms.join[room].timeline.events;
+    return response.rooms.join[roomId].timeline.events;
 }
 
 export async function getMattermostMembers(

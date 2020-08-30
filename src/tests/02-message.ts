@@ -23,7 +23,7 @@ test('Mattermost -> Matrix plain text', async t => {
     });
     await promise;
 
-    const messages = await getMatrixMessage(MATRIX_ROOM_IDS['town-square']);
+    const messages = await getMatrixMessage('town-square');
     t.equal(messages[0].sender, '@mm_mattermost_a:localhost');
     t.deepEqual(messages[0].content, {
         msgtype: 'm.text',
@@ -71,7 +71,7 @@ test('Mattermost -> Matrix formatted', async t => {
     });
     await promise;
 
-    const messages = await getMatrixMessage(MATRIX_ROOM_IDS['town-square']);
+    const messages = await getMatrixMessage('town-square');
     t.equal(messages[0].sender, '@mm_mattermost_a:localhost');
     t.deepEqual(messages[0].content, {
         msgtype: 'm.text',

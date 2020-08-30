@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as path from 'path';
 import * as test from 'tape';
-import { spawnSync } from 'child_process';
+import { spawnSync, spawn as spawnAsync } from 'child_process';
 import { MATTERMOST_PORT, SYNAPSE_PORT } from './utils/Data';
 
 const DOCKER_PATH = path.join(__dirname, '../../docker/docker-compose.yaml');
@@ -47,7 +47,9 @@ test('Start docker', async t => {
         spawn(['docker-compose', '-f', DOCKER_PATH, 'kill']);
         spawn(['docker-compose', '-f', DOCKER_PATH, 'down', '-v']);
         spawn(['docker-compose', '-f', DOCKER_PATH, 'build']);
-        spawn(['docker-compose', '-f', DOCKER_PATH, 'up', '-d']);
+        spawnAsync('docker-compose', ['-f', DOCKER_PATH, 'up'], {
+            stdio: 'inherit',
+        });
     }
 
     t.timeoutAfter(20000);

@@ -4,6 +4,7 @@ import Main from './Main';
 import { localpart, sanitizeMattermostUsername } from './utils/Functions';
 import { config } from './Config';
 import { findFirstAvailable } from './utils/Functions';
+import log from './Logging';
 
 export default class MatrixUserStore {
     readonly byMatrixUserId: Map<string, User>;
@@ -84,6 +85,9 @@ export default class MatrixUserStore {
                 matrix_userid,
                 username,
                 displayname,
+            );
+            log.debug(
+                `Creating mattermost puppet ${user.mattermost_userid} for ${matrix_userid}`,
             );
             this.mutex.unlock();
         }

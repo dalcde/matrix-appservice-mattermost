@@ -5,6 +5,7 @@ import Mutex from './utils/Mutex';
 import Main from './Main';
 import { findFirstAvailable } from './utils/Functions';
 import { MattermostUserInfo } from './Interfaces';
+import log from './Logging';
 
 export default class MattermostUserStore {
     users: Map<string, User>;
@@ -57,6 +58,9 @@ export default class MattermostUserStore {
                     (await User.findOne({
                         matrix_userid: `@${s}:${server_name}`,
                     })) === undefined,
+            );
+            log.debug(
+                `Creating matrix puppet @${localpart}:${server_name} for ${userid}`,
             );
             user = await User.createMattermostUser(
                 `@${localpart}:${server_name}`,

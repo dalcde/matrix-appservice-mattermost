@@ -1,12 +1,13 @@
 import { startBridge, test, main } from './utils/Bridge';
 import {
-    getMatrixMessage,
+    getMattermostMessages,
+    getMatrixMessages,
     getMattermostClient,
     getMatrixClient,
+    getMattermostUsername,
 } from './utils/Client';
 import { waitEvent } from '../utils/Functions';
 import { MATTERMOST_CHANNEL_IDS, MATRIX_ROOM_IDS } from './utils/Data';
-import { MattermostPost } from '../Interfaces';
 
 test('Start bridge', async t => {
     await startBridge(t);
@@ -23,7 +24,7 @@ test('Mattermost -> Matrix plain text', async t => {
     });
     await promise;
 
-    const messages = await getMatrixMessage('town-square');
+    const messages = await getMatrixMessages('town-square');
     t.equal(messages[0].sender, '@mm_mattermost_a:localhost');
     t.deepEqual(messages[0].content, {
         msgtype: 'm.text',
@@ -34,7 +35,6 @@ test('Mattermost -> Matrix plain text', async t => {
 });
 
 test('Matrix -> Mattermost plain text', async t => {
-    const mattermostClient = getMattermostClient('admin');
     const matrixClient = getMatrixClient('matrix_a');
 
     await Promise.all([
@@ -46,15 +46,11 @@ test('Matrix -> Mattermost plain text', async t => {
         }),
     ]);
 
-    const posts = await mattermostClient.get(
-        `/channels/${MATTERMOST_CHANNEL_IDS['town-square']}/posts?page=0&per_page=1`,
-    );
-    const post = Object.values(posts.posts)[0] as MattermostPost;
-    t.equal(post.type, '');
-    t.equal(post.message, 'test2');
+    const posts = await getMattermostMessages('town-square', 1);
+    t.equal(posts[0].type, '');
+    t.equal(posts[0].message, 'test2');
 
-    const user = await mattermostClient.get(`/users/${post.user_id}`);
-    t.equal(user.username, 'matrix_matrix_a');
+    t.equal(await getMattermostUsername(posts[0].user_id), 'matrix_matrix_a');
 
     t.end();
 });
@@ -71,7 +67,7 @@ test('Mattermost -> Matrix formatted', async t => {
     });
     await promise;
 
-    const messages = await getMatrixMessage('town-square');
+    const messages = await getMatrixMessages('town-square');
     t.equal(messages[0].sender, '@mm_mattermost_a:localhost');
     t.deepEqual(messages[0].content, {
         msgtype: 'm.text',
@@ -84,7 +80,6 @@ test('Mattermost -> Matrix formatted', async t => {
 });
 
 test('Matrix -> Mattermost formatted', async t => {
-    const mattermostClient = getMattermostClient('admin');
     const matrixClient = getMatrixClient('matrix_b');
 
     // Wait for the mattermost echo too
@@ -99,12 +94,9 @@ test('Matrix -> Mattermost formatted', async t => {
         }),
     ]);
 
-    const posts = await mattermostClient.get(
-        `/channels/${MATTERMOST_CHANNEL_IDS['town-square']}/posts?page=0&per_page=1`,
-    );
-    const post = Object.values(posts.posts)[0] as MattermostPost;
-    t.equal(post.type, '');
-    t.equal(post.message, 'Header\n======\n\n**Bolded text**');
+    const posts = await getMattermostMessages('town-square', 1);
+    t.equal(posts[0].type, '');
+    t.equal(posts[0].message, 'Header\n======\n\n**Bolded text**');
 
     t.end();
 });

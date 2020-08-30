@@ -1,5 +1,6 @@
 import { createClient } from 'matrix-js-sdk';
 import { Client } from '../../mattermost/Client';
+import { MattermostPost } from '../../Interfaces';
 
 import {
     MATTERMOST_TOKENS,
@@ -30,7 +31,7 @@ export function getMatrixClient(username: MatrixUsername): any {
     } as any);
 }
 
-export async function getMatrixMessage(
+export async function getMatrixMessages(
     room: Channels,
     n: number = 1,
 ): Promise<any> {
@@ -59,6 +60,16 @@ export async function getMatrixMessage(
     return response.rooms.join[roomId].timeline.events;
 }
 
+export async function getMattermostMessages(
+    room: Channels,
+    n: number = 1,
+): Promise<MattermostPost[]> {
+    const postReply = await getMattermostClient('admin').get(
+        `/channels/${MATTERMOST_CHANNEL_IDS[room]}/posts?page=0&per_page=${n}`,
+    );
+    return postReply.order.map(x => postReply.posts[x]);
+}
+
 export async function getMattermostMembers(
     channel: Channels,
 ): Promise<Set<string>> {
@@ -85,4 +96,9 @@ export async function getMattermostTeamMembers(): Promise<Set<string>> {
         members.map(x => x.user_id),
     );
     return new Set(membersInfo.map(x => x.username));
+}
+
+export async function getMattermostUsername(userid: string): Promise<string> {
+    return (await getMattermostClient('admin').get(`/users/${userid}`))
+        .username;
 }

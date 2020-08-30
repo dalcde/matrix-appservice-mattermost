@@ -2,6 +2,7 @@ import { Post } from '../entities/Post';
 import { ClientError } from '../mattermost/Client';
 import { randomBytes } from 'crypto';
 import { spawn } from 'child_process';
+import { EventEmitter } from 'events';
 
 export function remove<T>(a: T[], x: T): void {
     const index = a.indexOf(x, 0);
@@ -113,5 +114,23 @@ export async function notifySystemd(): Promise<void> {
         proc.on('exit', resolve);
         // systemd might not exist, etc. We've tried out best
         proc.on('error', resolve);
+    });
+}
+
+export async function waitEvent(
+    emitter: EventEmitter,
+    event: string,
+    n: number = 1,
+): Promise<void> {
+    await new Promise(resolve => {
+        let counter = 0;
+        function onEvent() {
+            counter += 1;
+            if (counter === n) {
+                emitter.removeListener(event, onEvent);
+                resolve();
+            }
+        }
+        emitter.on(event, onEvent);
     });
 }

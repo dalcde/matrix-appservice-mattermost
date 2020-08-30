@@ -7,11 +7,11 @@ import * as FormData from 'form-data';
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export class Client {
-    password?: string;
-    username?: string;
-    token?: string;
-
-    constructor(public domain: string, public userid: string) {
+    constructor(
+        public domain: string,
+        public userid: string,
+        public token: string,
+    ) {
         this.domain = domain.replace(/\/*$/, '');
     }
 
@@ -49,17 +49,7 @@ export class Client {
         data?: unknown,
         auth: boolean = true,
     ): Promise<any> {
-        let response = await this.send_raw(method, endpoint, data, auth);
-        // If we used password login and we got a 401, the session token might
-        // have expired. Log in again and try the request.
-        if (
-            response.status === 401 &&
-            this.username !== undefined &&
-            this.password !== undefined
-        ) {
-            this.login(this.username, this.password);
-            response = await this.send_raw(method, endpoint, data, auth);
-        }
+        const response = await this.send_raw(method, endpoint, data, auth);
         if (response.ok) {
             return await response.json();
         } else {
@@ -100,25 +90,6 @@ export class Client {
         auth: boolean = true,
     ): Promise<any> {
         return await this.send('DELETE', endpoint, data, auth);
-    }
-
-    public async login(username: string, password: string): Promise<void> {
-        const r = await this.send_raw(
-            'POST',
-            '/users/login',
-            {
-                login_id: username,
-                password: password,
-            },
-            false,
-        );
-        this.username = username;
-        this.password = password;
-        this.token = r.headers.get('Token') || undefined;
-    }
-
-    public loginWithToken(token: string): void {
-        this.token = token;
     }
 
     public websocket(): ClientWebsocket {

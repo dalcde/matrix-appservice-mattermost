@@ -10,7 +10,8 @@
   "scripts": {
     "preinstall": "git config core.hooksPath .githooks",
     "build": "tsc",
-    "test": "npm run lint && npm run build && tape build{,/**}/*.test.js",
+    "test": "tape build{,/**}/*.test.js",
+    "integration": "tape build/tests/**.js",
     "lint": "prettier -c . && eslint --max-warnings=0 '*/**/*.ts'",
     "fmt": "prettier --write .",
     "fix": "eslint '*/**/*.ts' --fix"

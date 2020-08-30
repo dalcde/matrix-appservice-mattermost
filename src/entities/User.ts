@@ -30,8 +30,8 @@ export class User extends BaseEntity {
             this._client = new Client(
                 config().mattermost_url,
                 this.mattermost_userid,
+                this.access_token,
             );
-            this._client.loginWithToken(this.access_token);
         }
         return this._client;
     }

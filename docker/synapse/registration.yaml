@@ -1,0 +1,13 @@
+id: 'matrix-appservice-mattermost'
+hs_token: supersecrettoken
+as_token: anothersecrettoken
+namespaces:
+  users:
+    - exclusive: true
+      regex: '@mm_.*'
+  aliases: []
+  rooms: []
+url: 'http://appservice:9995'
+sender_localpart: matterbot
+rate_limited: true
+protocols: null

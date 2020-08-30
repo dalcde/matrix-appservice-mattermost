@@ -3,7 +3,7 @@ import { Post } from '../entities/Post';
 import { createConnection } from 'typeorm';
 
 const entities = [User, Post];
-const connection = createConnection({
+export const connection = createConnection({
     type: 'sqlite',
     database: ':memory:',
     entities,

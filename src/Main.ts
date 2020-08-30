@@ -1,5 +1,6 @@
 import {
     Bridge,
+    Intent,
     AppServiceRegistration,
     Request,
 } from 'matrix-appservice-bridge';
@@ -21,8 +22,14 @@ import MattermostUserStore from './MattermostUserStore';
 import Channel from './Channel';
 import Mutex from './utils/Mutex';
 import log from './Logging';
+import { EventEmitter } from 'events';
 
-export default class Main {
+// Patch Intent to fix bug
+Intent.prototype.join = function (roomId, viaServers) {
+    return this._ensureJoined(roomId, true, viaServers);
+};
+
+export default class Main extends EventEmitter {
     readonly client: Client;
     readonly ws: ClientWebsocket;
     readonly mattermostUserStore: MattermostUserStore;
@@ -42,8 +49,13 @@ export default class Main {
     matrixMutex: Mutex;
     initialized: boolean;
     adminEndpoint?: AdminEndpoint;
+    killed: boolean;
 
-    constructor(registration: AppServiceRegistration) {
+    constructor(
+        registration: AppServiceRegistration,
+        readonly exitOnFail: boolean = true,
+    ) {
+        super();
         this.bridge = new Bridge({
             homeserverUrl: config().homeserver.url,
             domain: config().homeserver.server_name,
@@ -75,8 +87,8 @@ export default class Main {
         this.client = new Client(
             config().mattermost_url,
             config().mattermost_bot_userid,
+            config().mattermost_bot_access_token,
         );
-        this.client.loginWithToken(config().mattermost_bot_access_token);
         this.ws = this.client.websocket();
 
         this.channelsByMatrix = new Map();
@@ -90,6 +102,9 @@ export default class Main {
         this.matrixMutex = new Mutex();
         this.mattermostUserStore = new MattermostUserStore(this);
         this.matrixUserStore = new MatrixUserStore(this);
+
+        this.killed = false;
+
         for (const map of config().mappings) {
             if (this.mappingsByMattermost.has(map.mattermost)) {
                 log.error(
@@ -190,6 +205,7 @@ export default class Main {
 
         notifySystemd();
         this.initialized = true;
+        this.emit('initialize');
     }
 
     async leaveUnbridgedChannels(): Promise<void> {
@@ -274,7 +290,12 @@ export default class Main {
         );
     }
 
-    async killBridge(exitCode: number): Promise<never> {
+    async killBridge(exitCode: number): Promise<void> {
+        this.emit('killing');
+        if (this.killed) {
+            return;
+        }
+        this.killed = true;
         try {
             // Otherwise, closing the websocket connection will initiate
             // the shutdown sequence again.
@@ -285,10 +306,14 @@ export default class Main {
                 this.bridge.appService.close(),
                 this.adminEndpoint?.kill(),
             ]);
-            process.exit(exitCode);
+            if (this.exitOnFail) {
+                process.exit(exitCode);
+            }
         } catch (e) {
             log.error(`Failed to kill bridge. Exiting anyway\n${e.stack}`);
-            process.exit(1);
+            if (this.exitOnFail) {
+                process.exit(1);
+            }
         }
     }
 
@@ -335,8 +360,9 @@ export default class Main {
                     this.skipMattermostUser(userid) ||
                     !(await this.isMattermostUser(userid))
                 ) {
-                    log.debug(`Skipping echoed message from ${userid}`);
+                    log.debug(`Skipping echoed message: ${JSON.stringify(m)}`);
                     log.timeEnd.debug('Process mattermost message');
+                    this.emit('mattermost');
                     this.mattermostMutex.unlock();
                     return;
                 }
@@ -378,6 +404,7 @@ export default class Main {
         log.timeEnd.debug('Process mattermost message');
 
         this.mattermostMutex.unlock();
+        this.emit('mattermost');
     }
 
     async onMatrixEvent(request: Request): Promise<void> {
@@ -416,6 +443,7 @@ export default class Main {
         log.timeEnd.debug('Process matrix message');
 
         this.matrixMutex.unlock();
+        this.emit('matrix');
     }
 
     async isMattermostUser(userid: string): Promise<boolean> {

@@ -1,11 +1,11 @@
 homeserver:
   # The url is the url used to talk to your server.
-  url: 'https://matrix.example.org/'
+  url: 'http://localhost:8008'
 
   # The server_name is the part that shows up in @username:server_name. This
   # is usually the domain of the url, but may be different if you use an SRV
-  # record.
-  server_name: 'matrix.example.org'
+  # record or a .well-known URI
+  server_name: 'localhost'
 
 appservice:
   # The port the appservice uses to talk to the bridge. This can be an
@@ -18,24 +18,24 @@ appservice:
   schema: http
 
 # URL to the mattermost instance.
-mattermost_url: https://mattermost.example.com/
+mattermost_url: http://localhost:8065/
 
 # The port the admin endpoint listens to, which lets the administrator interact
 # with the bridge. If unset, there will not be an admin endpoint.
 # admin_port: 9000
 
 # If true, the bridge exits if it fails to bridge any channel. Otherwise, it
-# will go on bridging the channels it can bridge.
-forbid_bridge_failure: false
+# will go on bridging the channels it can bridge. The default is false.
+forbid_bridge_failure: true
 
 # Mappings between mattermost channels and matrix rooms.
 mappings:
-  - mattermost: '33fn4rrcpfrc8p3bwf67rb4kgo'
-    matrix: '!LfejJRTXvmiWngZSVt:matrix.cloudburst.srcf.net'
-  - mattermost: 'rfjyhimtmfff5npnte3qxnir9y'
-    matrix: '!rQvXDKcBzKttJEVWFH:matrix.cloudburst.srcf.net'
-  - mattermost: 'y4zrgsyns7b9dpau4jfjoyb16r'
-    matrix: '!iqOHbKFsYxKiRXFnwM:matrix.cloudburst.srcf.net'
+  # Town Square
+  - mattermost: 'cxtmz3ubz3gfigd5m6prendmsw'
+    matrix: '!kmbTYjjsDRDHGgVqUP:localhost'
+  # Off-Topic
+  - mattermost: '73uy6kj1jb8wdqrf3ti6zies6r'
+    matrix: '!dKcbdDATuwwphjRPQP:localhost'
 
 # A puppet matrix user of a real mattermost user with have matrix localpart
 # with this prefix.
@@ -56,7 +56,7 @@ matrix_display_name_template: '[DISPLAY] [mm]'
 #    localpart is used.
 #
 # This is optional and defaults to [DISPLAY]
-mattermost_username_template: '[LOCALPART] [mm]'
+mattermost_username_template: 'matrix_[LOCALPART]'
 
 # The localpart of the corresponding matrix bot. This is automatically created
 # by the bridge.
@@ -68,8 +68,8 @@ matrix_bot:
 # The mattermost bot used by the bridge. This has to be an existing user with
 # system administration privileges, in order to verify the emails of the puppet
 # users.
-mattermost_bot_userid: 'k87dknq3mprejnjjgc7zfb4gee'
-mattermost_bot_access_token: 'jjd8w9tbnb81ddgcknafor16cr'
+mattermost_bot_userid: 'bmq7jiumpib3xdz3mx5iyo99ro'
+mattermost_bot_access_token: 's537n3t8zib1tx7eyd44qzqnbr'
 
 # Database configuration. Currently, only postgres and sqlite are supported.
 # The configuration is the arguments supplied to TypeORM's createConnection:
@@ -86,11 +86,12 @@ logging: debug # Valid values are trace, debug, info, warn, error and silent
 # Matrix users that should not show up on the other side of the bridge. The bot
 # user (matterbot) is automatically included.
 ignored_matrix_users:
-  - '@appservice-irc:matrix.example.org'
+  - '@admin:localhost'
+  - '@ignored_user:localhost'
 
 # Same as above. The mattermost bot is also automatically included.
 ignored_mattermost_users:
-  - 'gh39s3w2msae1a2jg67s2e4453'
+  - '0z4okgmv5lfhx3p0tf6pnpk8sk'
 
 # Email template used for puppet users, with [RANDOM] replaced by a random
 # string. These do not have to be valid emails, as the users have their emails
@@ -101,4 +102,4 @@ ignored_mattermost_users:
 # string, with variable [USERNAME]. However, since usernames are not immutable,
 # this can potentially conflict. Currently, [USERNAME] is still accepted but
 # will be replaced by a random string as well.
-mattermost_email_template: 'devnull-[RANDOM]@example.org'
+mattermost_email_template: 'devnull-[RANDOM]@localhost'

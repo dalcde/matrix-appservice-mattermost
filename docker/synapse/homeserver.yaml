@@ -1,0 +1,44 @@
+server_name: localhost
+public_baseurl: http://localhost:8008/
+
+pid_file: '/var/run/matrix-synapse.pid'
+
+listeners:
+  - port: 8008
+    tls: false
+    type: http
+    x_forwarded: false
+    bind_addresses: ['0.0.0.0']
+
+    resources:
+      - names: [client]
+        compress: false
+
+database:
+  name: psycopg2
+  args:
+    database: synapse
+    user: synapse
+    password: hunter2
+    host: postgres
+    port: 5432
+    cp_min: 5
+    cp_max: 10
+
+log_config: '/etc/synapse/my.domain.name.log.config'
+media_store_path: '/media_store'
+report_stats: false
+enable_registration: true
+
+rc_registration:
+  per_second: 10
+  burst_count: 10
+
+rc_message:
+  per_second: 10
+  burst_count: 10
+
+app_service_config_files:
+  - /etc/synapse/registration.yaml
+
+signing_key_path: '/etc/synapse/my.domain.name.signing.key'

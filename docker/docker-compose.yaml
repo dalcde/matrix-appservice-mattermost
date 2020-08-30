@@ -1,0 +1,28 @@
+version: '3.0'
+services:
+  postgres:
+    image: postgres:12.4-alpine
+    volumes:
+      - ./postgres/mattermost.sql:/docker-entrypoint-initdb.d/00-mattermost.sql
+      - ./postgres/setup-synapse.sql:/docker-entrypoint-initdb.d/01-setup-synapse.sql
+      - ./postgres/synapse.sql:/docker-entrypoint-initdb.d/02-synapse.sql
+    environment:
+      # We create synapse database in 01-setup.sql
+      - POSTGRES_USER=mattermost
+      - POSTGRES_DB=mattermost
+      - POSTGRES_PASSWORD=hunter2
+
+  mattermost:
+    build: mattermost
+    ports:
+      - '8065:8065'
+
+  synapse:
+    build: synapse
+    ports:
+      - '8008:8008'
+
+  appservice:
+    build: appservice
+    ports:
+      - '8022:22'

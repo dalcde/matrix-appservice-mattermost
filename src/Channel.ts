@@ -94,6 +94,13 @@ export default class Channel {
                 log.debug(
                     `Cannot remove user ${userid} from default town-square channel`,
                 );
+            } else if (
+                e instanceof ClientError &&
+                e.m.id === 'store.sql_channel.get_member.missing.app_error'
+            ) {
+                log.debug(
+                    `User ${userid} already removed from channel ${this.mattermostChannel}`,
+                );
             } else {
                 throw e;
             }

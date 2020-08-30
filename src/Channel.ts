@@ -95,7 +95,7 @@ export default class Channel {
                 e.m.status_code === 500
             ) {
                 try {
-                    await this.main.client.delete(
+                    await this.main.client.get(
                         `/channels/${this.mattermostChannel}/members/${userid}`,
                     );
                 } catch (e_) {

@@ -5,16 +5,33 @@ Bug fixes:
 - Don't use username in mattermost email template, since usernames are not
   immutable. Use a random string instead.
 - Fix error formatting when failing to connect to mattermost.
+- Fix errors when trailing slashes are included in domain names.
+- Ensure the randomly generated passwords meet password requirements.
+- Use \_ instead of . in random emails, because emails don't allow trailing dots
+  are repeated dots.
+- Prevent race condition where we try to remove a member from a channel after
+  they left the team.
+- Mitigate Mattermost bug where joining a channel twice (indirectly triggered
+  by default channel joins) returns an error.
 
 New features:
 
 - New admin endpoint for user to interact with the bridge. Migrate rename
   script to the admin endpoint
+- Add an option to abort bridge if any channel sync fails.
 - The bridge notifies systemd when it is initialized
 
 Breaking changes:
 
 - Rename script no longer present
+
+Others:
+
+- Prettify mattermost error messages
+- Avoid accessing "private" properties of objects from
+  `matrix-appservice-bridge` and `matrix-js-sdk` libraries in anticipation of
+  typescript port.
+- Add integration tests
 
 # 0.1.2 (2020-08-25)
 

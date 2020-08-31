@@ -52,23 +52,29 @@ export async function startBridge(
         '8022',
         'proxy@localhost',
     ]);
+
+    const m = new Main(registration, false);
     tunnel.on('close', () => {
-        if (!main().killed) {
+        // Don't use main() because it might refer to a new Main after this
+        // one.
+        if (!m.killed) {
             log.error('ssh tunnel for appservice unexpectedly closed');
         }
     });
+    m.on('kill', () => {
+        main_ = undefined;
+        tunnel.kill();
+    });
+    main_ = m;
 
-    main_ = new Main(registration, false);
-    main_.on('killing', () => tunnel.kill());
-
-    await main().init();
+    await m.init();
 }
 
 export function test(message: string, cb: (t) => void | Promise<void>): void {
     tapeTest(message, t => {
         log.error = msg => {
             log.error = console.error;
-            main().killBridge(1);
+            main_?.killBridge(1);
             t.fail(msg);
             t.end();
         };

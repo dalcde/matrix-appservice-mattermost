@@ -6,6 +6,7 @@ import {
     sanitizeMattermostUsername,
     uniq,
     randomString,
+    allSettled,
 } from './Functions';
 
 test('remove', t => {
@@ -77,5 +78,21 @@ test('randomString', t => {
     t.false(rand.includes('+'));
     t.false(rand.includes('='));
     t.false(rand.includes('/'));
+    t.end();
+});
+
+test('allSettled', async t => {
+    t.deepEqual(
+        await allSettled([
+            new Promise((resolve, reject) => reject('oops')),
+            new Promise(resolve => resolve('yay')),
+            undefined,
+        ]),
+        [
+            { status: 'rejected', reason: 'oops' },
+            { status: 'fulfilled', value: 'yay' },
+            { status: 'fulfilled', value: undefined },
+        ],
+    );
     t.end();
 });

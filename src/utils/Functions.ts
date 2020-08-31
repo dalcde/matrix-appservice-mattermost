@@ -134,3 +134,26 @@ export async function waitEvent(
         emitter.on(event, onEvent);
     });
 }
+
+type Fulfilled = {
+    status: 'fulfilled';
+    value: unknown;
+};
+type Rejected = {
+    status: 'rejected';
+    reason: Error;
+};
+
+export async function allSettled(
+    promises: (Promise<unknown> | undefined)[],
+): Promise<(Fulfilled | Rejected)[]> {
+    return await Promise.all(
+        promises.map(p =>
+            // Promise.resolve handles the case where p is undefined
+            Promise.resolve(p).then(
+                val => ({ status: 'fulfilled', value: val } as Fulfilled),
+                err => ({ status: 'rejected', reason: err } as Rejected),
+            ),
+        ),
+    );
+}

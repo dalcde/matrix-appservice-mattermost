@@ -13,7 +13,7 @@ import {
     RELOADABLE_CONFIG,
 } from './Config';
 import { isDeepStrictEqual } from 'util';
-import { none, notifySystemd } from './utils/Functions';
+import { none, notifySystemd, allSettled } from './utils/Functions';
 import { User } from './entities/User';
 import { MattermostMessage } from './Interfaces';
 import AdminEndpoint from './AdminEndpoint';
@@ -291,29 +291,35 @@ export default class Main extends EventEmitter {
     }
 
     async killBridge(exitCode: number): Promise<void> {
-        this.emit('killing');
-        if (this.killed) {
+        const killed = this.killed;
+        this.killed = true;
+
+        this.emit('kill');
+        if (killed) {
             return;
         }
-        this.killed = true;
-        try {
-            // Otherwise, closing the websocket connection will initiate
-            // the shutdown sequence again.
-            this.ws.removeAllListeners('close');
-            clearTimeout(this.bridge._intentLastAccessedTimeout);
-            await Promise.all([
-                this.ws.close(),
-                this.bridge.appService.close(),
-                this.adminEndpoint?.kill(),
-            ]);
-            if (this.exitOnFail) {
-                process.exit(exitCode);
+        // Otherwise, closing the websocket connection will initiate
+        // the shutdown sequence again.
+        this.ws.removeAllListeners('close');
+        clearTimeout(this.bridge._intentLastAccessedTimeout);
+
+        const results = await allSettled([
+            this.ws.close(),
+            this.bridge.appService.close(),
+            this.adminEndpoint?.kill(),
+            // Lock the channels so that we are not halfway through processing
+            // a message.
+            this.mattermostMutex.lock(),
+            this.matrixMutex.lock(),
+        ]);
+        for (const result of results) {
+            if (result.status === 'rejected') {
+                log.error(`Error when killing bridge: ${result.reason.stack}`);
+                exitCode = 1;
             }
-        } catch (e) {
-            log.error(`Failed to kill bridge. Exiting anyway\n${e.stack}`);
-            if (this.exitOnFail) {
-                process.exit(1);
-            }
+        }
+        if (this.exitOnFail) {
+            process.exit(exitCode);
         }
     }
 

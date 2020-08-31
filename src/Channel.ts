@@ -162,7 +162,7 @@ export default class Channel {
                     return;
                 }
                 if (!(await this.main.isMattermostUser(userid))) {
-                    this.leaveMattermost(userid);
+                    await this.leaveMattermost(userid);
                 } else {
                     const user = await this.main.mattermostUserStore.getOrCreate(
                         userid,

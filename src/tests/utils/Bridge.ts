@@ -74,7 +74,7 @@ export function test(message: string, cb: (t) => void | Promise<void>): void {
     tapeTest(message, t => {
         log.error = msg => {
             log.error = console.error;
-            main_?.killBridge(1);
+            void main_?.killBridge(1);
             t.fail(msg);
             t.end();
         };

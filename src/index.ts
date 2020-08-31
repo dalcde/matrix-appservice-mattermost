@@ -56,15 +56,15 @@ const cli = new Cli({
 
         const main = new Main(registration);
         log.timeEnd.info('Bridge loaded');
-        main.init();
+        void main.init();
 
         process.on('SIGTERM', () => {
             log.info('Received SIGTERM. Shutting down bridge.');
-            main.killBridge(0);
+            void main.killBridge(0);
         });
         process.on('SIGINT', () => {
             log.info('Received SIGINT. Shutting down bridge.');
-            main.killBridge(0);
+            void main.killBridge(0);
         });
     },
 });

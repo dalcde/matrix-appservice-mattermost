@@ -263,7 +263,7 @@ const MattermostHandlers = {
     ): Promise<void> {
         const user = await this.main.mattermostUserStore.get(m.data.user.id);
         if (user !== undefined) {
-            this.main.mattermostUserStore.updateUser(m.data.user, user);
+            await this.main.mattermostUserStore.updateUser(m.data.user, user);
         }
     },
     leave_team: async function (

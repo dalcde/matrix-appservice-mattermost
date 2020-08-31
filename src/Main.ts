@@ -65,7 +65,7 @@ export default class Main extends EventEmitter {
                     return {};
                 },
                 onEvent: request => {
-                    this.onMatrixEvent(request);
+                    void this.onMatrixEvent(request);
                 },
             },
             disableContext: true,
@@ -111,7 +111,7 @@ export default class Main extends EventEmitter {
                     `Mattermost channel ${map.mattermost} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
                 );
                 if (config().forbid_bridge_failure) {
-                    this.killBridge(1);
+                    void this.killBridge(1);
                     return;
                 }
                 continue;
@@ -121,7 +121,7 @@ export default class Main extends EventEmitter {
                     `Matrix channel ${map.matrix} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
                 );
                 if (config().forbid_bridge_failure) {
-                    this.killBridge(1);
+                    void this.killBridge(1);
                     return;
                 }
                 continue;
@@ -144,7 +144,7 @@ export default class Main extends EventEmitter {
 
         this.ws.on('close', () => {
             log.error('Mattermost websocket closed. Shutting down bridge');
-            this.killBridge(1);
+            void this.killBridge(1);
         });
 
         if (config().admin_port !== undefined) {
@@ -203,7 +203,7 @@ export default class Main extends EventEmitter {
         await botProfile;
         log.timeEnd.info('Bridge initialized');
 
-        notifySystemd();
+        void notifySystemd();
         this.initialized = true;
         this.emit('initialize');
     }

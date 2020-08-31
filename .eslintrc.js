@@ -4,6 +4,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020, // Allows for the parsing of modern ECMAScript features
     sourceType: 'module', // Allows for the use of imports
+    project: './tsconfig.json',
   },
 
   extends: [
@@ -11,6 +12,7 @@ module.exports = {
   ],
 
   rules: {
+    '@typescript-eslint/no-floating-promises': 'warn',
     '@typescript-eslint/no-inferrable-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/prefer-optional-chain': 'warn',

@@ -1069,18 +1069,6 @@ COPY public.access_tokens (id, user_id, device_id, token, last_used, valid_until
 4	@matrix_b:localhost	DJFHSWMXLW	MDAxN2xvY2F0aW9uIGxvY2FsaG9zdAowMDEzaWRlbnRpZmllciBrZXkKMDAxMGNpZCBnZW4gPSAxCjAwMjZjaWQgdXNlcl9pZCA9IEBtYXRyaXhfYjpsb2NhbGhvc3QKMDAxNmNpZCB0eXBlID0gYWNjZXNzCjAwMjFjaWQgbm9uY2UgPSBBYl9hbWthI0daSzgtfjdICjAwMmZzaWduYXR1cmUgOReBLkPURCMNtzORS9fpogQqVa3IWN9ZEu5gXW91QTMK	\N	\N
 5	@ignored_user:localhost	IYEBBQEXHS	MDAxN2xvY2F0aW9uIGxvY2FsaG9zdAowMDEzaWRlbnRpZmllciBrZXkKMDAxMGNpZCBnZW4gPSAxCjAwMmFjaWQgdXNlcl9pZCA9IEBpZ25vcmVkX3VzZXI6bG9jYWxob3N0CjAwMTZjaWQgdHlwZSA9IGFjY2VzcwowMDIxY2lkIG5vbmNlID0gZU5ta1BBMj1FNnVPRGtwdgowMDJmc2lnbmF0dXJlIHSt8jrFU836Ne3it2HY88EhPD1Aoustsm211bbFjcLcCg	\N	\N
 \.
-COPY public.account_data (user_id, account_data_type, stream_id, content) FROM stdin;
-\.
-COPY public.account_data_max_stream_id (lock, stream_id) FROM stdin;
-\.
-COPY public.account_validity (user_id, expiration_ts_ms, email_sent, renewal_token) FROM stdin;
-\.
-COPY public.application_services_state (as_id, state, last_txn) FROM stdin;
-\.
-COPY public.application_services_txns (as_id, txn_id, event_ids) FROM stdin;
-\.
-COPY public.applied_module_schemas (module_name, file) FROM stdin;
-\.
 COPY public.applied_schema_deltas (version, file) FROM stdin;
 55	55/access_token_expiry.sql
 55	55/track_threepid_validations.sql
@@ -1129,16 +1117,8 @@ COPY public.applied_schema_deltas (version, file) FROM stdin;
 58	58/05cache_instance.sql.postgres
 58	58/06dlols_unique_idx.py
 \.
-COPY public.appservice_room_list (appservice_id, network_id, room_id) FROM stdin;
-\.
 COPY public.appservice_stream_position (lock, stream_ordering) FROM stdin;
 X	19
-\.
-COPY public.background_updates (update_name, progress_json, depends_on, ordering) FROM stdin;
-\.
-COPY public.blocked_rooms (room_id, user_id) FROM stdin;
-\.
-COPY public.cache_invalidation_stream (stream_id, cache_func, keys, invalidation_ts) FROM stdin;
 \.
 COPY public.cache_invalidation_stream_by_instance (stream_id, instance_name, cache_func, keys, invalidation_ts) FROM stdin;
 1	master	user_last_seen_monthly_active	\N	1598686299114
@@ -1208,26 +1188,6 @@ $4ZLf-3JRJMLLADbzome2n_5rZNEeHEFIo3w1xN4KKu0	!dKcbdDATuwwphjRPQP:localhost	m.roo
 $hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	!kmbTYjjsDRDHGgVqUP:localhost	m.room.member	@ignored_user:localhost	join
 $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	!dKcbdDATuwwphjRPQP:localhost	m.room.member	@ignored_user:localhost	join
 \.
-COPY public.deleted_pushers (stream_id, app_id, pushkey, user_id) FROM stdin;
-\.
-COPY public.destinations (destination, retry_last_ts, retry_interval, failure_ts) FROM stdin;
-\.
-COPY public.device_federation_inbox (origin, message_id, received_ts) FROM stdin;
-\.
-COPY public.device_federation_outbox (destination, stream_id, queued_ts, messages_json) FROM stdin;
-\.
-COPY public.device_inbox (user_id, device_id, stream_id, message_json) FROM stdin;
-\.
-COPY public.device_lists_outbound_last_success (destination, user_id, stream_id) FROM stdin;
-\.
-COPY public.device_lists_outbound_pokes (destination, stream_id, user_id, device_id, sent, ts, opentracing_context) FROM stdin;
-\.
-COPY public.device_lists_remote_cache (user_id, device_id, content) FROM stdin;
-\.
-COPY public.device_lists_remote_extremeties (user_id, stream_id) FROM stdin;
-\.
-COPY public.device_lists_remote_resync (user_id, added_ts) FROM stdin;
-\.
 COPY public.device_lists_stream (stream_id, user_id, device_id) FROM stdin;
 2	@admin:localhost	WCSUBIGVWG
 3	@matrix_a:localhost	TKAVEOGKHH
@@ -1242,20 +1202,6 @@ COPY public.devices (user_id, device_id, display_name, last_seen, ip, user_agent
 @matrix_a:localhost	TKAVEOGKHH	\N	1598686328398	172.21.0.1	curl/7.72.0	f
 @matrix_b:localhost	DJFHSWMXLW	\N	1598686328482	172.21.0.1	curl/7.72.0	f
 @ignored_user:localhost	IYEBBQEXHS	\N	1598686328565	172.21.0.1	curl/7.72.0	f
-\.
-COPY public.e2e_cross_signing_keys (user_id, keytype, keydata, stream_id) FROM stdin;
-\.
-COPY public.e2e_cross_signing_signatures (user_id, key_id, target_user_id, target_device_id, signature) FROM stdin;
-\.
-COPY public.e2e_device_keys_json (user_id, device_id, ts_added_ms, key_json) FROM stdin;
-\.
-COPY public.e2e_one_time_keys_json (user_id, device_id, algorithm, key_id, ts_added_ms, key_json) FROM stdin;
-\.
-COPY public.e2e_room_keys (user_id, room_id, session_id, version, first_message_index, forwarded_count, is_verified, session_data) FROM stdin;
-\.
-COPY public.e2e_room_keys_versions (user_id, version, algorithm, auth_data, deleted, etag) FROM stdin;
-\.
-COPY public.erased_users (user_id) FROM stdin;
 \.
 COPY public.event_auth (event_id, auth_id, room_id) FROM stdin;
 $_oKaaOfL7rFtPsAsxDmHrCY9sAzFjslRwkJ_QHxHDTw	$mBmRyyvP_Jc-LDi7_hiGD9QTu5XGVXqNMxZM4yDMQPU	!kmbTYjjsDRDHGgVqUP:localhost
@@ -1301,8 +1247,6 @@ $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	$P98vptI_jrNYKKnTTDYouThgohgHqJkD5R
 $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	$hEtlt0NU16h0ix9xBX0MDJR0g54ATEZ4S96udYzYBqs	!dKcbdDATuwwphjRPQP:localhost
 $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	$Rczn5GeJ1aYMBU_oXSIF8ppVk8WEruaYIBA3FE7Yq88	!dKcbdDATuwwphjRPQP:localhost
 \.
-COPY public.event_backward_extremities (event_id, room_id) FROM stdin;
-\.
 COPY public.event_edges (event_id, prev_event_id, room_id, is_state) FROM stdin;
 $_oKaaOfL7rFtPsAsxDmHrCY9sAzFjslRwkJ_QHxHDTw	$mBmRyyvP_Jc-LDi7_hiGD9QTu5XGVXqNMxZM4yDMQPU	!kmbTYjjsDRDHGgVqUP:localhost	f
 $BYyVCPyJh9PVJBsxDwm9NakGY19DlCJJ1GlCcYpTv8w	$_oKaaOfL7rFtPsAsxDmHrCY9sAzFjslRwkJ_QHxHDTw	!kmbTYjjsDRDHGgVqUP:localhost	f
@@ -1320,8 +1264,6 @@ $llCtN-sfVC1IOdDQXgskgx4jl97hQHfKnEH-IP-lyvk	$N33GyONpuSa3zRNJk1CtLYdhqJbhXBwSpA
 $4ZLf-3JRJMLLADbzome2n_5rZNEeHEFIo3w1xN4KKu0	$wd-zBsOV9K_8HbhPARZ91kf5cfZwLKRi7yBBGGNUAb0	!dKcbdDATuwwphjRPQP:localhost	f
 $hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	$llCtN-sfVC1IOdDQXgskgx4jl97hQHfKnEH-IP-lyvk	!kmbTYjjsDRDHGgVqUP:localhost	f
 $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	$4ZLf-3JRJMLLADbzome2n_5rZNEeHEFIo3w1xN4KKu0	!dKcbdDATuwwphjRPQP:localhost	f
-\.
-COPY public.event_expiry (event_id, expiry_ts) FROM stdin;
 \.
 COPY public.event_forward_extremities (event_id, room_id) FROM stdin;
 $hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	!kmbTYjjsDRDHGgVqUP:localhost
@@ -1347,14 +1289,6 @@ $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	!dKcbdDATuwwphjRPQP:localhost	{"tok
 $llCtN-sfVC1IOdDQXgskgx4jl97hQHfKnEH-IP-lyvk	!kmbTYjjsDRDHGgVqUP:localhost	{"token_id": 4, "stream_ordering": 16}	{"auth_events": ["$BYyVCPyJh9PVJBsxDwm9NakGY19DlCJJ1GlCcYpTv8w", "$mBmRyyvP_Jc-LDi7_hiGD9QTu5XGVXqNMxZM4yDMQPU", "$G_m59AjH2Y1FX4D11JDsmEETfHGAWoknTIdv-_XYW2o"], "prev_events": ["$N33GyONpuSa3zRNJk1CtLYdhqJbhXBwSpAlUUm-zmB8"], "type": "m.room.member", "room_id": "!kmbTYjjsDRDHGgVqUP:localhost", "sender": "@matrix_b:localhost", "content": {"membership": "join", "displayname": "matrix_b"}, "depth": 8, "prev_state": [], "state_key": "@matrix_b:localhost", "origin": "localhost", "origin_server_ts": 1598686328493, "hashes": {"sha256": "cH8tXUk5lxa0k+40sn0aVCgn+JhxncHg3R/oYnHUDlU"}, "signatures": {"localhost": {"ed25519:a_snHR": "C43sosgS9LF5roZP7JiJGmrZR2O9nHvC+mPvYZ0+qDm58WLnmpjC0B8Y8Txye0OoW8HsBqxhJQf10txK8vI6CQ"}}, "unsigned": {"age_ts": 1598686328493}}	3
 $hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	!kmbTYjjsDRDHGgVqUP:localhost	{"token_id": 5, "stream_ordering": 18}	{"auth_events": ["$BYyVCPyJh9PVJBsxDwm9NakGY19DlCJJ1GlCcYpTv8w", "$G_m59AjH2Y1FX4D11JDsmEETfHGAWoknTIdv-_XYW2o", "$mBmRyyvP_Jc-LDi7_hiGD9QTu5XGVXqNMxZM4yDMQPU"], "prev_events": ["$llCtN-sfVC1IOdDQXgskgx4jl97hQHfKnEH-IP-lyvk"], "type": "m.room.member", "room_id": "!kmbTYjjsDRDHGgVqUP:localhost", "sender": "@ignored_user:localhost", "content": {"membership": "join", "displayname": "ignored_user"}, "depth": 9, "prev_state": [], "state_key": "@ignored_user:localhost", "origin": "localhost", "origin_server_ts": 1598686328575, "hashes": {"sha256": "D/rwxkYqWZ03Kws7Xsq84khdp4oGHRGnOy4+XwM8dLA"}, "signatures": {"localhost": {"ed25519:a_snHR": "kXK8xKjLjJ97KcFQivelEBI1TR/au+bgtD6i2VPDp9LjRi1bVH/zb6YqHZetT0JYaGt3NY4iFeN0Qh0mD4zyAg"}}, "unsigned": {"age_ts": 1598686328575}}	3
 \.
-COPY public.event_labels (event_id, label, room_id, topological_ordering) FROM stdin;
-\.
-COPY public.event_push_actions (room_id, event_id, user_id, profile_tag, actions, topological_ordering, stream_ordering, notif, highlight) FROM stdin;
-\.
-COPY public.event_push_actions_staging (event_id, user_id, actions, notif, highlight) FROM stdin;
-\.
-COPY public.event_push_summary (user_id, room_id, notif_count, stream_ordering) FROM stdin;
-\.
 COPY public.event_push_summary_stream_ordering (lock, stream_ordering) FROM stdin;
 X	0
 \.
@@ -1377,12 +1311,6 @@ $llCtN-sfVC1IOdDQXgskgx4jl97hQHfKnEH-IP-lyvk	sha256	\\x9650ad37eb1f542d4839d0d05
 $4ZLf-3JRJMLLADbzome2n_5rZNEeHEFIo3w1xN4KKu0	sha256	\\xe192dffb725124c2cb0036f3a267b69ffe6b64d11e1c4148a37c35c4de0a2aed
 $hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	sha256	\\x843d99f811e44ac70e4e27ed7097b59fea5e388b228509506edca34762244e60
 $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	sha256	\\x4af7fdd6dc86c94bb37a5607f1b6f333a417b88f5771a6fe5cc5e30ab2203390
-\.
-COPY public.event_relations (event_id, relates_to_id, relation_type, aggregation_key) FROM stdin;
-\.
-COPY public.event_reports (id, received_ts, room_id, event_id, user_id, reason, content) FROM stdin;
-\.
-COPY public.event_search (event_id, room_id, sender, key, vector, origin_server_ts, stream_ordering) FROM stdin;
 \.
 COPY public.event_to_state_groups (event_id, state_group) FROM stdin;
 $mBmRyyvP_Jc-LDi7_hiGD9QTu5XGVXqNMxZM4yDMQPU	2
@@ -1424,35 +1352,9 @@ COPY public.events (stream_ordering, topological_ordering, event_id, type, room_
 18	9	$hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	m.room.member	!kmbTYjjsDRDHGgVqUP:localhost	\N	\N	t	f	9	1598686328575	1598686328587	@ignored_user:localhost	f
 19	9	$Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	m.room.member	!dKcbdDATuwwphjRPQP:localhost	\N	\N	t	f	9	1598686328616	1598686328628	@ignored_user:localhost	f
 \.
-COPY public.ex_outlier_stream (event_stream_ordering, event_id, state_group) FROM stdin;
-\.
 COPY public.federation_stream_position (type, stream_id) FROM stdin;
 federation	-1
 events	19
-\.
-COPY public.group_attestations_remote (group_id, user_id, valid_until_ms, attestation_json) FROM stdin;
-\.
-COPY public.group_attestations_renewals (group_id, user_id, valid_until_ms) FROM stdin;
-\.
-COPY public.group_invites (group_id, user_id) FROM stdin;
-\.
-COPY public.group_roles (group_id, role_id, profile, is_public) FROM stdin;
-\.
-COPY public.group_room_categories (group_id, category_id, profile, is_public) FROM stdin;
-\.
-COPY public.group_rooms (group_id, room_id, is_public) FROM stdin;
-\.
-COPY public.group_summary_roles (group_id, role_id, role_order) FROM stdin;
-\.
-COPY public.group_summary_room_categories (group_id, category_id, cat_order) FROM stdin;
-\.
-COPY public.group_summary_rooms (group_id, room_id, category_id, room_order, is_public) FROM stdin;
-\.
-COPY public.group_summary_users (group_id, user_id, role_id, user_order, is_public) FROM stdin;
-\.
-COPY public.group_users (group_id, user_id, is_admin, is_public) FROM stdin;
-\.
-COPY public.groups (group_id, name, avatar_url, short_description, long_description, is_public, join_policy) FROM stdin;
 \.
 COPY public.local_current_membership (room_id, user_id, event_id, membership) FROM stdin;
 !kmbTYjjsDRDHGgVqUP:localhost	@admin:localhost	$_oKaaOfL7rFtPsAsxDmHrCY9sAzFjslRwkJ_QHxHDTw	join
@@ -1464,65 +1366,11 @@ COPY public.local_current_membership (room_id, user_id, event_id, membership) FR
 !kmbTYjjsDRDHGgVqUP:localhost	@ignored_user:localhost	$hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	join
 !dKcbdDATuwwphjRPQP:localhost	@ignored_user:localhost	$Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	join
 \.
-COPY public.local_group_membership (group_id, user_id, is_admin, membership, is_publicised, content) FROM stdin;
-\.
-COPY public.local_group_updates (stream_id, group_id, user_id, type, content) FROM stdin;
-\.
-COPY public.local_invites (stream_id, inviter, invitee, event_id, room_id, locally_rejected, replaced_by) FROM stdin;
-\.
-COPY public.local_media_repository (media_id, media_type, media_length, created_ts, upload_name, user_id, quarantined_by, url_cache, last_access_ts) FROM stdin;
-\.
-COPY public.local_media_repository_thumbnails (media_id, thumbnail_width, thumbnail_height, thumbnail_type, thumbnail_method, thumbnail_length) FROM stdin;
-\.
-COPY public.local_media_repository_url_cache (url, response_code, etag, expires_ts, og, media_id, download_ts) FROM stdin;
-\.
-COPY public.monthly_active_users (user_id, "timestamp") FROM stdin;
-\.
-COPY public.open_id_tokens (token, ts_valid_until_ms, user_id) FROM stdin;
-\.
-COPY public.presence (user_id, state, status_msg, mtime) FROM stdin;
-\.
-COPY public.presence_allow_inbound (observed_user_id, observer_user_id) FROM stdin;
-\.
-COPY public.presence_stream (stream_id, user_id, state, last_active_ts, last_federation_update_ts, last_user_sync_ts, status_msg, currently_active) FROM stdin;
-\.
 COPY public.profiles (user_id, displayname, avatar_url) FROM stdin;
 admin	Admin User	\N
 matrix_a	Matrix UserA	\N
 matrix_b	matrix_b	\N
 ignored_user	ignored_user	\N
-\.
-COPY public.public_room_list_stream (stream_id, room_id, visibility, appservice_id, network_id) FROM stdin;
-\.
-COPY public.push_rules (id, user_name, rule_id, priority_class, priority, conditions, actions) FROM stdin;
-\.
-COPY public.push_rules_enable (id, user_name, rule_id, enabled) FROM stdin;
-\.
-COPY public.push_rules_stream (stream_id, event_stream_ordering, user_id, rule_id, op, priority_class, priority, conditions, actions) FROM stdin;
-\.
-COPY public.pusher_throttle (pusher, room_id, last_sent_ts, throttle_ms) FROM stdin;
-\.
-COPY public.pushers (id, user_name, access_token, profile_tag, kind, app_id, app_display_name, device_display_name, pushkey, ts, lang, data, last_stream_ordering, last_success, failing_since) FROM stdin;
-\.
-COPY public.ratelimit_override (user_id, messages_per_second, burst_count) FROM stdin;
-\.
-COPY public.receipts_graph (room_id, receipt_type, user_id, event_ids, data) FROM stdin;
-\.
-COPY public.receipts_linearized (stream_id, room_id, receipt_type, user_id, event_id, data) FROM stdin;
-\.
-COPY public.received_transactions (transaction_id, origin, ts, response_code, response_json, has_been_referenced) FROM stdin;
-\.
-COPY public.redactions (event_id, redacts, have_censored, received_ts) FROM stdin;
-\.
-COPY public.rejections (event_id, reason, last_check) FROM stdin;
-\.
-COPY public.remote_media_cache (media_origin, media_id, media_type, created_ts, upload_name, media_length, filesystem_id, last_access_ts, quarantined_by) FROM stdin;
-\.
-COPY public.remote_media_cache_thumbnails (media_origin, media_id, thumbnail_width, thumbnail_height, thumbnail_method, thumbnail_type, thumbnail_length, filesystem_id) FROM stdin;
-\.
-COPY public.remote_profile_cache (user_id, displayname, avatar_url, last_check) FROM stdin;
-\.
-COPY public.room_account_data (user_id, room_id, account_data_type, stream_id, content) FROM stdin;
 \.
 COPY public.room_alias_servers (room_alias, server) FROM stdin;
 #town-square:localhost	localhost
@@ -1546,13 +1394,9 @@ $4ZLf-3JRJMLLADbzome2n_5rZNEeHEFIo3w1xN4KKu0	@matrix_b:localhost	@matrix_b:local
 $hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA	@ignored_user:localhost	@ignored_user:localhost	!kmbTYjjsDRDHGgVqUP:localhost	join	0	ignored_user	\N
 $Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A	@ignored_user:localhost	@ignored_user:localhost	!dKcbdDATuwwphjRPQP:localhost	join	0	ignored_user	\N
 \.
-COPY public.room_retention (room_id, event_id, min_lifetime, max_lifetime) FROM stdin;
-\.
 COPY public.room_stats_current (room_id, current_state_events, joined_members, invited_members, left_members, banned_members, local_users_in_room, completed_delta_stream_id) FROM stdin;
 !kmbTYjjsDRDHGgVqUP:localhost	9	4	0	0	0	4	18
 !dKcbdDATuwwphjRPQP:localhost	9	4	0	0	0	4	19
-\.
-COPY public.room_stats_earliest_token (room_id, token) FROM stdin;
 \.
 COPY public.room_stats_historical (room_id, end_ts, bucket_size, current_state_events, joined_members, invited_members, left_members, banned_members, local_users_in_room, total_events, total_event_bytes) FROM stdin;
 !kmbTYjjsDRDHGgVqUP:localhost	1598745600000	86400000	9	4	0	0	0	4	9	6709
@@ -1562,20 +1406,12 @@ COPY public.room_stats_state (room_id, name, canonical_alias, join_rules, histor
 !kmbTYjjsDRDHGgVqUP:localhost	\N	#town-square:localhost	public	shared	\N	\N	\N	t	\N
 !dKcbdDATuwwphjRPQP:localhost	\N	#off-topic:localhost	public	shared	\N	\N	\N	t	\N
 \.
-COPY public.room_tags (user_id, room_id, tag, content) FROM stdin;
-\.
-COPY public.room_tags_revisions (user_id, room_id, stream_id) FROM stdin;
-\.
 COPY public.rooms (room_id, is_public, creator, room_version) FROM stdin;
 !kmbTYjjsDRDHGgVqUP:localhost	f	@admin:localhost	5
 !dKcbdDATuwwphjRPQP:localhost	f	@admin:localhost	5
 \.
 COPY public.schema_version (lock, version, upgraded) FROM stdin;
 X	58	t
-\.
-COPY public.server_keys_json (server_name, key_id, from_server, ts_added_ms, ts_valid_until_ms, key_json) FROM stdin;
-\.
-COPY public.server_signature_keys (server_name, key_id, from_server, ts_added_ms, verify_key, ts_valid_until_ms) FROM stdin;
 \.
 COPY public.state_events (event_id, room_id, type, state_key, prev_state) FROM stdin;
 $mBmRyyvP_Jc-LDi7_hiGD9QTu5XGVXqNMxZM4yDMQPU	!kmbTYjjsDRDHGgVqUP:localhost	m.room.create		\N
@@ -1682,12 +1518,6 @@ COPY public.stream_ordering_to_exterm (stream_ordering, room_id, event_id) FROM 
 18	!kmbTYjjsDRDHGgVqUP:localhost	$hD2Z-BHkSscOTiftcJe1n-peOIsihQlQbtyjR2IkTmA
 19	!dKcbdDATuwwphjRPQP:localhost	$Svf91tyGyUuzelYH8bbzM6QXuI9Xcab-XMXjCrIgM5A
 \.
-COPY public.threepid_guest_access_tokens (medium, address, guest_access_token, first_inviter) FROM stdin;
-\.
-COPY public.threepid_validation_session (session_id, medium, address, client_secret, last_send_attempt, validated_at) FROM stdin;
-\.
-COPY public.threepid_validation_token (token, session_id, next_link, expires) FROM stdin;
-\.
 COPY public.ui_auth_sessions (session_id, creation_time, serverdict, clientdict, uri, method, description) FROM stdin;
 xeJRRYeggRZPDjZRxsYsQwor	1598686326894	{"registered_user_id": "@admin:localhost"}	{"username": "admin", "password_hash": "$2b$12$y3lT6nJGWMTXBWF2kFRaRuUqALWaFe.dhbEEBKROoFnkoKBuDnLhK"}	/_matrix/client/r0/register	/_matrix/client/r0/register	register a new account
 pljISqDsSRaWKiCZKERPVqQR	1598686327218	{"registered_user_id": "@matrix_a:localhost"}	{"username": "matrix_a", "password_hash": "$2b$12$V8cOJ670WikSre/C66CGI.a1ANkbEvkgYEUW.M23dlUnekRcPr08O"}	/_matrix/client/r0/register	/_matrix/client/r0/register	register a new account
@@ -1699,8 +1529,6 @@ xeJRRYeggRZPDjZRxsYsQwor	m.login.dummy	true
 pljISqDsSRaWKiCZKERPVqQR	m.login.dummy	true
 SMvQriZwHcUMqIIOdUeQtXzc	m.login.dummy	true
 EGVIALjvHFLqBpLFKyGCObFZ	m.login.dummy	true
-\.
-COPY public.user_daily_visits (user_id, device_id, "timestamp") FROM stdin;
 \.
 COPY public.user_directory (user_id, room_id, display_name, avatar_url) FROM stdin;
 @admin:localhost	\N	admin	\N
@@ -1717,17 +1545,11 @@ COPY public.user_directory_search (user_id, vector) FROM stdin;
 COPY public.user_directory_stream_pos (lock, stream_id) FROM stdin;
 X	19
 \.
-COPY public.user_external_ids (auth_provider, external_id, user_id) FROM stdin;
-\.
-COPY public.user_filters (user_id, filter_id, filter_json) FROM stdin;
-\.
 COPY public.user_ips (user_id, access_token, device_id, ip, user_agent, last_seen) FROM stdin;
 @admin:localhost	MDAxN2xvY2F0aW9uIGxvY2FsaG9zdAowMDEzaWRlbnRpZmllciBrZXkKMDAxMGNpZCBnZW4gPSAxCjAwMjNjaWQgdXNlcl9pZCA9IEBhZG1pbjpsb2NhbGhvc3QKMDAxNmNpZCB0eXBlID0gYWNjZXNzCjAwMjFjaWQgbm9uY2UgPSBXVU9yUTVRMFRnUkNjME1ACjAwMmZzaWduYXR1cmUgdYKA-yuTQ5JV5O0HWRak-48xavOYgA1MMc6A1V_Uw5kK	WCSUBIGVWG	172.21.0.1	curl/7.72.0	1598686327741
 @matrix_a:localhost	MDAxN2xvY2F0aW9uIGxvY2FsaG9zdAowMDEzaWRlbnRpZmllciBrZXkKMDAxMGNpZCBnZW4gPSAxCjAwMjZjaWQgdXNlcl9pZCA9IEBtYXRyaXhfYTpsb2NhbGhvc3QKMDAxNmNpZCB0eXBlID0gYWNjZXNzCjAwMjFjaWQgbm9uY2UgPSAwb3Y6eTZVdHojUk4jbFprCjAwMmZzaWduYXR1cmUgNNZKnOVRzj5svh9pEM0UUEqtXYnHjnj9XyNLJ1_uKoAK	TKAVEOGKHH	172.21.0.1	curl/7.72.0	1598686328398
 @matrix_b:localhost	MDAxN2xvY2F0aW9uIGxvY2FsaG9zdAowMDEzaWRlbnRpZmllciBrZXkKMDAxMGNpZCBnZW4gPSAxCjAwMjZjaWQgdXNlcl9pZCA9IEBtYXRyaXhfYjpsb2NhbGhvc3QKMDAxNmNpZCB0eXBlID0gYWNjZXNzCjAwMjFjaWQgbm9uY2UgPSBBYl9hbWthI0daSzgtfjdICjAwMmZzaWduYXR1cmUgOReBLkPURCMNtzORS9fpogQqVa3IWN9ZEu5gXW91QTMK	DJFHSWMXLW	172.21.0.1	curl/7.72.0	1598686328482
 @ignored_user:localhost	MDAxN2xvY2F0aW9uIGxvY2FsaG9zdAowMDEzaWRlbnRpZmllciBrZXkKMDAxMGNpZCBnZW4gPSAxCjAwMmFjaWQgdXNlcl9pZCA9IEBpZ25vcmVkX3VzZXI6bG9jYWxob3N0CjAwMTZjaWQgdHlwZSA9IGFjY2VzcwowMDIxY2lkIG5vbmNlID0gZU5ta1BBMj1FNnVPRGtwdgowMDJmc2lnbmF0dXJlIHSt8jrFU836Ne3it2HY88EhPD1Aoustsm211bbFjcLcCg	IYEBBQEXHS	172.21.0.1	curl/7.72.0	1598686328565
-\.
-COPY public.user_signature_stream (stream_id, from_user_id, user_ids) FROM stdin;
 \.
 COPY public.user_stats_current (user_id, joined_rooms, completed_delta_stream_id) FROM stdin;
 @admin:localhost	2	13
@@ -1745,10 +1567,6 @@ COPY public.user_stats_historical (user_id, end_ts, bucket_size, joined_rooms, i
 @matrix_b:localhost	1598745600000	86400000	2	0	0	2	1522
 @ignored_user:localhost	1598745600000	86400000	2	0	0	2	1546
 \.
-COPY public.user_threepid_id_server (user_id, medium, address, id_server) FROM stdin;
-\.
-COPY public.user_threepids (user_id, medium, address, validated_at, added_at) FROM stdin;
-\.
 COPY public.users (name, password_hash, creation_ts, admin, upgrade_ts, is_guest, appservice_id, consent_version, consent_server_notice_sent, user_type, deactivated) FROM stdin;
 @admin:localhost	$2b$12$y3lT6nJGWMTXBWF2kFRaRuUqALWaFe.dhbEEBKROoFnkoKBuDnLhK	1598686326	0	\N	0	\N	\N	\N	\N	0
 @matrix_a:localhost	$2b$12$V8cOJ670WikSre/C66CGI.a1ANkbEvkgYEUW.M23dlUnekRcPr08O	1598686327	0	\N	0	\N	\N	\N	\N	0
@@ -1764,10 +1582,6 @@ COPY public.users_in_public_rooms (user_id, room_id) FROM stdin;
 @matrix_b:localhost	!dKcbdDATuwwphjRPQP:localhost
 @ignored_user:localhost	!kmbTYjjsDRDHGgVqUP:localhost
 @ignored_user:localhost	!dKcbdDATuwwphjRPQP:localhost
-\.
-COPY public.users_pending_deactivation (user_id) FROM stdin;
-\.
-COPY public.users_who_share_private_rooms (user_id, other_user_id, room_id) FROM stdin;
 \.
 SELECT pg_catalog.setval('public.cache_invalidation_stream_seq', 26, true);
 SELECT pg_catalog.setval('public.state_group_id_seq', 20, true);

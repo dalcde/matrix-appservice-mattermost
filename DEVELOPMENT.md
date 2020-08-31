@@ -64,7 +64,7 @@ This container allows synapse to access the appservice running on the host, sinc
 
 This is a standard postgres image pulled from DockerHub. It has two database, one for mattermost and one for synapse, with the mattermost one being the "default" one.
 
-The tables are prepopulated with hardcoded values extracted from live instances. This makes it faster to start up and more convenient to write tests with known ids.
+The tables are prepopulated with hardcoded values extracted from live instances. This makes it faster to start up and more convenient to write tests with known ids. The dumps are piped through awk to remove redundant lines. The awk script is placed at `docker/postgres/minify-dump.awk`.
 
 ### synapse
 

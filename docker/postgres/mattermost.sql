@@ -499,10 +499,6 @@ CREATE TABLE public.usertermsofservice (
     createat bigint
 );
 ALTER TABLE public.usertermsofservice OWNER TO mattermost;
-COPY public.audits (id, createat, userid, action, extrainfo, ipaddress, sessionid) FROM stdin;
-\.
-COPY public.bots (userid, description, ownerid, lasticonupdate, createat, updateat, deleteat) FROM stdin;
-\.
 COPY public.channelmemberhistory (channelid, userid, jointime, leavetime) FROM stdin;
 cxtmz3ubz3gfigd5m6prendmsw	bmq7jiumpib3xdz3mx5iyo99ro	1598351847734	\N
 73uy6kj1jb8wdqrf3ti6zies6r	bmq7jiumpib3xdz3mx5iyo99ro	1598351847751	\N
@@ -527,44 +523,8 @@ COPY public.channels (id, createat, updateat, deleteat, teamid, type, displaynam
 cxtmz3ubz3gfigd5m6prendmsw	1598351837713	1598351837713	0	tgrw7sjgbiy1jggs3qg3m6zpee	O	Town Square	town-square			1598351852030	0	0		\N	\N
 73uy6kj1jb8wdqrf3ti6zies6r	1598351837717	1598351837717	0	tgrw7sjgbiy1jggs3qg3m6zpee	O	Off-Topic	off-topic			1598351852046	0	0		\N	\N
 \.
-COPY public.clusterdiscovery (id, type, clustername, hostname, gossipport, port, createat, lastpingat) FROM stdin;
-\.
-COPY public.commands (id, token, createat, updateat, deleteat, creatorid, teamid, trigger, method, username, iconurl, autocomplete, autocompletedesc, autocompletehint, displayname, description, url) FROM stdin;
-\.
-COPY public.commandwebhooks (id, createat, commandid, userid, channelid, rootid, parentid, usecount) FROM stdin;
-\.
-COPY public.compliances (id, createat, userid, status, count, "desc", type, startat, endat, keywords, emails) FROM stdin;
-\.
-COPY public.emoji (id, createat, updateat, deleteat, creatorid, name) FROM stdin;
-\.
-COPY public.fileinfo (id, creatorid, postid, createat, updateat, deleteat, path, thumbnailpath, previewpath, name, extension, size, mimetype, width, height, haspreviewimage) FROM stdin;
-\.
-COPY public.groupchannels (groupid, autoadd, schemeadmin, createat, deleteat, updateat, channelid) FROM stdin;
-\.
-COPY public.groupmembers (groupid, userid, createat, deleteat) FROM stdin;
-\.
-COPY public.groupteams (groupid, autoadd, schemeadmin, createat, deleteat, updateat, teamid) FROM stdin;
-\.
-COPY public.incomingwebhooks (id, createat, updateat, deleteat, userid, channelid, teamid, displayname, description, username, iconurl, channellocked) FROM stdin;
-\.
 COPY public.jobs (id, type, priority, createat, startat, lastactivityat, status, progress, data) FROM stdin;
 fky8msypr7nhbko6jm1fydozow	migrations	0	1598351829123	1598351839894	1598351840103	success	0	{"last_done":"{\\"current_table\\":\\"ChannelMembers\\",\\"last_team_id\\":\\"00000000000000000000000000\\",\\"last_channel_id\\":\\"00000000000000000000000000\\",\\"last_user\\":\\"00000000000000000000000000\\"}","migration_key":"migration_advanced_permissions_phase_2"}
-\.
-COPY public.licenses (id, createat, bytes) FROM stdin;
-\.
-COPY public.linkmetadata (hash, url, "timestamp", type, data) FROM stdin;
-\.
-COPY public.oauthaccessdata (clientid, userid, token, refreshtoken, redirecturi, expiresat, scope) FROM stdin;
-\.
-COPY public.oauthapps (id, creatorid, createat, updateat, clientsecret, name, description, iconurl, callbackurls, homepage, istrusted) FROM stdin;
-\.
-COPY public.oauthauthdata (clientid, userid, code, expiresin, createat, redirecturi, state, scope) FROM stdin;
-\.
-COPY public.outgoingwebhooks (id, token, createat, updateat, deleteat, creatorid, channelid, teamid, triggerwords, triggerwhen, callbackurls, displayname, description, contenttype, username, iconurl) FROM stdin;
-\.
-COPY public.pluginkeyvaluestore (pluginid, pkey, pvalue, expireat) FROM stdin;
-\.
-COPY public.posts (id, createat, updateat, editat, deleteat, ispinned, userid, channelid, rootid, parentid, originalid, message, type, props, hashtags, filenames, fileids, hasreactions) FROM stdin;
 \.
 COPY public.preferences (userid, category, name, value) FROM stdin;
 bmq7jiumpib3xdz3mx5iyo99ro	tutorial_step	bmq7jiumpib3xdz3mx5iyo99ro	0
@@ -575,8 +535,6 @@ bmq7jiumpib3xdz3mx5iyo99ro	tutorial_step	bmq7jiumpib3xdz3mx5iyo99ro	0
 COPY public.publicchannels (id, deleteat, teamid, displayname, name, header, purpose) FROM stdin;
 cxtmz3ubz3gfigd5m6prendmsw	0	tgrw7sjgbiy1jggs3qg3m6zpee	Town Square	town-square		
 73uy6kj1jb8wdqrf3ti6zies6r	0	tgrw7sjgbiy1jggs3qg3m6zpee	Off-Topic	off-topic		
-\.
-COPY public.reactions (userid, postid, emojiname, createat) FROM stdin;
 \.
 COPY public.roles (id, name, displayname, description, createat, updateat, deleteat, permissions, schememanaged, builtin) FROM stdin;
 cqedmkhfmtfhidp18w8pkogtpa	team_post_all	authentication.roles.team_post_all.name	authentication.roles.team_post_all.description	1598351767777	1598351767984	0	 use_channel_mentions create_post use_group_mentions	f	t
@@ -593,16 +551,6 @@ gygr3fd64p8izpynu6uef8jq3r	channel_guest	authentication.roles.channel_guest.name
 jgrdf15eifyu5gsrum87u8ka5y	team_guest	authentication.roles.team_guest.name	authentication.roles.team_guest.description	1598351767768	1598351767989	0	 view_team	t	t
 sw8erru9jjyzfegokosh9sb15h	system_user_access_token	authentication.roles.system_user_access_token.name	authentication.roles.system_user_access_token.description	1598351767769	1598351767990	0	 create_user_access_token read_user_access_token revoke_user_access_token	f	t
 nypn4aniofbf9eu4efqkb1n56y	system_admin	authentication.roles.global_admin.name	authentication.roles.global_admin.description	1598351767771	1598351767991	0	 manage_channel_roles read_public_channel read_user_access_token invite_guest manage_oauth add_reaction manage_bots manage_slash_commands assign_system_admin_role create_post list_users_without_team list_private_teams invite_user delete_post create_emojis add_user_to_team manage_public_channel_members manage_outgoing_webhooks manage_others_slash_commands list_team_channels remove_reaction delete_public_channel read_channel remove_others_reactions delete_emojis remove_user_from_team create_private_channel manage_others_incoming_webhooks create_team edit_post manage_private_channel_members manage_jobs delete_others_posts manage_team_roles create_bot manage_private_channel_properties read_others_bots manage_system_wide_oauth create_public_channel join_public_channels use_slash_commands view_team join_private_teams edit_others_posts manage_others_bots create_post_public read_bots edit_other_users manage_system delete_others_emojis use_group_mentions create_user_access_token manage_public_channel_properties manage_roles promote_guest use_channel_mentions revoke_user_access_token manage_team manage_others_outgoing_webhooks manage_incoming_webhooks get_public_link import_team upload_file view_members delete_private_channel create_post_ephemeral demote_to_guest	t	t
-\.
-COPY public.schemes (id, name, displayname, description, createat, updateat, deleteat, scope, defaultteamadminrole, defaultteamuserrole, defaultchanneladminrole, defaultchanneluserrole, defaultteamguestrole, defaultchannelguestrole) FROM stdin;
-\.
-COPY public.sessions (id, token, createat, expiresat, lastactivityat, userid, deviceid, roles, isoauth, expirednotify, props) FROM stdin;
-\.
-COPY public.sidebarcategories (id, userid, teamid, sortorder, sorting, type, displayname) FROM stdin;
-\.
-COPY public.sidebarchannels (channelid, userid, categoryid, sortorder) FROM stdin;
-\.
-COPY public.status (userid, status, manual, lastactivityat) FROM stdin;
 \.
 COPY public.systems (name, value) FROM stdin;
 Version	5.26.0
@@ -637,25 +585,17 @@ tgrw7sjgbiy1jggs3qg3m6zpee	3zats68fztgu9mgu944a4t35so		0	t	f	f
 COPY public.teams (id, createat, updateat, deleteat, displayname, name, description, email, type, companyname, alloweddomains, inviteid, allowopeninvite, lastteamiconupdate, schemeid, groupconstrained) FROM stdin;
 tgrw7sjgbiy1jggs3qg3m6zpee	1598351837711	1598351837711	0	Test Team	test			O			5tdc6sxr43byufri3r6px9f9xo	f	0	\N	\N
 \.
-COPY public.termsofservice (id, createat, userid, text) FROM stdin;
-\.
-COPY public.tokens (token, createat, type, extra) FROM stdin;
-\.
 COPY public.useraccesstokens (id, token, userid, description, isactive) FROM stdin;
 98yjyceocfb5mc3jaibtbmr1ph	s537n3t8zib1tx7eyd44qzqnbr	bmq7jiumpib3xdz3mx5iyo99ro	test-token	t
 ya4wtr9fjiyxfptgnjmjgcc3wh	aqhn1jc1nbgjtpd7es83wckner	5bw66y36bff3umq1q57mfy4y5c	test-token	t
 fpvzz1p2d2sgmhzrmfrhg3kami	qhkzgz0ruottpmoooxiudgvtis	0z4okgmv5lfhx3p0tf6pnpk8sk	test-token	t
 e3dnfu1g17fjtxq53odawh6e7y	ox8n8edimjdbfkeybdf56pj4xw	3zats68fztgu9mgu944a4t35so	test-token	t
 \.
-COPY public.usergroups (id, name, displayname, description, source, remoteid, createat, updateat, deleteat, allowreference) FROM stdin;
-\.
 COPY public.users (id, createat, updateat, deleteat, username, password, authdata, authservice, email, emailverified, nickname, firstname, lastname, "position", roles, allowmarketing, props, notifyprops, lastpasswordupdate, lastpictureupdate, failedattempts, locale, timezone, mfaactive, mfasecret) FROM stdin;
 3zats68fztgu9mgu944a4t35so	1598351812493	1598351812493	0	mattermost_b	$2a$10$bV5EvQPt9.p4jTO4VVM4Te2J7B7/IJhstPLhxVltLtufn7F97Q3nO	\N		mattermost_b@localhost	f					system_user	f	{}	{"channel":"true","comments":"never","desktop":"mention","desktop_sound":"true","email":"true","first_name":"false","mention_keys":"","push":"mention","push_status":"away"}	1598351812493	0	0	en	{"automaticTimezone":"","manualTimezone":"","useAutomaticTimezone":"true"}	f	
 bmq7jiumpib3xdz3mx5iyo99ro	1598351769026	1598351847718	0	admin	$2a$10$08I/69Phynm.yDfERKNPV.cYRXSC1.hjb7/2upwafY0GvRjs9iri.	\N		admin@localhost	f		Admin	User		system_admin system_user	f	{}	{"channel":"true","comments":"never","desktop":"mention","desktop_sound":"true","email":"true","first_name":"false","mention_keys":"","push":"mention","push_status":"away"}	1598351769026	0	0	en	{"automaticTimezone":"","manualTimezone":"","useAutomaticTimezone":"true"}	f	
 5bw66y36bff3umq1q57mfy4y5c	1598351800458	1598352057088	0	mattermost_a	$2a$10$WdovEVVvy9ZS867UE2hSq.7hV38Lg9H2ozgaF3gwuO6fuoCkkTzIu	\N		mattermost_a@localhost	f		MattermostUser	A		system_user	f	{}	{"channel":"true","comments":"never","desktop":"mention","desktop_sound":"true","email":"true","first_name":"false","mention_keys":"","push":"mention","push_status":"away"}	1598352057088	0	0	en	{"automaticTimezone":"","manualTimezone":"","useAutomaticTimezone":"true"}	f	
 0z4okgmv5lfhx3p0tf6pnpk8sk	1598351800458	1598352057088	0	ignored_user	$2a$10$WdovEVVvy9ZS867UE2hSq.7hV38Lg9H2ozgaF3gwuO6fuoCkkTzIu	\N		ignored_user@localhost	f					system_user	f	{}	{"channel":"true","comments":"never","desktop":"mention","desktop_sound":"true","email":"true","first_name":"false","mention_keys":"","push":"mention","push_status":"away"}	1598352057088	0	0	en	{"automaticTimezone":"","manualTimezone":"","useAutomaticTimezone":"true"}	f	
-\.
-COPY public.usertermsofservice (userid, termsofserviceid, createat) FROM stdin;
 \.
 ALTER TABLE ONLY public.audits
     ADD CONSTRAINT audits_pkey PRIMARY KEY (id);

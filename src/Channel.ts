@@ -89,11 +89,7 @@ export default class Channel {
             // This would be triggered by default channels, where two different
             // join events end up causing the user to join the same channel
             // twice.
-            if (
-                e instanceof ClientError &&
-                e.m.id === 'api.channel.add_user.to.channel.failed.app_error' &&
-                e.m.status_code === 500
-            ) {
+            if (e instanceof ClientError && e.m.status_code === 500) {
                 try {
                     await this.main.client.get(
                         `/channels/${this.mattermostChannel}/members/${userid}`,

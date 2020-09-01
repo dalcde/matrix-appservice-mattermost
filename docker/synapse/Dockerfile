@@ -1,12 +1,10 @@
-FROM alpine:3.12
+FROM alpine:edge
 
 RUN apk add --no-cache synapse
 
 RUN mkdir /media_store && \
     chown synapse:synapse /media_store && \
-    mkdir /var/log/synapse/ && \
-    chown synapse:synapse /var/log/synapse && \
-    sed -i "s%filename: /homeserver.log%filename: /var/log/synapse/homeserver.log%" \
+    sed -i "s/handlers: .*/handlers: [console]/;s%/homeserver.log%/dev/null%" \
         /etc/synapse/my.domain.name.log.config
 
 EXPOSE 8008

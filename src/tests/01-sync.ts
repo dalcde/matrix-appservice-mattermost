@@ -199,8 +199,11 @@ test('Leave mattermost team when all channels left', async t => {
     // are processed. We don't check it because the bridge will be killed after
     // this.
     await Promise.all([
-        waitEvent(main(), 'matrix', 2),
+        waitEvent(main(), 'matrix'),
         matrixClient.leave(MATRIX_ROOM_IDS['off-topic']),
+    ]);
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
         matrixClient.leave(MATRIX_ROOM_IDS['town-square']),
     ]);
 
@@ -216,8 +219,11 @@ test('Leave mattermost team when all channels left', async t => {
     );
 
     await Promise.all([
-        waitEvent(main(), 'matrix', 2),
+        waitEvent(main(), 'matrix'),
         matrixClient.joinRoom(MATRIX_ROOM_IDS['off-topic']),
+    ]);
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
         matrixClient.joinRoom(MATRIX_ROOM_IDS['town-square']),
     ]);
 

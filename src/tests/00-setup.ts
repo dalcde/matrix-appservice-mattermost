@@ -3,6 +3,9 @@ import * as path from 'path';
 import * as test from 'tape';
 import { spawnSync, spawn as spawnAsync } from 'child_process';
 import { MATTERMOST_PORT, SYNAPSE_PORT } from './utils/Data';
+import { createConnection, getConnection } from 'typeorm';
+import { User } from '../entities/User';
+import { Post } from '../entities/Post';
 
 const DOCKER_PATH = path.join(__dirname, '../../docker/docker-compose.yaml');
 
@@ -30,6 +33,7 @@ function cleanup() {
         spawn(['docker-compose', '-f', DOCKER_PATH, 'kill']);
         spawn(['docker-compose', '-f', DOCKER_PATH, 'down', '-v']);
     }
+    void getConnection().close();
 }
 
 test.onFinish(cleanup);
@@ -57,5 +61,16 @@ test('Start docker', async t => {
         healthCheck(MATTERMOST_PORT),
         healthCheck(SYNAPSE_PORT),
     ]);
+
+    await createConnection({
+        type: 'postgres',
+        database: 'matrix-mattermost',
+        username: 'matrix-mattermost',
+        password: 'hunter2',
+        entities: [User, Post],
+        dropSchema: true,
+        synchronize: true,
+        logging: false,
+    });
     t.end();
 });

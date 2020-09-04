@@ -6,11 +6,14 @@ services:
       - ./postgres/mattermost.sql:/docker-entrypoint-initdb.d/00-mattermost.sql
       - ./postgres/setup-synapse.sql:/docker-entrypoint-initdb.d/01-setup-synapse.sql
       - ./postgres/synapse.sql:/docker-entrypoint-initdb.d/02-synapse.sql
+      - ./postgres/setup-bridge.sql:/docker-entrypoint-initdb.d/03-setup-bridge.sql
     environment:
       # We create synapse database in 01-setup.sql
       - POSTGRES_USER=mattermost
       - POSTGRES_DB=mattermost
       - POSTGRES_PASSWORD=hunter2
+    ports:
+      - '5432:5432'
 
   mattermost:
     build: mattermost

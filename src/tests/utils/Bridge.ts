@@ -8,7 +8,6 @@ import { AppServiceRegistration } from 'matrix-appservice-bridge';
 import { setConfig, Config } from '../../Config';
 import Main from '../../Main';
 import log from '../../Logging';
-import connection from './Connection';
 
 const REGISTRATION_PATH = join(
     __dirname,
@@ -29,7 +28,6 @@ function loadYaml(path: string): any {
 }
 
 export async function startBridge(extra?: Partial<Config>): Promise<void> {
-    await connection;
     const registration = AppServiceRegistration.fromObject(
         loadYaml(REGISTRATION_PATH),
     );

@@ -22,7 +22,7 @@ const cli = new Cli({
         );
         reg.addRegexPattern(
             'users',
-            `@${config.matrix_localpart_prefix}.*`,
+            `@${config.matrix_localpart_prefix}.*:${config.homeserver.server_name}`,
             true,
         );
 

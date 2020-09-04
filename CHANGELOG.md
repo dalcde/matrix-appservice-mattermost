@@ -13,6 +13,7 @@ Bug fixes:
   they left the team.
 - Mitigate Mattermost bug where joining a channel twice (indirectly triggered
   by default channel joins) returns an error.
+- Fix overzealous registration namespace. Restrict to local server only
 
 New features:
 

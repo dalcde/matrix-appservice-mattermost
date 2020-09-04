@@ -20,8 +20,6 @@ export default class Channel {
         real: Set<string>;
         remote: Set<string>;
     }> {
-        const bot = this.main.bridge.getBot();
-
         const realMatrixUsers: Set<string> = new Set();
         const remoteMatrixUsers: Set<string> = new Set();
 
@@ -30,7 +28,7 @@ export default class Channel {
                 .joined,
         );
         for (const matrixUser of allMatrixUsers) {
-            if (bot.isRemoteUser(matrixUser)) {
+            if (this.main.isRemoteUser(matrixUser)) {
                 remoteMatrixUsers.add(matrixUser);
             } else {
                 realMatrixUsers.add(matrixUser);

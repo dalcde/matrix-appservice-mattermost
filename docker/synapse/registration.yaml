@@ -4,7 +4,7 @@ as_token: anothersecrettoken
 namespaces:
   users:
     - exclusive: true
-      regex: '@mm_.*'
+      regex: '@mm_.*:localhost'
   aliases: []
   rooms: []
 url: 'http://appservice:9995'

@@ -24,28 +24,33 @@ import log from './Logging';
 import { EventEmitter } from 'events';
 
 export default class Main extends EventEmitter {
-    public readonly client: Client;
-    private readonly ws: ClientWebsocket;
-    public readonly mattermostUserStore: MattermostUserStore;
-    public readonly matrixUserStore: MatrixUserStore;
-
-    // Channels include successfully bridge channels.
-    public readonly channelsByMattermost: Map<string, Channel>;
-    public readonly channelsByMatrix: Map<string, Channel>;
-    public readonly channelsByTeam: Map<string, Channel[]>;
-
-    // Mappings are ones that are specified in the config file
-    public readonly mappingsByMattermost: Map<string, Mapping>;
-    public readonly mappingsByMatrix: Map<string, Mapping>;
-
-    public readonly bridge: Bridge;
-    private readonly mattermostMutex: Mutex;
     private readonly matrixMutex: Mutex;
-    public initialized: boolean;
+    private readonly mattermostMutex: Mutex;
+
+    private readonly ws: ClientWebsocket;
+
     private adminEndpoint?: AdminEndpoint;
-    public killed: boolean;
+    private remoteUserRegex: RegExp;
 
     public botClient: MatrixClient;
+
+    public initialized: boolean;
+    public killed: boolean;
+
+    public readonly bridge: Bridge;
+    public readonly client: Client;
+
+    public readonly channelsByMatrix: Map<string, Channel>;
+    public readonly channelsByMattermost: Map<string, Channel>;
+    public readonly channelsByTeam: Map<string, Channel[]>;
+
+    // Channels include successfully bridge channels.
+    // Mappings are ones that are specified in the config file
+    public readonly mappingsByMatrix: Map<string, Mapping>;
+    public readonly mappingsByMattermost: Map<string, Mapping>;
+
+    public readonly matrixUserStore: MatrixUserStore;
+    public readonly mattermostUserStore: MattermostUserStore;
 
     constructor(
         registration: AppServiceRegistration,
@@ -79,6 +84,11 @@ export default class Main extends EventEmitter {
         );
 
         this.botClient = this.bridge.getIntent().getClient();
+        this.remoteUserRegex = new RegExp(
+            `@${config().matrix_localpart_prefix}.*:${
+                config().homeserver.server_name
+            }`,
+        );
 
         this.initialized = false;
 
@@ -214,8 +224,7 @@ export default class Main extends EventEmitter {
     }
 
     private async leaveUnbridgedMatrixRooms(): Promise<void> {
-        const bot = this.bridge.getBot();
-        const rooms = await bot.getJoinedRooms();
+        const rooms = (await this.botClient.getJoinedRooms()).joined_rooms;
 
         await Promise.all(
             rooms.map(async room => {
@@ -227,7 +236,7 @@ export default class Main extends EventEmitter {
                 );
                 await Promise.all(
                     members.map(async userid => {
-                        if (bot.isRemoteUser(userid)) {
+                        if (this.isRemoteUser(userid)) {
                             await this.bridge
                                 .getIntent(userid)
                                 .getClient()
@@ -420,7 +429,6 @@ export default class Main extends EventEmitter {
         log.time.debug('Process matrix message');
 
         try {
-            const bot = this.bridge.getBot();
             const event = request.getData();
             log.debug(`Matrix event: ${JSON.stringify(event)}`);
 
@@ -431,8 +439,8 @@ export default class Main extends EventEmitter {
                 event.type === 'm.room.member' &&
                 event.content.membership === 'invite' &&
                 event.state_key &&
-                (event.state_key === bot.getUserId() ||
-                    bot.isRemoteUser(event.state_key)) &&
+                (event.state_key === this.botClient.userId ||
+                    this.isRemoteUser(event.state_key)) &&
                 event.content.is_direct
             ) {
                 const client = this.bridge
@@ -477,6 +485,10 @@ export default class Main extends EventEmitter {
         } else {
             return response;
         }
+    }
+
+    public isRemoteUser(userid: string): boolean {
+        return this.remoteUserRegex.test(userid);
     }
 
     public skipMattermostUser(userid: string): boolean {

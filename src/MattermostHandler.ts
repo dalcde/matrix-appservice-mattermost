@@ -8,7 +8,7 @@ import {
     MatrixEvent,
     MatrixClient,
 } from './Interfaces';
-import { uniq, handlePostError, none } from './utils/Functions';
+import { handlePostError, none } from './utils/Functions';
 import { mattermostToMatrix, constructMatrixReply } from './utils/Formatting';
 
 interface Metadata {
@@ -157,7 +157,9 @@ const MattermostHandlers = {
                 );
 
                 // threadResponse.order often contains duplicate entries
-                const threads = uniq(threadResponse.order);
+                const threads = Object.values(threadResponse.posts).sort(
+                    (a: any, b: any) => a.create_at - b.create_at,
+                );
 
                 const thisIndex = threads.indexOf(post.id);
                 const id = threads[thisIndex - 1] as string;

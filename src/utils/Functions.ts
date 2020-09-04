@@ -70,10 +70,6 @@ export function sanitizeMattermostUsername(s: string): string {
     return s;
 }
 
-export function uniq<T>(a: T[]): T[] {
-    return [...new Set(a)];
-}
-
 export async function handlePostError(
     e: unknown,
     postid: string,

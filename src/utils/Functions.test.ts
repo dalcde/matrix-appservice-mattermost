@@ -4,7 +4,6 @@ import {
     findFirstAvailable,
     localpart,
     sanitizeMattermostUsername,
-    uniq,
     randomString,
     allSettled,
 } from './Functions';
@@ -62,11 +61,6 @@ test('sanitizeMattermostUsername', t => {
     t.equal(sanitizeMattermostUsername('John Smith'), 'john_smith');
     t.equal(sanitizeMattermostUsername('bar [irc]'), 'bar_irc');
     t.equal(sanitizeMattermostUsername('a'.repeat(50)), 'a'.repeat(22));
-    t.end();
-});
-
-test('uniq', t => {
-    t.deepEqual(uniq(['5', '2', '2', '3', '4', '5']), ['5', '2', '3', '4']);
     t.end();
 });
 

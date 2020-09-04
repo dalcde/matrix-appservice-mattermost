@@ -60,9 +60,10 @@ export default class MatrixUserStore {
 
             if (template.includes('[DISPLAY]')) {
                 try {
-                    const resp = await this.main.bridge
-                        .getIntent()
-                        .getProfileInfo(matrix_userid, 'displayname');
+                    const resp = await this.main.botClient.getProfileInfo(
+                        matrix_userid,
+                        'displayname',
+                    );
                     if (resp.displayname) {
                         displayname = resp.displayname;
                     }
@@ -102,9 +103,10 @@ export default class MatrixUserStore {
         let displayname = localpart(user.matrix_userid);
 
         try {
-            const resp = await this.main.bridge
-                .getIntent()
-                .getProfileInfo(user.matrix_userid, 'displayname');
+            const resp = await this.main.botClient.getProfileInfo(
+                user.matrix_userid,
+                'displayname',
+            );
             if (resp.displayname) {
                 displayname = resp.displayname;
             }

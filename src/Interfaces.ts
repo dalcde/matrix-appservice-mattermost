@@ -84,3 +84,9 @@ export interface MattermostUserInfo {
 
     [propName: string]: unknown;
 }
+
+export interface MatrixClient {
+    sendMessage: (room: string, message: MatrixMessage) => Promise<MatrixEvent>;
+    fetchRoomEvent: (room: string, eventid: string) => Promise<MatrixEvent>;
+    [propName: string]: any;
+}

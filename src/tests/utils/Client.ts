@@ -1,6 +1,6 @@
 import { createClient } from 'matrix-js-sdk';
 import { Client } from '../../mattermost/Client';
-import { MattermostPost } from '../../Interfaces';
+import { MattermostPost, MatrixClient } from '../../Interfaces';
 
 import {
     MATTERMOST_TOKENS,
@@ -23,7 +23,7 @@ export function getMattermostClient(username: MattermostUsername): Client {
     );
 }
 
-export function getMatrixClient(username: MatrixUsername): any {
+export function getMatrixClient(username: MatrixUsername): MatrixClient {
     return createClient({
         baseUrl: `http://localhost:${SYNAPSE_PORT}`,
         accessToken: MATRIX_TOKENS[username],

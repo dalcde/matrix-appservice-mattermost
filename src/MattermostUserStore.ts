@@ -1,10 +1,9 @@
-import { Intent } from 'matrix-appservice-bridge';
 import { User } from './entities/User';
 import { config } from './Config';
 import Mutex from './utils/Mutex';
 import Main from './Main';
 import { findFirstAvailable } from './utils/Functions';
-import { MattermostUserInfo } from './Interfaces';
+import { MattermostUserInfo, MatrixClient } from './Interfaces';
 import log from './Logging';
 
 export default class MattermostUserStore {
@@ -54,10 +53,18 @@ export default class MattermostUserStore {
         if (user === undefined) {
             const localpart = await findFirstAvailable(
                 `${config().matrix_localpart_prefix}${data.username}`,
-                async s =>
-                    (await User.findOne({
-                        matrix_userid: `@${s}:${server_name}`,
-                    })) === undefined,
+                async s => {
+                    try {
+                        await this.main.botClient.register(s);
+                        return true;
+                    } catch (e) {
+                        if (e.errcode === 'M_USER_IN_USE') {
+                            return false;
+                        } else {
+                            throw e;
+                        }
+                    }
+                },
             );
             log.debug(
                 `Creating matrix puppet @${localpart}:${server_name} for ${userid}`,
@@ -103,26 +110,26 @@ export default class MattermostUserStore {
             user.matrix_displayname = displayName;
             await user.save();
         }
-        await this.intent(user).setDisplayName(displayName);
+        await this.client(user).setDisplayName(displayName);
     }
 
-    public intent(user: User): Intent {
-        return this.main.bridge.getIntent(user.matrix_userid);
+    public client(user: User): MatrixClient {
+        return this.main.bridge.getIntent(user.matrix_userid).getClient();
     }
 
-    public async getOrCreateIntent(
+    public async getOrCreateClient(
         userid: string,
         sync: boolean = false,
-    ): Promise<Intent> {
-        return this.intent(await this.getOrCreate(userid, sync));
+    ): Promise<MatrixClient> {
+        return this.client(await this.getOrCreate(userid, sync));
     }
 
-    public getIntent(userid: string): Intent | undefined {
+    public getClient(userid: string): MatrixClient | undefined {
         const user = this.get(userid);
         if (user === undefined) {
             return undefined;
         } else {
-            return this.intent(user);
+            return this.client(user);
         }
     }
 }

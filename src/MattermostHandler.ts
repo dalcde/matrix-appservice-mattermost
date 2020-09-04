@@ -1,5 +1,4 @@
 import Channel from './Channel';
-import { Intent } from 'matrix-appservice-bridge';
 import { Post } from './entities/Post';
 import log from './Logging';
 import {
@@ -7,6 +6,7 @@ import {
     MattermostPost,
     MatrixMessage,
     MatrixEvent,
+    MatrixClient,
 } from './Interfaces';
 import { uniq, handlePostError, none } from './utils/Functions';
 import { mattermostToMatrix, constructMatrixReply } from './utils/Formatting';
@@ -19,7 +19,7 @@ interface Metadata {
 }
 
 async function sendMatrixMessage(
-    intent: Intent,
+    client: MatrixClient,
     room: string,
     postid: string,
     message: MatrixMessage,
@@ -31,13 +31,13 @@ async function sendMatrixMessage(
         rootid = replyTo.mattermost;
         let original: MatrixEvent | undefined = undefined;
         try {
-            original = await intent.getEvent(room, replyTo.matrix);
+            original = await client.fetchRoomEvent(room, replyTo.matrix);
         } catch (e) {}
         if (original !== undefined) {
             constructMatrixReply(original, message);
         }
     }
-    const event = await intent.sendMessage(room, message);
+    const event = await client.sendMessage(room, message);
     await Post.create({
         postid,
         rootid,
@@ -49,12 +49,12 @@ async function sendMatrixMessage(
 const MattermostPostHandlers = {
     '': async function (
         this: Channel,
-        intent: Intent,
+        client: MatrixClient,
         post: MattermostPost,
         metadata: Metadata,
     ) {
         await sendMatrixMessage(
-            intent,
+            client,
             this.matrixRoom,
             post.id,
             await mattermostToMatrix(post.message),
@@ -68,7 +68,7 @@ const MattermostPostHandlers = {
                 ).body;
                 const mimetype = file.mime_type;
 
-                const url = await intent.getClient().uploadContent(body, {
+                const url = await client.uploadContent(body, {
                     name: file.name,
                     type: mimetype,
                     rawResponse: false,
@@ -84,7 +84,7 @@ const MattermostPostHandlers = {
                     msgtype = 'm.video';
                 }
                 await sendMatrixMessage(
-                    intent,
+                    client,
                     this.matrixRoom,
                     post.id,
                     {
@@ -100,8 +100,7 @@ const MattermostPostHandlers = {
                 );
             }
         }
-        intent
-            .getClient()
+        client
             .sendTyping(this.matrixRoom, false)
             .catch(e =>
                 log.warn(
@@ -111,19 +110,18 @@ const MattermostPostHandlers = {
     },
     me: async function (
         this: Channel,
-        intent: Intent,
+        client: MatrixClient,
         post: MattermostPost,
         metadata: Metadata,
     ) {
         await sendMatrixMessage(
-            intent,
+            client,
             this.matrixRoom,
             post.id,
             await mattermostToMatrix(post.props.message, 'm.emote'),
             metadata,
         );
-        intent
-            .getClient()
+        client
             .sendTyping(this.matrixRoom, false)
             .catch(e =>
                 log.warn(
@@ -147,8 +145,8 @@ const MattermostHandlers = {
             return;
         }
 
-        const intent = this.main.mattermostUserStore.getIntent(post.user_id);
-        if (intent === undefined) {
+        const client = this.main.mattermostUserStore.getClient(post.user_id);
+        if (client === undefined) {
             return;
         }
         const metadata: Metadata = {};
@@ -177,7 +175,7 @@ const MattermostHandlers = {
 
         const handler = MattermostPostHandlers[post.type];
         if (handler !== undefined) {
-            await handler.bind(this)(intent, post, metadata);
+            await handler.bind(this)(client, post, metadata);
         } else {
             log.debug(`Unknown post type: ${post.type}`);
         }
@@ -190,7 +188,7 @@ const MattermostHandlers = {
         if (!(await this.main.isMattermostUser(post.user_id))) {
             return;
         }
-        const intent = await this.main.mattermostUserStore.getOrCreateIntent(
+        const client = await this.main.mattermostUserStore.getOrCreateClient(
             post.user_id,
         );
 
@@ -215,7 +213,7 @@ const MattermostHandlers = {
                 rel_type: 'm.replace',
             };
         }
-        await intent.sendMessage(this.matrixRoom, msg);
+        await client.sendMessage(this.matrixRoom, msg);
     },
     post_deleted: async function (
         this: Channel,
@@ -224,7 +222,6 @@ const MattermostHandlers = {
         // See the README for details on the logic.
         const post = JSON.parse(m.data.post);
 
-        const client = this.main.bridge.getIntent().client;
         // There can be multiple corresponding Matrix posts if it has
         // attachments.
         const matrixEvents = await Post.find({
@@ -234,7 +231,9 @@ const MattermostHandlers = {
         const promises: Promise<unknown>[] = [Post.removeAll(post.postid)];
         // It is okay to redact an event already redacted.
         for (const event of matrixEvents) {
-            promises.push(client.redactEvent(this.matrixRoom, event.eventid));
+            promises.push(
+                this.main.botClient.redactEvent(this.matrixRoom, event.eventid),
+            );
             promises.push(event.remove());
         }
         await Promise.all(promises);
@@ -243,18 +242,18 @@ const MattermostHandlers = {
         this: Channel,
         m: MattermostMessage,
     ): Promise<void> {
-        const intent = await this.main.mattermostUserStore.getOrCreateIntent(
+        const client = await this.main.mattermostUserStore.getOrCreateClient(
             m.data.user_id,
         );
-        await intent.join(this.matrixRoom);
+        await client.joinRoom(this.matrixRoom);
     },
     user_removed: async function (
         this: Channel,
         m: MattermostMessage,
     ): Promise<void> {
-        const intent = this.main.mattermostUserStore.getIntent(m.data.user_id);
-        if (intent !== undefined) {
-            await intent.leave(this.matrixRoom);
+        const client = this.main.mattermostUserStore.getClient(m.data.user_id);
+        if (client !== undefined) {
+            await client.leave(this.matrixRoom);
         }
     },
     user_updated: async function (
@@ -276,10 +275,9 @@ const MattermostHandlers = {
         this: Channel,
         m: MattermostMessage,
     ): Promise<void> {
-        const intent = this.main.mattermostUserStore.getIntent(m.data.user_id);
-        if (intent !== undefined) {
-            intent
-                .getClient()
+        const client = this.main.mattermostUserStore.getClient(m.data.user_id);
+        if (client !== undefined) {
+            client
                 .sendTyping(this.matrixRoom, true, 6000)
                 .catch(e =>
                     log.warn(

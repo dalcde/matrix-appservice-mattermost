@@ -26,7 +26,8 @@ export default class Channel {
         const remoteMatrixUsers: Set<string> = new Set();
 
         const allMatrixUsers = Object.keys(
-            await bot.getJoinedMembers(this.matrixRoom),
+            (await this.main.botClient.getJoinedRoomMembers(this.matrixRoom))
+                .joined,
         );
         for (const matrixUser of allMatrixUsers) {
             if (bot.isRemoteUser(matrixUser)) {
@@ -133,7 +134,7 @@ export default class Channel {
         const bridge = this.main.bridge;
 
         await Promise.all([
-            bridge.getIntent().join(this.matrixRoom),
+            this.main.botClient.joinRoom(this.matrixRoom),
             this.joinMattermost(this.main.client.userid),
         ]);
 
@@ -169,16 +170,16 @@ export default class Channel {
                         true,
                     );
                     matrixUsers.remote.delete(user.matrix_userid);
-                    const intent = bridge.getIntent(user.matrix_userid);
-                    await intent.join(this.matrixRoom);
+                    const client = this.main.mattermostUserStore.client(user);
+                    await client.joinRoom(this.matrixRoom);
                 }
             }),
         );
 
         await Promise.all(
             Array.from(matrixUsers.remote, async matrix_userid => {
-                const intent = bridge.getIntent(matrix_userid);
-                await intent.leave(this.matrixRoom);
+                const client = bridge.getIntent(matrix_userid).getClient();
+                await client.leave(this.matrixRoom);
             }),
         );
     }

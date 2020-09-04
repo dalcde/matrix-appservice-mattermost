@@ -13,12 +13,12 @@ test('display name', async t => {
     const store = new MattermostUserStore((undefined as unknown) as Main);
     let displayName: string = '';
 
-    store.intent = () => {
+    store.client = () => {
         return {
             setDisplayName: (name: string) => {
                 displayName = name;
             },
-        };
+        } as any;
     };
 
     const user = (await User.findOne({

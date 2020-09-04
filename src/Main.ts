@@ -1,6 +1,5 @@
 import {
     Bridge,
-    Intent,
     AppServiceRegistration,
     Request,
 } from 'matrix-appservice-bridge';
@@ -15,7 +14,7 @@ import {
 import { isDeepStrictEqual } from 'util';
 import { none, notifySystemd, allSettled } from './utils/Functions';
 import { User } from './entities/User';
-import { MattermostMessage } from './Interfaces';
+import { MattermostMessage, MatrixClient } from './Interfaces';
 import AdminEndpoint from './AdminEndpoint';
 import MatrixUserStore from './MatrixUserStore';
 import MattermostUserStore from './MattermostUserStore';
@@ -23,11 +22,6 @@ import Channel from './Channel';
 import Mutex from './utils/Mutex';
 import log from './Logging';
 import { EventEmitter } from 'events';
-
-// Patch Intent to fix bug
-Intent.prototype.join = function (roomId, viaServers) {
-    return this._ensureJoined(roomId, true, viaServers);
-};
 
 export default class Main extends EventEmitter {
     public readonly client: Client;
@@ -50,6 +44,8 @@ export default class Main extends EventEmitter {
     public initialized: boolean;
     private adminEndpoint?: AdminEndpoint;
     public killed: boolean;
+
+    public botClient: MatrixClient;
 
     constructor(
         registration: AppServiceRegistration,
@@ -81,6 +77,8 @@ export default class Main extends EventEmitter {
             undefined,
             config().appservice.hostname,
         );
+
+        this.botClient = this.bridge.getIntent().getClient();
 
         this.initialized = false;
 
@@ -217,7 +215,6 @@ export default class Main extends EventEmitter {
 
     private async leaveUnbridgedMatrixRooms(): Promise<void> {
         const bot = this.bridge.getBot();
-        const botIntent = this.bridge.getIntent();
         const rooms = await bot.getJoinedRooms();
 
         await Promise.all(
@@ -225,15 +222,20 @@ export default class Main extends EventEmitter {
                 if (this.mappingsByMatrix.has(room)) {
                     return;
                 }
-                const members = Object.keys(await bot.getJoinedMembers(room));
+                const members = Object.keys(
+                    (await this.botClient.getJoinedRoomMembers(room)).joined,
+                );
                 await Promise.all(
                     members.map(async userid => {
                         if (bot.isRemoteUser(userid)) {
-                            await this.bridge.getIntent(userid).leave(room);
+                            await this.bridge
+                                .getIntent(userid)
+                                .getClient()
+                                .leave(room);
                         }
                     }),
                 );
-                await botIntent.leave(room);
+                await this.botClient.leave(room);
             }),
         );
     }
@@ -340,20 +342,17 @@ export default class Main extends EventEmitter {
     }
 
     private async updateBotProfile(): Promise<void> {
-        const intent = this.bridge.getIntent();
-        // The bot believes itelf to always be registered, even when it isn't.
-        // This part is copied from matrix-appservice-slack.
-        intent.opts.registered = false;
-        await intent._ensureRegistered();
+        await this.botClient.register(config().matrix_bot.username);
+
         const targetProfile = config().matrix_bot;
-        const profile = await intent.getProfileInfo(
-            this.bridge.getBot().getUserId(),
+        const profile = await this.botClient.getProfileInfo(
+            this.botClient.getUserId(),
         );
         if (
             targetProfile.display_name &&
             profile.displayname !== targetProfile.display_name
         ) {
-            await intent.setDisplayName(targetProfile.display_name);
+            await this.botClient.setDisplayName(targetProfile.display_name);
         }
     }
 
@@ -436,13 +435,15 @@ export default class Main extends EventEmitter {
                     bot.isRemoteUser(event.state_key)) &&
                 event.content.is_direct
             ) {
-                const intent = this.bridge.getIntent(event.state_key);
-                await intent.sendEvent(event.room_id, 'm.room.message', {
+                const client = this.bridge
+                    .getIntent(event.state_key)
+                    .getClient();
+                await client.sendEvent(event.room_id, 'm.room.message', {
                     body:
                         'Private messaging is not supported for this bridged user',
                     msgtype: 'm.notice',
                 });
-                await intent.leave(event.room_id);
+                await client.leave(event.room_id);
             } else {
                 log.debug(`Message for unknown room: ${event.room_id}`);
             }
@@ -488,7 +489,7 @@ export default class Main extends EventEmitter {
     }
 
     public skipMatrixUser(userid: string): boolean {
-        const botMatrixUser = this.bridge.getBot().getUserId();
+        const botMatrixUser = this.botClient.getUserId();
         const ignoredMatrixUsers = config().ignored_matrix_users ?? [];
         return userid === botMatrixUser || ignoredMatrixUsers.includes(userid);
     }

@@ -8,9 +8,9 @@ import { MattermostUserInfo } from './Interfaces';
 import log from './Logging';
 
 export default class MattermostUserStore {
-    users: Map<string, User>;
-    mutex: Mutex;
-    constructor(readonly main: Main) {
+    private users: Map<string, User>;
+    private mutex: Mutex;
+    constructor(private readonly main: Main) {
         this.mutex = new Mutex();
         this.users = new Map();
     }
@@ -77,7 +77,7 @@ export default class MattermostUserStore {
         return user;
     }
 
-    async updateUser(
+    public async updateUser(
         data: MattermostUserInfo | undefined,
         user: User,
     ): Promise<void> {
@@ -106,7 +106,7 @@ export default class MattermostUserStore {
         await this.intent(user).setDisplayName(displayName);
     }
 
-    intent(user: User): Intent {
+    public intent(user: User): Intent {
         return this.main.bridge.getIntent(user.matrix_userid);
     }
 

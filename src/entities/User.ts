@@ -6,26 +6,26 @@ import { randomString } from '../utils/Functions';
 @Entity('users')
 export class User extends BaseEntity {
     @PrimaryColumn('text')
-    matrix_userid!: string;
+    public matrix_userid!: string;
 
     @Column('character', { length: '26' })
-    mattermost_userid!: string;
+    public mattermost_userid!: string;
 
     @Column('text')
-    access_token!: string;
+    public access_token!: string;
 
     @Column('boolean')
-    is_matrix_user!: boolean;
+    public is_matrix_user!: boolean;
 
     @Column('text')
-    mattermost_username!: string;
+    public mattermost_username!: string;
 
     @Column('text')
-    matrix_displayname!: string;
+    public matrix_displayname!: string;
 
     private _client?: Client;
 
-    get client(): Client {
+    public get client(): Client {
         if (this._client === undefined) {
             this._client = new Client(
                 config().mattermost_url,
@@ -36,7 +36,7 @@ export class User extends BaseEntity {
         return this._client;
     }
 
-    static async createMatrixUser(
+    public static async createMatrixUser(
         client: Client,
         matrix_userid: string,
         username: string,
@@ -73,7 +73,7 @@ export class User extends BaseEntity {
         return user;
     }
 
-    static async createMattermostUser(
+    public static async createMattermostUser(
         matrix_userid: string,
         mattermost_userid: string,
         username: string,

@@ -1,6 +1,6 @@
 export default class Mutex {
-    queue: (() => void)[];
-    locked: boolean;
+    private queue: (() => void)[];
+    private locked: boolean;
     constructor() {
         this.queue = [];
         this.locked = false;

@@ -8,15 +8,15 @@ import MattermostHandlers from './MattermostHandler';
 const MAX_MEMBERS: number = 10000;
 
 export default class Channel {
-    team?: string;
+    private team?: string;
 
     constructor(
-        readonly main: Main,
-        readonly matrixRoom: string,
-        readonly mattermostChannel: string,
+        public readonly main: Main,
+        public readonly matrixRoom: string,
+        public readonly mattermostChannel: string,
     ) {}
 
-    async getMatrixUsers(): Promise<{
+    private async getMatrixUsers(): Promise<{
         real: Set<string>;
         remote: Set<string>;
     }> {
@@ -41,7 +41,7 @@ export default class Channel {
         };
     }
 
-    async getMattermostUsers(): Promise<Set<string>> {
+    private async getMattermostUsers(): Promise<Set<string>> {
         const mattermostUsers: Set<string> = new Set();
         const query = await this.main.client.send(
             'GET',
@@ -54,7 +54,7 @@ export default class Channel {
         return mattermostUsers;
     }
 
-    async getTeam(): Promise<string> {
+    public async getTeam(): Promise<string> {
         if (this.team === undefined) {
             this.team = (
                 await this.main.client.get(
@@ -65,7 +65,7 @@ export default class Channel {
         return this.team;
     }
 
-    async joinMattermost(userid: string): Promise<void> {
+    public async joinMattermost(userid: string): Promise<void> {
         const team = await this.getTeam();
         try {
             await this.main.client.post(`/teams/${team}/members`, {
@@ -103,7 +103,7 @@ export default class Channel {
         }
     }
 
-    async leaveMattermost(userid: string): Promise<void> {
+    public async leaveMattermost(userid: string): Promise<void> {
         try {
             await this.main.client.delete(
                 `/channels/${this.mattermostChannel}/members/${userid}`,
@@ -129,7 +129,7 @@ export default class Channel {
         }
     }
 
-    async syncChannel(): Promise<void> {
+    public async syncChannel(): Promise<void> {
         const bridge = this.main.bridge;
 
         await Promise.all([
@@ -183,7 +183,7 @@ export default class Channel {
         );
     }
 
-    async onMattermostMessage(m: MattermostMessage): Promise<void> {
+    public async onMattermostMessage(m: MattermostMessage): Promise<void> {
         const handler = MattermostHandlers[m.event];
         if (handler === undefined) {
             log.debug(`Unknown matermost message type: ${m.event}`);
@@ -192,7 +192,7 @@ export default class Channel {
         }
     }
 
-    async onMatrixEvent(event: MatrixEvent): Promise<void> {
+    public async onMatrixEvent(event: MatrixEvent): Promise<void> {
         const handler = MatrixHandlers[event.type];
         if (handler === undefined) {
             log.debug(`Unknown matrix event type: ${event.type}`);

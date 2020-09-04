@@ -10,7 +10,7 @@ export default class AdminEndpoint {
     private app: Application;
     private server: Server;
 
-    constructor(readonly main: Main) {
+    constructor(private readonly main: Main) {
         this.app = express();
         this.app.get('/status', (_, res: Response): void => {
             log.info('Status requested');
@@ -25,11 +25,11 @@ export default class AdminEndpoint {
         this.server = createServer(this.app).listen(config().admin_port);
     }
 
-    async kill(): Promise<void> {
+    public async kill(): Promise<void> {
         await new Promise(r => this.server.close(r));
     }
 
-    async rename(req: Request, res: Response): Promise<void> {
+    private async rename(req: Request, res: Response): Promise<void> {
         const params = req.params;
         const oldName = params.oldName;
         const newName = params.newName;

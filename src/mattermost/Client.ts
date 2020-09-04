@@ -103,10 +103,10 @@ interface PromiseCallbacks {
 }
 
 export class ClientWebsocket extends EventEmitter {
-    ws: WebSocket;
-    seq: number;
-    promises: PromiseCallbacks[];
-    openPromise: Promise<void>;
+    private ws: WebSocket;
+    private seq: number;
+    private promises: PromiseCallbacks[];
+    public openPromise: Promise<void>;
 
     constructor(private client: Client) {
         super();
@@ -153,7 +153,7 @@ export class ClientWebsocket extends EventEmitter {
         this.ws.on('error', e => this.emit('error', e));
     }
 
-    async close(): Promise<void> {
+    public async close(): Promise<void> {
         // If the websocket is already closed, we will not receive a close event.
         if (this.ws.readyState === WebSocket.CLOSED) {
             return;
@@ -161,7 +161,7 @@ export class ClientWebsocket extends EventEmitter {
         this.ws.close();
         await new Promise(resolve => this.ws.once('close', resolve));
     }
-    async send(action: string, data: unknown): Promise<any> {
+    public async send(action: string, data: unknown): Promise<any> {
         this.seq += 1;
         this.ws.send(
             JSON.stringify({
@@ -182,10 +182,10 @@ export class ClientWebsocket extends EventEmitter {
 
 export class ClientError extends Error {
     constructor(
-        readonly method: Method,
-        readonly endpoint: string,
-        readonly data: unknown,
-        readonly m: ErrorObject,
+        public readonly method: Method,
+        public readonly endpoint: string,
+        public readonly data: unknown,
+        public readonly m: ErrorObject,
     ) {
         super();
         this.message = `${this.m.status_code} ${this.method} ${

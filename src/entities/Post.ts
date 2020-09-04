@@ -16,15 +16,15 @@ import {
 @Entity('posts')
 export class Post extends BaseEntity {
     @PrimaryColumn('text')
-    eventid!: string;
+    public eventid!: string;
 
     @Column('character', { length: '26' })
-    postid!: string;
+    public postid!: string;
 
     @Column('character', { length: '26' })
-    rootid!: string;
+    public rootid!: string;
 
-    static async removeAll(postid: string): Promise<void> {
+    public static async removeAll(postid: string): Promise<void> {
         await getConnection()
             .createQueryBuilder()
             .delete()

@@ -30,30 +30,30 @@ Intent.prototype.join = function (roomId, viaServers) {
 };
 
 export default class Main extends EventEmitter {
-    readonly client: Client;
-    readonly ws: ClientWebsocket;
-    readonly mattermostUserStore: MattermostUserStore;
-    readonly matrixUserStore: MatrixUserStore;
+    public readonly client: Client;
+    private readonly ws: ClientWebsocket;
+    public readonly mattermostUserStore: MattermostUserStore;
+    public readonly matrixUserStore: MatrixUserStore;
 
     // Channels include successfully bridge channels.
-    readonly channelsByMattermost: Map<string, Channel>;
-    readonly channelsByMatrix: Map<string, Channel>;
-    readonly channelsByTeam: Map<string, Channel[]>;
+    public readonly channelsByMattermost: Map<string, Channel>;
+    public readonly channelsByMatrix: Map<string, Channel>;
+    public readonly channelsByTeam: Map<string, Channel[]>;
 
     // Mappings are ones that are specified in the config file
-    readonly mappingsByMattermost: Map<string, Mapping>;
-    readonly mappingsByMatrix: Map<string, Mapping>;
+    public readonly mappingsByMattermost: Map<string, Mapping>;
+    public readonly mappingsByMatrix: Map<string, Mapping>;
 
-    readonly bridge: Bridge;
-    mattermostMutex: Mutex;
-    matrixMutex: Mutex;
-    initialized: boolean;
-    adminEndpoint?: AdminEndpoint;
-    killed: boolean;
+    public readonly bridge: Bridge;
+    private readonly mattermostMutex: Mutex;
+    private readonly matrixMutex: Mutex;
+    public initialized: boolean;
+    private adminEndpoint?: AdminEndpoint;
+    public killed: boolean;
 
     constructor(
         registration: AppServiceRegistration,
-        readonly exitOnFail: boolean = true,
+        private readonly exitOnFail: boolean = true,
     ) {
         super();
         this.bridge = new Bridge({
@@ -152,7 +152,7 @@ export default class Main extends EventEmitter {
         }
     }
 
-    async init(): Promise<void> {
+    public async init(): Promise<void> {
         log.time.info('Bridge initialized');
         const botProfile = this.updateBotProfile().catch(e =>
             log.warn(`Error when updating bot profile\n${e.stack}`),
@@ -208,14 +208,14 @@ export default class Main extends EventEmitter {
         this.emit('initialize');
     }
 
-    async leaveUnbridgedChannels(): Promise<void> {
+    private async leaveUnbridgedChannels(): Promise<void> {
         await Promise.all([
             this.leaveUnbridgedMattermostChannels(),
             this.leaveUnbridgedMatrixRooms(),
         ]);
     }
 
-    async leaveUnbridgedMatrixRooms(): Promise<void> {
+    private async leaveUnbridgedMatrixRooms(): Promise<void> {
         const bot = this.bridge.getBot();
         const botIntent = this.bridge.getIntent();
         const rooms = await bot.getJoinedRooms();
@@ -238,7 +238,7 @@ export default class Main extends EventEmitter {
         );
     }
 
-    async leaveUnbridgedMattermostChannels(): Promise<void> {
+    private async leaveUnbridgedMattermostChannels(): Promise<void> {
         const mattermostTeams = await this.client.get(
             `/users/${this.client.userid}/teams`,
         );
@@ -290,7 +290,7 @@ export default class Main extends EventEmitter {
         );
     }
 
-    async killBridge(exitCode: number): Promise<void> {
+    public async killBridge(exitCode: number): Promise<void> {
         const killed = this.killed;
         this.killed = true;
 
@@ -323,7 +323,10 @@ export default class Main extends EventEmitter {
         }
     }
 
-    async updateConfig(oldConfig: Config, newConfig: Config): Promise<void> {
+    public async updateConfig(
+        oldConfig: Config,
+        newConfig: Config,
+    ): Promise<void> {
         for (const key of Object.keys(oldConfig)) {
             if (
                 !RELOADABLE_CONFIG.has(key) &&
@@ -336,7 +339,7 @@ export default class Main extends EventEmitter {
         }
     }
 
-    async updateBotProfile(): Promise<void> {
+    private async updateBotProfile(): Promise<void> {
         const intent = this.bridge.getIntent();
         // The bot believes itelf to always be registered, even when it isn't.
         // This part is copied from matrix-appservice-slack.
@@ -354,7 +357,7 @@ export default class Main extends EventEmitter {
         }
     }
 
-    async onMattermostMessage(m: MattermostMessage): Promise<void> {
+    private async onMattermostMessage(m: MattermostMessage): Promise<void> {
         await this.mattermostMutex.lock();
         log.time.debug('Process mattermost message');
 
@@ -413,7 +416,7 @@ export default class Main extends EventEmitter {
         this.emit('mattermost');
     }
 
-    async onMatrixEvent(request: Request): Promise<void> {
+    private async onMatrixEvent(request: Request): Promise<void> {
         await this.matrixMutex.lock();
         log.time.debug('Process matrix message');
 
@@ -452,11 +455,13 @@ export default class Main extends EventEmitter {
         this.emit('matrix');
     }
 
-    async isMattermostUser(userid: string): Promise<boolean> {
+    public async isMattermostUser(userid: string): Promise<boolean> {
         return (await this.getPuppetMatrixUser(userid)) === null;
     }
 
-    async getPuppetMatrixUser(mattermostUserId: string): Promise<User | null> {
+    public async getPuppetMatrixUser(
+        mattermostUserId: string,
+    ): Promise<User | null> {
         const cached = this.matrixUserStore.byMattermostUserId.get(
             mattermostUserId,
         );
@@ -473,7 +478,7 @@ export default class Main extends EventEmitter {
         }
     }
 
-    skipMattermostUser(userid: string): boolean {
+    public skipMattermostUser(userid: string): boolean {
         const botMattermostUser = this.client.userid;
         const ignoredMattermostUsers = config().ignored_mattermost_users ?? [];
         return (
@@ -482,13 +487,13 @@ export default class Main extends EventEmitter {
         );
     }
 
-    skipMatrixUser(userid: string): boolean {
+    public skipMatrixUser(userid: string): boolean {
         const botMatrixUser = this.bridge.getBot().getUserId();
         const ignoredMatrixUsers = config().ignored_matrix_users ?? [];
         return userid === botMatrixUser || ignoredMatrixUsers.includes(userid);
     }
 
-    static readonly mattermostMessageHandlers = {
+    private static readonly mattermostMessageHandlers = {
         hello: none,
         added_to_team: none,
         new_user: none,

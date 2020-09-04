@@ -17,6 +17,10 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/prefer-optional-chain': 'warn',
     '@typescript-eslint/prefer-for-of': 'warn',
+    '@typescript-eslint/explicit-member-accessibility': [
+      'warn',
+      { overrides: { constructors: 'no-public' } },
+    ],
     '@typescript-eslint/array-type': ['warn', { default: 'array' }],
     '@typescript-eslint/consistent-type-assertions': [
       'warn',

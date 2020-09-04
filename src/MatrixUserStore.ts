@@ -7,10 +7,10 @@ import { findFirstAvailable } from './utils/Functions';
 import log from './Logging';
 
 export default class MatrixUserStore {
-    readonly byMatrixUserId: Map<string, User>;
-    readonly byMattermostUserId: Map<string, User>;
-    mutex: Mutex;
-    constructor(readonly main: Main) {
+    public readonly byMatrixUserId: Map<string, User>;
+    public readonly byMattermostUserId: Map<string, User>;
+    private readonly mutex: Mutex;
+    constructor(private readonly main: Main) {
         this.mutex = new Mutex();
         this.byMatrixUserId = new Map();
         this.byMattermostUserId = new Map();
@@ -98,7 +98,7 @@ export default class MatrixUserStore {
         return user;
     }
 
-    async updateUser(user: User): Promise<void> {
+    public async updateUser(user: User): Promise<void> {
         let displayname = localpart(user.matrix_userid);
 
         try {

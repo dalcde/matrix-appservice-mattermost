@@ -3,6 +3,8 @@ import {
     AppServiceRegistration,
     Request,
 } from 'matrix-appservice-bridge';
+// import { createClient } from 'matrix-js-sdk';
+import * as sdk from 'matrix-js-sdk';
 import { Client, ClientWebsocket } from './mattermost/Client';
 import {
     Config,
@@ -28,6 +30,7 @@ export default class Main extends EventEmitter {
     private readonly mattermostMutex: Mutex;
 
     private readonly ws: ClientWebsocket;
+    private readonly bridge: Bridge;
 
     private adminEndpoint?: AdminEndpoint;
     private remoteUserRegex: RegExp;
@@ -37,7 +40,6 @@ export default class Main extends EventEmitter {
     public initialized: boolean;
     public killed: boolean;
 
-    public readonly bridge: Bridge;
     public readonly client: Client;
 
     public readonly channelsByMatrix: Map<string, Channel>;
@@ -53,7 +55,7 @@ export default class Main extends EventEmitter {
     public readonly mattermostUserStore: MattermostUserStore;
 
     constructor(
-        registration: AppServiceRegistration,
+        public readonly registration: AppServiceRegistration,
         private readonly exitOnFail: boolean = true,
     ) {
         super();
@@ -83,7 +85,12 @@ export default class Main extends EventEmitter {
             config().appservice.hostname,
         );
 
-        this.botClient = this.bridge.getIntent().getClient();
+        this.botClient = this.getMatrixClient(
+            `@${config().matrix_bot.username}:${
+                config().homeserver.server_name
+            }`,
+        );
+
         this.remoteUserRegex = new RegExp(
             `@${config().matrix_localpart_prefix}.*:${
                 config().homeserver.server_name
@@ -237,10 +244,7 @@ export default class Main extends EventEmitter {
                 await Promise.all(
                     members.map(async userid => {
                         if (this.isRemoteUser(userid)) {
-                            await this.bridge
-                                .getIntent(userid)
-                                .getClient()
-                                .leave(room);
+                            await this.getMatrixClient(userid).leave(room);
                         }
                     }),
                 );
@@ -351,12 +355,18 @@ export default class Main extends EventEmitter {
     }
 
     private async updateBotProfile(): Promise<void> {
-        await this.botClient.register(config().matrix_bot.username);
+        try {
+            await this.botClient.register(config().matrix_bot.username);
+        } catch (e) {
+            if (e.errcode !== 'M_USER_IN_USE') {
+                throw e;
+            }
+        }
 
         const targetProfile = config().matrix_bot;
-        const profile = await this.botClient.getProfileInfo(
-            this.botClient.getUserId(),
-        );
+        const profile = await this.botClient
+            .getProfileInfo(this.botClient.getUserId())
+            .catch(() => ({ display_name: '' }));
         if (
             targetProfile.display_name &&
             profile.displayname !== targetProfile.display_name
@@ -443,9 +453,7 @@ export default class Main extends EventEmitter {
                     this.isRemoteUser(event.state_key)) &&
                 event.content.is_direct
             ) {
-                const client = this.bridge
-                    .getIntent(event.state_key)
-                    .getClient();
+                const client = this.getMatrixClient(event.state_key);
                 await client.sendEvent(event.room_id, 'm.room.message', {
                     body:
                         'Private messaging is not supported for this bridged user',
@@ -533,4 +541,18 @@ export default class Main extends EventEmitter {
             }
         },
     };
+
+    public getMatrixClient(userId: string): MatrixClient {
+        return sdk.createClient({
+            accessToken: this.registration.getAppServiceToken(),
+            baseUrl: config().homeserver.url,
+            userId,
+            queryParams: {
+                user_id: userId,
+                access_token: this.registration.getAppServiceToken(),
+            },
+            scheduler: new (sdk as any).MatrixScheduler(),
+            localTimeoutMs: 1000 * 60 * 2,
+        } as any);
+    }
 }

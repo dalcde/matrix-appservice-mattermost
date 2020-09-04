@@ -129,8 +129,6 @@ export default class Channel {
     }
 
     public async syncChannel(): Promise<void> {
-        const bridge = this.main.bridge;
-
         await Promise.all([
             this.main.botClient.joinRoom(this.matrixRoom),
             this.joinMattermost(this.main.client.userid),
@@ -176,7 +174,7 @@ export default class Channel {
 
         await Promise.all(
             Array.from(matrixUsers.remote, async matrix_userid => {
-                const client = bridge.getIntent(matrix_userid).getClient();
+                const client = this.main.getMatrixClient(matrix_userid);
                 await client.leave(this.matrixRoom);
             }),
         );

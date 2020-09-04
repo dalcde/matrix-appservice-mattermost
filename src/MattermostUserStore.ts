@@ -114,7 +114,7 @@ export default class MattermostUserStore {
     }
 
     public client(user: User): MatrixClient {
-        return this.main.bridge.getIntent(user.matrix_userid).getClient();
+        return this.main.getMatrixClient(user.matrix_userid);
     }
 
     public async getOrCreateClient(

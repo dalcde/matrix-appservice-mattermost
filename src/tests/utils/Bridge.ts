@@ -5,7 +5,7 @@ import { safeLoad } from 'js-yaml';
 import { spawn } from 'child_process';
 import { AppServiceRegistration } from 'matrix-appservice-bridge';
 
-import { setConfig } from '../../Config';
+import { setConfig, Config } from '../../Config';
 import Main from '../../Main';
 import log from '../../Logging';
 import connection from './Connection';
@@ -28,14 +28,12 @@ function loadYaml(path: string): any {
     return safeLoad(readFileSync(path, 'utf8'));
 }
 
-export async function startBridge(
-    extra: Record<string, unknown> = {},
-): Promise<void> {
+export async function startBridge(extra?: Partial<Config>): Promise<void> {
     await connection;
     const registration = AppServiceRegistration.fromObject(
         loadYaml(REGISTRATION_PATH),
     );
-    const config = Object.assign(loadYaml(CONFIG_PATH), extra);
+    const config = Object.assign(loadYaml(CONFIG_PATH), extra || {});
 
     setConfig(config);
 

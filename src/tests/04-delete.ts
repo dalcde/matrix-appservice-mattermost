@@ -9,7 +9,7 @@ import { waitEvent } from '../utils/Functions';
 import { MATTERMOST_CHANNEL_IDS, MATRIX_ROOM_IDS } from './utils/Data';
 
 test('Start bridge', async t => {
-    await startBridge(t);
+    await startBridge();
     t.end();
 });
 

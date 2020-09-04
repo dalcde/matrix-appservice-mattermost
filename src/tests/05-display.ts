@@ -4,7 +4,7 @@ import { getMattermostClient, getMatrixClient } from './utils/Client';
 import { waitEvent } from '../utils/Functions';
 
 test('Start bridge', async t => {
-    await startBridge(t);
+    await startBridge();
     t.end();
 });
 

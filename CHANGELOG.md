@@ -14,6 +14,8 @@ Bug fixes:
 - Mitigate Mattermost bug where joining a channel twice (indirectly triggered
   by default channel joins) returns an error.
 - Fix overzealous registration namespace. Restrict to local server only
+- Fix a deadlock that prevents the bridge from exiting if there are no channels
+  bridged
 
 New features:
 

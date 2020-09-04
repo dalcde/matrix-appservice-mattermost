@@ -204,15 +204,16 @@ export default class Main extends EventEmitter {
 
         await this.leaveUnbridgedChannels();
 
+        this.mattermostMutex.unlock();
+        this.matrixMutex.unlock();
+
         if (this.channelsByMattermost.size === 0) {
             log.info('No channels bridged successfully. Shutting down bridge.');
             // If we exit before notifying systemd, it is considered a failure
             await notifySystemd();
             await this.killBridge(0);
+            return;
         }
-
-        this.mattermostMutex.unlock();
-        this.matrixMutex.unlock();
 
         await this.ws.openPromise;
         await botProfile;

@@ -157,9 +157,9 @@ const MattermostHandlers = {
                 );
 
                 // threadResponse.order often contains duplicate entries
-                const threads = Object.values(threadResponse.posts).sort(
-                    (a: any, b: any) => a.create_at - b.create_at,
-                );
+                const threads = Object.values(threadResponse.posts)
+                    .sort((a: any, b: any) => a.create_at - b.create_at)
+                    .map((x: any) => x.id);
 
                 const thisIndex = threads.indexOf(post.id);
                 const id = threads[thisIndex - 1] as string;

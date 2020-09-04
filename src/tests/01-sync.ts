@@ -14,7 +14,7 @@ import {
 } from './utils/Data';
 
 test('Start bridge', async t => {
-    await startBridge(t);
+    await startBridge();
     t.end();
 });
 
@@ -195,15 +195,14 @@ test('Sync matrix join', async t => {
 test('Leave mattermost team when all channels left', async t => {
     const matrixClient = getMatrixClient('matrix_a');
 
-    // The number of mattermost messages depends on the order in which events
-    // are processed. We don't check it because the bridge will be killed after
-    // this.
     await Promise.all([
         waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost', 2),
         matrixClient.leave(MATRIX_ROOM_IDS['off-topic']),
     ]);
     await Promise.all([
         waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost', 2),
         matrixClient.leave(MATRIX_ROOM_IDS['town-square']),
     ]);
 
@@ -220,10 +219,12 @@ test('Leave mattermost team when all channels left', async t => {
 
     await Promise.all([
         waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost', 3),
         matrixClient.joinRoom(MATRIX_ROOM_IDS['off-topic']),
     ]);
     await Promise.all([
         waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost'),
         matrixClient.joinRoom(MATRIX_ROOM_IDS['town-square']),
     ]);
 
@@ -237,6 +238,91 @@ test('Leave mattermost team when all channels left', async t => {
             'matrix_matrix_a',
             'matrix_matrix_b',
         ]),
+    );
+
+    t.end();
+});
+
+test('Kill bridge', async t => {
+    await main().killBridge(0);
+    t.end();
+});
+
+// This bridge kills itself because there are no bridged channels.
+test('Start bridge with no channels mapped', async t => {
+    await startBridge({ mappings: [] });
+    t.end();
+});
+
+test('check users removed', async t => {
+    await Promise.all(
+        CHANNELS.map(async channel => {
+            t.deepEqual(
+                await getMattermostMembers(channel),
+                new Set(['mattermost_a', 'mattermost_b', 'ignored_user']),
+            );
+        }),
+    );
+
+    const matrixClient = getMatrixClient('admin');
+    await Promise.all(
+        Object.values(MATRIX_ROOM_IDS).map(async room => {
+            const members = await matrixClient.getJoinedRoomMembers(room);
+            t.deepEqual(
+                new Set(Object.keys(members.joined)),
+                new Set([
+                    '@admin:localhost',
+                    '@ignored_user:localhost',
+                    '@matrix_a:localhost',
+                    '@matrix_b:localhost',
+                ]),
+            );
+        }),
+    );
+
+    t.end();
+});
+
+test('Start bridge with all channels', async t => {
+    await startBridge();
+    t.end();
+});
+
+// This is the same as initial sync
+test('All users returned', async t => {
+    await Promise.all(
+        CHANNELS.map(async channel => {
+            t.deepEqual(
+                await getMattermostMembers(channel),
+                new Set([
+                    'admin',
+                    'mattermost_a',
+                    'mattermost_b',
+                    'ignored_user',
+                    'matrix_matrix_a',
+                    'matrix_matrix_b',
+                ]),
+            );
+        }),
+    );
+
+    const matrixClient = getMatrixClient('admin');
+    await Promise.all(
+        Object.values(MATRIX_ROOM_IDS).map(async room => {
+            const members = await matrixClient.getJoinedRoomMembers(room);
+            t.deepEqual(
+                new Set(Object.keys(members.joined)),
+                new Set([
+                    '@admin:localhost',
+                    '@ignored_user:localhost',
+                    '@matrix_a:localhost',
+                    '@matrix_b:localhost',
+                    '@mm_mattermost_a:localhost',
+                    '@mm_mattermost_b:localhost',
+                    '@matterbot:localhost',
+                ]),
+            );
+        }),
     );
 
     t.end();

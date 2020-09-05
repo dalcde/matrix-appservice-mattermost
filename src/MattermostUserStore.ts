@@ -8,10 +8,12 @@ import log from './Logging';
 
 export default class MattermostUserStore {
     private users: Map<string, User>;
+    private clients: Map<string, MatrixClient>;
     private mutex: Mutex;
     constructor(private readonly main: Main) {
         this.mutex = new Mutex();
         this.users = new Map();
+        this.clients = new Map();
     }
 
     public get(userid: string): User | undefined {
@@ -114,7 +116,12 @@ export default class MattermostUserStore {
     }
 
     public client(user: User): MatrixClient {
-        return this.main.getMatrixClient(user.matrix_userid);
+        let client = this.clients.get(user.matrix_userid);
+        if (client === undefined) {
+            client = this.main.getMatrixClient(user.matrix_userid);
+            this.clients.set(user.matrix_userid, client);
+        }
+        return client;
     }
 
     public async getOrCreateClient(

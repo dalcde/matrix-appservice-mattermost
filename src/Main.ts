@@ -31,7 +31,6 @@ export default class Main extends EventEmitter {
     public readonly registration: AppServiceRegistration;
 
     private adminEndpoint?: AdminEndpoint;
-    private remoteUserRegex: RegExp;
 
     public botClient: MatrixClient;
 
@@ -78,10 +77,6 @@ export default class Main extends EventEmitter {
 
         this.botClient = this.getMatrixClient(
             `@${config.matrix_bot.username}:${config.homeserver.server_name}`,
-        );
-
-        this.remoteUserRegex = new RegExp(
-            `@${config.matrix_localpart_prefix}.*:${config.homeserver.server_name}`,
         );
 
         this.initialized = false;
@@ -437,6 +432,9 @@ export default class Main extends EventEmitter {
     }
 
     private async onMatrixEvent(event: MatrixEvent): Promise<void> {
+        if (this.isRemoteUser(event.sender)) {
+            return;
+        }
         await this.matrixMutex.lock();
         log.time.debug('Process matrix message');
 
@@ -497,7 +495,7 @@ export default class Main extends EventEmitter {
     }
 
     public isRemoteUser(userid: string): boolean {
-        return this.remoteUserRegex.test(userid);
+        return this.registration.isUserMatch(userid, true);
     }
 
     public skipMattermostUser(userid: string): boolean {

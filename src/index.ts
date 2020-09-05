@@ -29,6 +29,19 @@ if (argv.r === undefined) {
         log.info('Received SIGINT. Shutting down bridge.');
         void main.killBridge(0);
     });
+    process.on('SIGHUP', () => {
+        log.info('Received SIGHUP. Reloading config.');
+
+        const newConfig = loadYaml(argv.c);
+        try {
+            validate(newConfig);
+        } catch (e) {
+            log.error(`Invalid config: ${e}`);
+        }
+        main.updateConfig(newConfig).catch(e => {
+            log.error(e);
+        });
+    });
 } else {
     const config = loadYaml(argv.c);
     validate(config);

@@ -26,6 +26,8 @@ New features:
 - The dummy -u cli parameter is no longer needed.
 - Additional appservice.bind parameter to specify the host the appservice
   binds to
+- Add minimal config hot reloading support. Currently only supports reloading
+  log levels and some templates
 
 Breaking changes:
 

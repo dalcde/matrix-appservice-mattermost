@@ -183,7 +183,7 @@ export default class Main extends EventEmitter {
             511,
         );
 
-        const db = config().database;
+        const db = Object.assign({}, config().database);
         db['entities'] = [User, Post];
         db['synchronize'] = true;
         db['logging'] = false;
@@ -347,20 +347,26 @@ export default class Main extends EventEmitter {
         }
     }
 
-    public async updateConfig(
-        oldConfig: Config,
-        newConfig: Config,
-    ): Promise<void> {
-        for (const key of Object.keys(oldConfig)) {
+    public async updateConfig(newConfig: Config): Promise<void> {
+        // There is no easy way to get the list of all possible config keys.
+        // However, the ones that could have changed must be a key in either
+        // the new one or the old one.
+        const oldConfig = config();
+        const keys = new Set([
+            ...Object.keys(oldConfig),
+            ...Object.keys(newConfig),
+        ]);
+
+        for (const key of keys) {
             if (
                 !RELOADABLE_CONFIG.has(key) &&
                 !isDeepStrictEqual(oldConfig[key], newConfig[key])
             ) {
-                log.error('Cannot hot reload config ');
+                throw new Error(`Cannot hot reload config ${key}`);
             }
-            log.setLevel(newConfig.logging);
-            setConfig(newConfig);
         }
+        log.setLevel(newConfig.logging);
+        setConfig(newConfig, false);
     }
 
     private async updateBotProfile(): Promise<void> {

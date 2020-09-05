@@ -104,7 +104,13 @@ export interface Config {
         database: string;
     };
     logging: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'silent';
+    /**
+     * @default []
+     */
     ignored_mattermost_users: string[];
+    /**
+     * @default []
+     */
     ignored_matrix_users: string[];
     mattermost_email_template: string;
 }

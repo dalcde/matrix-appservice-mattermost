@@ -2,3 +2,4 @@ tsconfig.tsbuildinfo
 node_modules
 Makefile
 build
+docker/synapse/registration.yaml

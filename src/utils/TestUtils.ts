@@ -35,8 +35,8 @@ export async function setupDb(): Promise<void> {
     ]);
 }
 
-import { Config, setConfig as realSetConfig } from '../Config';
+import { setConfig as realSetConfig } from '../Config';
 
 export function setConfig(c: Record<string, unknown>): void {
-    realSetConfig((c as unknown) as Config);
+    realSetConfig(c, false);
 }

@@ -1,16 +1,13 @@
-import * as http from 'http';
-import * as path from 'path';
 import * as test from 'tape';
+import { get } from 'http';
+import { join } from 'path';
 import { spawnSync, spawn as spawnAsync } from 'child_process';
 import { MATTERMOST_PORT, SYNAPSE_PORT } from './utils/Data';
-import { createConnection, getConnection } from 'typeorm';
-import { User } from '../entities/User';
-import { Post } from '../entities/Post';
 
-const DOCKER_PATH = path.join(__dirname, '../../docker/docker-compose.yaml');
+const DOCKER_PATH = join(__dirname, '../../docker/docker-compose.yaml');
 
 function query(port: number, resolve: () => void): void {
-    http.get(`http://localhost:${port}/`, () => {
+    get(`http://localhost:${port}/`, () => {
         resolve();
     }).on('error', () => {
         setTimeout(() => query(port, resolve), 500);
@@ -33,7 +30,6 @@ function cleanup() {
         spawn(['docker-compose', '-f', DOCKER_PATH, 'kill']);
         spawn(['docker-compose', '-f', DOCKER_PATH, 'down', '-v']);
     }
-    void getConnection().close();
 }
 
 test.onFinish(cleanup);
@@ -62,15 +58,5 @@ test('Start docker', async t => {
         healthCheck(SYNAPSE_PORT),
     ]);
 
-    await createConnection({
-        type: 'postgres',
-        database: 'matrix-mattermost',
-        username: 'matrix-mattermost',
-        password: 'hunter2',
-        entities: [User, Post],
-        dropSchema: true,
-        synchronize: true,
-        logging: false,
-    });
     t.end();
 });

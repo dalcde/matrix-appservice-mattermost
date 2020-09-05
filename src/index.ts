@@ -1,71 +1,51 @@
 console.time('Bridge loaded');
-import { Cli, AppServiceRegistration } from 'matrix-appservice-bridge';
-import log from './Logging';
-import { setConfig, Config } from './Config';
-import { createConnection, ConnectionOptions } from 'typeorm';
-import * as path from 'path';
+import * as yargs from 'yargs';
+import { AppServiceRegistration } from 'matrix-appservice';
+
+import { loadYaml } from './utils/Functions';
+import { validate } from './Config';
 import Main from './Main';
-import { User } from './entities/User';
-import { Post } from './entities/Post';
+import log from './Logging';
 
-const cli = new Cli({
-    registrationPath: 'registration.yaml',
-    generateRegistration(reg, callback) {
-        const config: Config = cli.getConfig();
+const argv = yargs
+    .scriptName('matrix-appservice-bridge')
+    .help('help')
+    .alias('h', 'help')
+    .option('r', { describe: 'generate registration file' })
+    .option('c', { describe: 'configuration file', nargs: 1, demand: true })
+    .option('f', { describe: 'registration file', nargs: 1, demand: true })
+    .argv;
 
-        reg.setId(AppServiceRegistration.generateToken());
-        reg.setHomeserverToken(AppServiceRegistration.generateToken());
-        reg.setAppServiceToken(AppServiceRegistration.generateToken());
-        reg.setSenderLocalpart(`${config.matrix_bot.username}`);
-        reg.setAppServiceUrl(
-            `${config.appservice.schema}://${config.appservice.hostname}:${config.appservice.port}`,
-        );
-        reg.addRegexPattern(
-            'users',
-            `@${config.matrix_localpart_prefix}.*:${config.homeserver.server_name}`,
-            true,
-        );
+if (argv.r === undefined) {
+    const main = new Main(loadYaml(argv.c), argv.f);
+    log.timeEnd.info('Bridge loaded');
+    void main.init();
 
-        callback(reg);
-    },
-    bridgeConfig: {
-        schema: path.join(__dirname, '../config/mattermost-config-schema.yaml'),
-        affectsRegistration: true,
-        defaults: {
-            matrix_localpart_suffix: 'mm_',
-            matrix_display_name_template: '[DISPLAY]',
-            mattermost_username_template: '[DISPLAY]',
-            forbid_bridge_failure: false,
-        },
-    },
-    async run(
-        port: number,
-        config: Config,
-        registration: AppServiceRegistration,
-    ) {
-        log.setLevel(config.logging);
+    process.on('SIGTERM', () => {
+        log.info('Received SIGTERM. Shutting down bridge.');
+        void main.killBridge(0);
+    });
+    process.on('SIGINT', () => {
+        log.info('Received SIGINT. Shutting down bridge.');
+        void main.killBridge(0);
+    });
+} else {
+    const config = loadYaml(argv.c);
+    validate(config);
 
-        setConfig(config);
-
-        const db = config.database;
-        db['entities'] = [User, Post];
-        db['synchronize'] = true;
-        db['logging'] = false;
-
-        await createConnection(db as ConnectionOptions);
-
-        const main = new Main(registration);
-        log.timeEnd.info('Bridge loaded');
-        void main.init();
-
-        process.on('SIGTERM', () => {
-            log.info('Received SIGTERM. Shutting down bridge.');
-            void main.killBridge(0);
-        });
-        process.on('SIGINT', () => {
-            log.info('Received SIGINT. Shutting down bridge.');
-            void main.killBridge(0);
-        });
-    },
-});
-cli.run();
+    const reg = new AppServiceRegistration(
+        `${config.appservice.schema}://${config.appservice.hostname}:${config.appservice.port}`,
+    );
+    reg.setId(AppServiceRegistration.generateToken());
+    reg.setHomeserverToken(AppServiceRegistration.generateToken());
+    reg.setAppServiceToken(AppServiceRegistration.generateToken());
+    reg.setSenderLocalpart(`${config.matrix_bot.username}`);
+    reg.addRegexPattern(
+        'users',
+        `@${config.matrix_localpart_prefix}.*:${config.homeserver.server_name}`,
+        true,
+    );
+    reg.outputAsYaml(argv.f);
+    log.info(`Output registration to: ${argv.f}`);
+    process.exit(0);
+}

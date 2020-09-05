@@ -8,13 +8,18 @@ homeserver:
   server_name: 'localhost'
 
 appservice:
-  # The port the appservice uses to talk to the bridge. This can be an
-  # arbitrary unused port.
+  # The port the homeserver uses to talk to the appservice (bridge). This can
+  # be an arbitrary unused port.
   port: 9995
 
-  # The hostname the appservice uses to talk to the bridge. If they are on the
-  # same server, set it to localhost.
-  hostname: localhost
+  # The hostname the homeserver uses to talk to the appservice. This hostname
+  # should be accessible from the homeserver. If they are on the same server,
+  # set it to localhost.
+  hostname: appservice
+
+  # The host the appservice server should bind to. Defaults to hostname
+  bind: localhost
+
   schema: http
 
 # URL to the mattermost instance.

@@ -44,12 +44,8 @@ production system (with understanding users) by the author.
 4. Generate registration file
 
    ```
-   node build/index.js -c config.yaml -f registration.yaml -r -u dummy
+   node build/index.js -c config.yaml -f registration.yaml -r
    ```
-
-   Note that the last argument `dummy` can be arbitrary; The
-   `matrix-appservice-bridge` library requires this argument to be supplied, but
-   it is not used. The relevant arguments are specified in the config file.
 
    You should regenerate the registration file every time you update the
    bridge or change your configuration file.

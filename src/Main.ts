@@ -1,9 +1,5 @@
-import {
-    Bridge,
-    AppServiceRegistration,
-    Request,
-} from 'matrix-appservice-bridge';
-// import { createClient } from 'matrix-js-sdk';
+import { AppService, AppServiceRegistration } from 'matrix-appservice';
+import { createConnection, ConnectionOptions, getConnection } from 'typeorm';
 import * as sdk from 'matrix-js-sdk';
 import { Client, ClientWebsocket } from './mattermost/Client';
 import {
@@ -14,9 +10,10 @@ import {
     RELOADABLE_CONFIG,
 } from './Config';
 import { isDeepStrictEqual } from 'util';
-import { none, notifySystemd, allSettled } from './utils/Functions';
+import { none, notifySystemd, allSettled, loadYaml } from './utils/Functions';
 import { User } from './entities/User';
-import { MattermostMessage, MatrixClient } from './Interfaces';
+import { Post } from './entities/Post';
+import { MattermostMessage, MatrixClient, MatrixEvent } from './Interfaces';
 import AdminEndpoint from './AdminEndpoint';
 import MatrixUserStore from './MatrixUserStore';
 import MattermostUserStore from './MattermostUserStore';
@@ -30,7 +27,8 @@ export default class Main extends EventEmitter {
     private readonly mattermostMutex: Mutex;
 
     private readonly ws: ClientWebsocket;
-    private readonly bridge: Bridge;
+    private readonly appService: AppService;
+    public readonly registration: AppServiceRegistration;
 
     private adminEndpoint?: AdminEndpoint;
     private remoteUserRegex: RegExp;
@@ -55,54 +53,43 @@ export default class Main extends EventEmitter {
     public readonly mattermostUserStore: MattermostUserStore;
 
     constructor(
-        public readonly registration: AppServiceRegistration,
+        config: Config,
+        registrationPath: string,
         private readonly exitOnFail: boolean = true,
     ) {
         super();
-        this.bridge = new Bridge({
-            homeserverUrl: config().homeserver.url,
-            domain: config().homeserver.server_name,
-            registration,
-            controller: {
-                onUserQuery: () => {
-                    return {};
-                },
-                onEvent: request => {
-                    void this.onMatrixEvent(request);
-                },
-            },
-            disableContext: true,
-        });
 
-        this.bridge.opts.userStore = undefined;
-        this.bridge.opts.roomStore = undefined;
-        this.bridge.opts.eventStore = undefined;
+        setConfig(config);
+        log.setLevel(config.logging);
 
-        this.bridge.run(
-            config().appservice.port,
-            config(),
-            undefined,
-            config().appservice.hostname,
+        const registration = AppServiceRegistration.fromObject(
+            loadYaml(registrationPath),
         );
+        if (!registration) {
+            throw new Error('Invalid registration file');
+        }
+        this.registration = registration;
+
+        this.appService = new AppService({
+            // It shouldn't be null but TypeScript complains
+            homeserverToken: registration.getHomeserverToken() || '',
+        });
+        this.appService.on('event', this.onMatrixEvent.bind(this));
 
         this.botClient = this.getMatrixClient(
-            `@${config().matrix_bot.username}:${
-                config().homeserver.server_name
-            }`,
+            `@${config.matrix_bot.username}:${config.homeserver.server_name}`,
         );
 
         this.remoteUserRegex = new RegExp(
-            `@${config().matrix_localpart_prefix}.*:${
-                config().homeserver.server_name
-            }`,
+            `@${config.matrix_localpart_prefix}.*:${config.homeserver.server_name}`,
         );
 
         this.initialized = false;
 
         this.client = new Client(
-            config().mattermost_url,
-            config().mattermost_bot_userid,
-            config().mattermost_bot_access_token,
+            config.mattermost_url,
+            config.mattermost_bot_userid,
+            config.mattermost_bot_access_token,
         );
         this.ws = this.client.websocket();
 
@@ -120,12 +107,12 @@ export default class Main extends EventEmitter {
 
         this.killed = false;
 
-        for (const map of config().mappings) {
+        for (const map of config.mappings) {
             if (this.mappingsByMattermost.has(map.mattermost)) {
                 log.error(
                     `Mattermost channel ${map.mattermost} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
                 );
-                if (config().forbid_bridge_failure) {
+                if (config.forbid_bridge_failure) {
                     void this.killBridge(1);
                     return;
                 }
@@ -135,7 +122,7 @@ export default class Main extends EventEmitter {
                 log.error(
                     `Matrix channel ${map.matrix} already bridged. Skipping bridge ${map.mattermost} <-> ${map.matrix}`,
                 );
-                if (config().forbid_bridge_failure) {
+                if (config.forbid_bridge_failure) {
                     void this.killBridge(1);
                     return;
                 }
@@ -162,21 +149,34 @@ export default class Main extends EventEmitter {
             void this.killBridge(1);
         });
 
-        if (config().admin_port !== undefined) {
+        if (config.admin_port !== undefined) {
             this.adminEndpoint = new AdminEndpoint(this);
         }
     }
 
     public async init(): Promise<void> {
         log.time.info('Bridge initialized');
+
         const botProfile = this.updateBotProfile().catch(e =>
             log.warn(`Error when updating bot profile\n${e.stack}`),
+        );
+        const appservice = this.appService.listen(
+            config().appservice.port,
+            config().appservice.bind || config().appservice.hostname,
+            511,
         );
 
         await Promise.all([
             this.mattermostMutex.lock(),
             this.matrixMutex.lock(),
         ]);
+
+        const db = config().database;
+        db['entities'] = [User, Post];
+        db['synchronize'] = true;
+        db['logging'] = false;
+
+        await createConnection(db as ConnectionOptions);
 
         await Promise.all(
             Array.from(this.channelsByMattermost, async ([, channel]) => {
@@ -217,6 +217,7 @@ export default class Main extends EventEmitter {
 
         await this.ws.openPromise;
         await botProfile;
+        await appservice;
         log.timeEnd.info('Bridge initialized');
 
         void notifySystemd();
@@ -317,12 +318,12 @@ export default class Main extends EventEmitter {
         // Otherwise, closing the websocket connection will initiate
         // the shutdown sequence again.
         this.ws.removeAllListeners('close');
-        clearTimeout(this.bridge._intentLastAccessedTimeout);
 
         const results = await allSettled([
             this.ws.close(),
-            this.bridge.appService.close(),
+            this.appService.close(),
             this.adminEndpoint?.kill(),
+            getConnection().close(),
             // Lock the channels so that we are not halfway through processing
             // a message.
             this.mattermostMutex.lock(),
@@ -435,12 +436,11 @@ export default class Main extends EventEmitter {
         this.emit('mattermost');
     }
 
-    private async onMatrixEvent(request: Request): Promise<void> {
+    private async onMatrixEvent(event: MatrixEvent): Promise<void> {
         await this.matrixMutex.lock();
         log.time.debug('Process matrix message');
 
         try {
-            const event = request.getData();
             log.debug(`Matrix event: ${JSON.stringify(event)}`);
 
             const channel = this.channelsByMatrix.get(event.room_id);

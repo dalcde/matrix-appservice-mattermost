@@ -11,6 +11,6 @@ EXPOSE 8008
 
 USER synapse
 
-COPY ./homeserver.yaml ./registration.yaml /etc/synapse/
+COPY ./homeserver.yaml /etc/synapse/
 
 CMD until nc -z postgres 5432; do sleep 0.5; done; /usr/bin/python3 -m synapse.app.homeserver --config-path=/etc/synapse/homeserver.yaml

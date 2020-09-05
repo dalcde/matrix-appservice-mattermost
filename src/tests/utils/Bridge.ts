@@ -1,11 +1,9 @@
 import * as tapeTest from 'tape';
 import { join } from 'path';
-import { readFileSync } from 'fs';
-import { safeLoad } from 'js-yaml';
 import { spawn } from 'child_process';
-import { AppServiceRegistration } from 'matrix-appservice-bridge';
+import { loadYaml } from '../../utils/Functions';
 
-import { setConfig, Config } from '../../Config';
+import { Config } from '../../Config';
 import Main from '../../Main';
 import log from '../../Logging';
 
@@ -23,18 +21,7 @@ export function main(): Main {
     return main_;
 }
 
-function loadYaml(path: string): any {
-    return safeLoad(readFileSync(path, 'utf8'));
-}
-
 export async function startBridge(extra?: Partial<Config>): Promise<void> {
-    const registration = AppServiceRegistration.fromObject(
-        loadYaml(REGISTRATION_PATH),
-    );
-    const config = Object.assign(loadYaml(CONFIG_PATH), extra || {});
-
-    setConfig(config);
-
     // Run reverse port forwarding to expose appservice to the docker network.
     const tunnel = spawn('ssh', [
         '-N',
@@ -49,7 +36,9 @@ export async function startBridge(extra?: Partial<Config>): Promise<void> {
         'proxy@localhost',
     ]);
 
-    const m = new Main(registration, false);
+    const config = Object.assign(loadYaml(CONFIG_PATH), extra || {});
+    const m = new Main(config, REGISTRATION_PATH, false);
+
     tunnel.on('close', () => {
         // Don't use main() because it might refer to a new Main after this
         // one.

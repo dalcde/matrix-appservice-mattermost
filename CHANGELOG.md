@@ -23,6 +23,9 @@ New features:
   script to the admin endpoint
 - Add an option to abort bridge if any channel sync fails.
 - The bridge notifies systemd when it is initialized
+- The dummy -u cli parameter is no longer needed.
+- Additional appservice.bind parameter to specify the host the appservice
+  binds to
 
 Breaking changes:
 
@@ -31,10 +34,12 @@ Breaking changes:
 Others:
 
 - Prettify mattermost error messages
-- Avoid accessing "private" properties of objects from
-  `matrix-appservice-bridge` and `matrix-js-sdk` libraries in anticipation of
-  typescript port.
+- Avoid accessing "private" properties of objects from `matrix-js-sdk`
+  libraries in anticipation of typescript port.
 - Add integration tests
+- Remove `matrix-appservice-bridge` dependency. Use `matrix-appservice` and
+  `matrix-js-sdk` directly.
+- Automatically generate config file schema from typescript interface
 
 # 0.1.2 (2020-08-25)
 

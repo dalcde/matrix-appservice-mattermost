@@ -9,9 +9,9 @@
   },
   "scripts": {
     "preinstall": "git config core.hooksPath .githooks",
-    "build": "tsc",
+    "build": "tsc && typescript-json-schema --noExtraProps --required src/Config.ts Config -o build/config-schema.json",
     "test": "tape build{,/**}/*.test.js",
-    "integration": "tape build/tests/**.js",
+    "integration": "node build/index.js -r -c config.sample.yaml -f docker/synapse/registration.yaml && tape build/tests/**.js && rm docker/synapse/registration.yaml",
     "lint": "prettier -c . && eslint --max-warnings=0 '*/**/*.ts'",
     "fmt": "prettier --write .",
     "fix": "eslint '*/**/*.ts' --fix"
@@ -20,19 +20,22 @@
   "license": "MIT",
   "dependencies": {
     "@types/node-fetch": "^2.5.7",
+    "ajv": "^6.12.4",
     "bufferutil": "^4.0.1",
     "express": "^4.17.1",
     "form-data": "^3.0.0",
     "js-yaml": "^3.14.0",
     "loglevel": "^1.6.8",
     "marked": "^1.1.1",
-    "matrix-appservice-bridge": "^1.13.2",
+    "matrix-appservice": "^0.4.2",
+    "matrix-js-sdk": "^8.2.0",
     "node-fetch": "^2.6.0",
     "pg": "^8.3.0",
     "turndown-performance-fixed": "^6.0.1",
     "typeorm": "^0.2.25",
     "utf-8-validate": "^5.0.2",
-    "ws": "^7.3.1"
+    "ws": "^7.3.1",
+    "yargs": "^15.4.1"
   },
   "devDependencies": {
     "@types/node": "^14.6.0",
@@ -43,7 +46,8 @@
     "prettier": "^2.0.5",
     "sqlite3": "^5.0.0",
     "tape": "^5.0.1",
-    "typescript": "^4.0.0"
+    "typescript": "^4.0.0",
+    "typescript-json-schema": "^0.43.0"
   },
   "renovate": {
     "extends": [

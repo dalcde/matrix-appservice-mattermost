@@ -24,6 +24,8 @@ services:
     build: synapse
     ports:
       - '8008:8008'
+    volumes:
+      - ./synapse/registration.yaml:/etc/synapse/registration.yaml
 
   appservice:
     build: appservice

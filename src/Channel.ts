@@ -3,7 +3,7 @@ import { MatrixEvent, MattermostMessage } from './Interfaces';
 import log from './Logging';
 import Main from './Main';
 import MatrixHandlers from './MatrixHandler';
-import MattermostHandlers from './MattermostHandler';
+import { MattermostHandlers } from './MattermostHandler';
 
 const MAX_MEMBERS: number = 10000;
 

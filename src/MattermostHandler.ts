@@ -1,5 +1,6 @@
 import Channel from './Channel';
 import { Post } from './entities/Post';
+import Main from './Main';
 import log from './Logging';
 import {
     MattermostMessage,
@@ -131,7 +132,7 @@ const MattermostPostHandlers = {
     },
 };
 
-const MattermostHandlers = {
+export const MattermostHandlers = {
     posted: async function (
         this: Channel,
         m: MattermostMessage,
@@ -290,4 +291,31 @@ const MattermostHandlers = {
     },
     channel_viewed: none,
 };
-export default MattermostHandlers;
+
+export const MattermostMainHandlers = {
+    hello: none,
+    added_to_team: none,
+    new_user: none,
+    status_change: none,
+    channel_viewed: none,
+    preferences_changed: none,
+    sidebar_category_updated: none,
+    direct_added: async function (
+        this: Main,
+        m: MattermostMessage,
+    ): Promise<void> {
+        await this.client.post('/posts', {
+            channel_id: m.broadcast.channel_id,
+            message: 'This is a bot. You will not get a reply',
+        });
+    },
+    user_updated: async function (
+        this: Main,
+        m: MattermostMessage,
+    ): Promise<void> {
+        const user = this.mattermostUserStore.get(m.data.user.id);
+        if (user !== undefined) {
+            await this.mattermostUserStore.updateUser(m.data.user, user);
+        }
+    },
+};

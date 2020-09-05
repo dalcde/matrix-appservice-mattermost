@@ -10,7 +10,7 @@ import {
     RELOADABLE_CONFIG,
 } from './Config';
 import { isDeepStrictEqual } from 'util';
-import { none, notifySystemd, allSettled, loadYaml } from './utils/Functions';
+import { notifySystemd, allSettled, loadYaml } from './utils/Functions';
 import { User } from './entities/User';
 import { Post } from './entities/Post';
 import { MattermostMessage, MatrixClient, MatrixEvent } from './Interfaces';
@@ -21,6 +21,7 @@ import Channel from './Channel';
 import EventQueue from './utils/EventQueue';
 import log from './Logging';
 import { EventEmitter } from 'events';
+import { MattermostMainHandlers } from './MattermostHandler';
 
 export default class Main extends EventEmitter {
     private readonly ws: ClientWebsocket;
@@ -397,7 +398,7 @@ export default class Main extends EventEmitter {
         }
 
         log.debug(`Mattermost message: ${JSON.stringify(m)}`);
-        const handler = Main.mattermostMessageHandlers[m.event];
+        const handler = MattermostMainHandlers[m.event];
         if (handler !== undefined) {
             await handler.bind(this)(m);
         } else if (m.broadcast.channel_id !== '') {
@@ -494,34 +495,6 @@ export default class Main extends EventEmitter {
         const ignoredMatrixUsers = config().ignored_matrix_users ?? [];
         return userid === botMatrixUser || ignoredMatrixUsers.includes(userid);
     }
-
-    private static readonly mattermostMessageHandlers = {
-        hello: none,
-        added_to_team: none,
-        new_user: none,
-        status_change: none,
-        channel_viewed: none,
-        preferences_changed: none,
-        sidebar_category_updated: none,
-        direct_added: async function (
-            this: Main,
-            m: MattermostMessage,
-        ): Promise<void> {
-            await this.client.post('/posts', {
-                channel_id: m.broadcast.channel_id,
-                message: 'This is a bot. You will not get a reply',
-            });
-        },
-        user_updated: async function (
-            this: Main,
-            m: MattermostMessage,
-        ): Promise<void> {
-            const user = this.mattermostUserStore.get(m.data.user.id);
-            if (user !== undefined) {
-                await this.mattermostUserStore.updateUser(m.data.user, user);
-            }
-        },
-    };
 
     public getMatrixClient(userId: string): MatrixClient {
         return sdk.createClient({

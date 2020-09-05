@@ -32,7 +32,16 @@ export function validate(c: unknown): Config {
     if (valid) {
         return c as Config;
     } else {
-        throw validator.errors?.map(e => e.message);
+        throw new Error(
+            validator.errors
+                ?.map(
+                    e =>
+                        `${e.dataPath}: ${e.message} (${JSON.stringify(
+                            e.params,
+                        )})`,
+                )
+                ?.join('\n'),
+        );
     }
 }
 

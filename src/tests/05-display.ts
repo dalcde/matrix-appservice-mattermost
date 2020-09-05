@@ -42,6 +42,7 @@ test('change mattermost user display name', async t => {
 
     await Promise.all([
         waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'matrix', 2),
         client.put(`/users/${client.userid}/patch`, {
             first_name: 'MMTest',
             last_name: 'Last',
@@ -58,6 +59,7 @@ test('change mattermost user display name', async t => {
 
     await Promise.all([
         waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'matrix', 2),
         client.put(`/users/${client.userid}/patch`, {
             first_name: '',
             last_name: '',
@@ -77,7 +79,7 @@ test('change matrix user display name', async t => {
     const client = getMatrixClient('matrix_b');
 
     await Promise.all([
-        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'matrix', 2),
         waitEvent(main(), 'mattermost'),
         client.setDisplayName('Hello World'),
     ]);
@@ -89,7 +91,7 @@ test('change matrix user display name', async t => {
     t.equal(user.last_name, '');
 
     await Promise.all([
-        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'matrix', 2),
         waitEvent(main(), 'mattermost'),
         client.setDisplayName(''),
     ]);

@@ -18,17 +18,17 @@ import AdminEndpoint from './AdminEndpoint';
 import MatrixUserStore from './MatrixUserStore';
 import MattermostUserStore from './MattermostUserStore';
 import Channel from './Channel';
-import Mutex from './utils/Mutex';
+import EventQueue from './utils/EventQueue';
 import log from './Logging';
 import { EventEmitter } from 'events';
 
 export default class Main extends EventEmitter {
-    private readonly matrixMutex: Mutex;
-    private readonly mattermostMutex: Mutex;
-
     private readonly ws: ClientWebsocket;
     private readonly appService: AppService;
     public readonly registration: AppServiceRegistration;
+
+    private matrixQueue: EventQueue<MatrixEvent>;
+    private mattermostQueue: EventQueue<MattermostMessage>;
 
     private adminEndpoint?: AdminEndpoint;
 
@@ -73,7 +73,6 @@ export default class Main extends EventEmitter {
             // It shouldn't be null but TypeScript complains
             homeserverToken: registration.getHomeserverToken() || '',
         });
-        this.appService.on('event', this.onMatrixEvent.bind(this));
 
         this.botClient = this.getMatrixClient(
             `@${config.matrix_bot.username}:${config.homeserver.server_name}`,
@@ -88,6 +87,31 @@ export default class Main extends EventEmitter {
         );
         this.ws = this.client.websocket();
 
+        this.mattermostQueue = new EventQueue({
+            emitter: this.ws,
+            event: 'message',
+            description: 'mattermost',
+            callback: this.onMattermostMessage.bind(this),
+            filter: async m => {
+                const userid = m.data.user_id ?? m.data.user?.id;
+                return (
+                    userid &&
+                    (this.skipMattermostUser(userid) ||
+                        !(await this.isMattermostUser(userid)))
+                );
+            },
+            parent: this,
+        });
+
+        this.matrixQueue = new EventQueue({
+            emitter: this.appService,
+            event: 'event',
+            description: 'matrix',
+            callback: this.onMatrixEvent.bind(this),
+            filter: async e => this.isRemoteUser(e.sender),
+            parent: this,
+        });
+
         this.channelsByMatrix = new Map();
         this.channelsByMattermost = new Map();
         this.channelsByTeam = new Map();
@@ -95,8 +119,6 @@ export default class Main extends EventEmitter {
         this.mappingsByMatrix = new Map();
         this.mappingsByMattermost = new Map();
 
-        this.mattermostMutex = new Mutex();
-        this.matrixMutex = new Mutex();
         this.mattermostUserStore = new MattermostUserStore(this);
         this.matrixUserStore = new MatrixUserStore(this);
 
@@ -131,7 +153,6 @@ export default class Main extends EventEmitter {
             this.mappingsByMattermost.set(map.mattermost, map);
             this.mappingsByMatrix.set(map.matrix, map);
         }
-        this.ws.on('message', m => this.onMattermostMessage(m));
 
         this.ws.on('error', e => {
             log.error(
@@ -160,11 +181,6 @@ export default class Main extends EventEmitter {
             config().appservice.bind || config().appservice.hostname,
             511,
         );
-
-        await Promise.all([
-            this.mattermostMutex.lock(),
-            this.matrixMutex.lock(),
-        ]);
 
         const db = config().database;
         db['entities'] = [User, Post];
@@ -198,9 +214,6 @@ export default class Main extends EventEmitter {
         );
 
         await this.leaveUnbridgedChannels();
-
-        this.mattermostMutex.unlock();
-        this.matrixMutex.unlock();
 
         if (this.channelsByMattermost.size === 0) {
             log.info('No channels bridged successfully. Shutting down bridge.');
@@ -318,11 +331,9 @@ export default class Main extends EventEmitter {
             this.ws.close(),
             this.appService.close(),
             this.adminEndpoint?.kill(),
+            this.matrixQueue.kill(),
+            this.mattermostQueue.kill(),
             getConnection().close(),
-            // Lock the channels so that we are not halfway through processing
-            // a message.
-            this.mattermostMutex.lock(),
-            this.matrixMutex.lock(),
         ]);
         for (const result of results) {
             if (result.status === 'rejected') {
@@ -373,102 +384,73 @@ export default class Main extends EventEmitter {
     }
 
     private async onMattermostMessage(m: MattermostMessage): Promise<void> {
-        await this.mattermostMutex.lock();
-        log.time.debug('Process mattermost message');
+        const userid = m.data.user_id ?? m.data.user?.id;
 
-        try {
-            const userid = m.data.user_id ?? m.data.user?.id;
-
-            if (userid) {
-                if (
-                    this.skipMattermostUser(userid) ||
-                    !(await this.isMattermostUser(userid))
-                ) {
-                    log.debug(`Skipping echoed message: ${JSON.stringify(m)}`);
-                    log.timeEnd.debug('Process mattermost message');
-                    this.emit('mattermost');
-                    this.mattermostMutex.unlock();
-                    return;
-                }
+        if (userid) {
+            if (
+                this.skipMattermostUser(userid) ||
+                !(await this.isMattermostUser(userid))
+            ) {
+                log.debug(`Skipping echoed message: ${JSON.stringify(m)}`);
+                return;
             }
-
-            log.debug(`Mattermost message: ${JSON.stringify(m)}`);
-            const handler = Main.mattermostMessageHandlers[m.event];
-            if (handler !== undefined) {
-                await handler.bind(this)(m);
-            } else if (m.broadcast.channel_id !== '') {
-                // We may have been invited to channels that are not bridged;
-                const channel = this.channelsByMattermost.get(
-                    m.broadcast.channel_id,
-                );
-                if (channel !== undefined) {
-                    await channel.onMattermostMessage(m);
-                } else {
-                    log.debug(
-                        `Message for unknown channel_id: ${m.broadcast.channel_id}`,
-                    );
-                }
-            } else if (m.broadcast.team_id !== '') {
-                const channels = this.channelsByTeam.get(m.broadcast.team_id);
-                if (channels === undefined) {
-                    log.debug(
-                        `Message for unknown team: ${m.broadcast.team_id}`,
-                    );
-                } else {
-                    await Promise.all(
-                        channels.map(c => c.onMattermostMessage(m)),
-                    );
-                }
-            } else {
-                log.debug(`Unkown event type: ${m.event}`);
-            }
-        } catch (e) {
-            log.warn(`Error when processing mattermost message\n${e.stack}`);
         }
-        log.timeEnd.debug('Process mattermost message');
 
-        this.mattermostMutex.unlock();
-        this.emit('mattermost');
+        log.debug(`Mattermost message: ${JSON.stringify(m)}`);
+        const handler = Main.mattermostMessageHandlers[m.event];
+        if (handler !== undefined) {
+            await handler.bind(this)(m);
+        } else if (m.broadcast.channel_id !== '') {
+            // We may have been invited to channels that are not bridged;
+            const channel = this.channelsByMattermost.get(
+                m.broadcast.channel_id,
+            );
+            if (channel !== undefined) {
+                await channel.onMattermostMessage(m);
+            } else {
+                log.debug(
+                    `Message for unknown channel_id: ${m.broadcast.channel_id}`,
+                );
+            }
+        } else if (m.broadcast.team_id !== '') {
+            const channels = this.channelsByTeam.get(m.broadcast.team_id);
+            if (channels === undefined) {
+                log.debug(`Message for unknown team: ${m.broadcast.team_id}`);
+            } else {
+                await Promise.all(channels.map(c => c.onMattermostMessage(m)));
+            }
+        } else {
+            log.debug(`Unkown event type: ${m.event}`);
+        }
     }
 
     private async onMatrixEvent(event: MatrixEvent): Promise<void> {
         if (this.isRemoteUser(event.sender)) {
             return;
         }
-        await this.matrixMutex.lock();
-        log.time.debug('Process matrix message');
+        log.debug(`Matrix event: ${JSON.stringify(event)}`);
 
-        try {
-            log.debug(`Matrix event: ${JSON.stringify(event)}`);
-
-            const channel = this.channelsByMatrix.get(event.room_id);
-            if (channel !== undefined) {
-                await channel.onMatrixEvent(event);
-            } else if (
-                event.type === 'm.room.member' &&
-                event.content.membership === 'invite' &&
-                event.state_key &&
-                (event.state_key === this.botClient.userId ||
-                    this.isRemoteUser(event.state_key)) &&
-                event.content.is_direct
-            ) {
-                const client = this.getMatrixClient(event.state_key);
-                await client.sendEvent(event.room_id, 'm.room.message', {
-                    body:
-                        'Private messaging is not supported for this bridged user',
-                    msgtype: 'm.notice',
-                });
-                await client.leave(event.room_id);
-            } else {
-                log.debug(`Message for unknown room: ${event.room_id}`);
-            }
-        } catch (e) {
-            log.warn(`Error when processing matrix event\n${e.stack}`);
+        const channel = this.channelsByMatrix.get(event.room_id);
+        if (channel !== undefined) {
+            await channel.onMatrixEvent(event);
+        } else if (
+            event.type === 'm.room.member' &&
+            event.content.membership === 'invite' &&
+            event.state_key &&
+            (event.state_key === this.botClient.userId ||
+                this.isRemoteUser(event.state_key)) &&
+            event.content.is_direct
+        ) {
+            const client = this.getMatrixClient(event.state_key);
+            await client.sendEvent(event.room_id, 'm.room.message', {
+                body:
+                    'Private messaging is not supported for this bridged user',
+                msgtype: 'm.notice',
+            });
+            await client.leave(event.room_id);
+        } else {
+            log.debug(`Message for unknown room: ${event.room_id}`);
         }
-        log.timeEnd.debug('Process matrix message');
-
-        this.matrixMutex.unlock();
-        this.emit('matrix');
     }
 
     public async isMattermostUser(userid: string): Promise<boolean> {

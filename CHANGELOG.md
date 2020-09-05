@@ -40,6 +40,7 @@ Others:
 - Remove `matrix-appservice-bridge` dependency. Use `matrix-appservice` and
   `matrix-js-sdk` directly.
 - Automatically generate config file schema from typescript interface
+- Log echoed matrix events
 
 # 0.1.2 (2020-08-25)
 

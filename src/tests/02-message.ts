@@ -17,12 +17,14 @@ test('Start bridge', async t => {
 test('Mattermost -> Matrix plain text', async t => {
     const mattermostClient = getMattermostClient('mattermost_a');
 
-    const promise = waitEvent(main(), 'mattermost');
-    await mattermostClient.post('/posts', {
-        channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
-        message: 'test',
-    });
-    await promise;
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost'),
+        mattermostClient.post('/posts', {
+            channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
+            message: 'test',
+        }),
+    ]);
 
     const messages = await getMatrixMessages('town-square');
     t.equal(messages[0].sender, '@mm_mattermost_a:localhost');
@@ -60,12 +62,14 @@ test('Matrix -> Mattermost plain text', async t => {
 test('Mattermost -> Matrix formatted', async t => {
     const mattermostClient = getMattermostClient('mattermost_a');
 
-    const promise = waitEvent(main(), 'mattermost');
-    await mattermostClient.post('/posts', {
-        channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
-        message: '# Header\n\n**bold**',
-    });
-    await promise;
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost'),
+        mattermostClient.post('/posts', {
+            channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
+            message: '# Header\n\n**bold**',
+        }),
+    ]);
 
     const messages = await getMatrixMessages('town-square');
     t.equal(messages[0].sender, '@mm_mattermost_a:localhost');

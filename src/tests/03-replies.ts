@@ -18,7 +18,10 @@ test('Mattermost -> Matrix thread', async t => {
     const clientA = getMattermostClient('mattermost_a');
     const clientB = getMattermostClient('mattermost_b');
 
-    const promise = waitEvent(main(), 'mattermost', 3);
+    const promise = Promise.all([
+        waitEvent(main(), 'mattermost', 3),
+        waitEvent(main(), 'matrix', 3),
+    ]);
     const root = await clientA.post('/posts', {
         channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
         message: 'first mm message',
@@ -128,8 +131,9 @@ test('Interleaved thread', async t => {
     const roomId = MATRIX_ROOM_IDS['town-square'];
     const channelId = MATTERMOST_CHANNEL_IDS['town-square'];
 
-    const [, firstMattermost] = await Promise.all([
+    const [, , firstMattermost] = await Promise.all([
         waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'matrix'),
         mattermostClient.post('/posts', {
             channel_id: channelId,
             message: 'first message',
@@ -156,6 +160,7 @@ test('Interleaved thread', async t => {
 
     await Promise.all([
         waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'matrix'),
         mattermostClient.post('/posts', {
             channel_id: channelId,
             root_id: firstMattermost.id,

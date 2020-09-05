@@ -89,11 +89,13 @@ test('Sync mattermost leave', async t => {
     const matrixClient = getMatrixClient('admin');
     const mattermostClient = getMattermostClient('mattermost_a');
 
-    const promise = waitEvent(main(), 'mattermost', 2);
-    await mattermostClient.delete(
-        `/channels/${MATTERMOST_CHANNEL_IDS['off-topic']}/members/${mattermostClient.userid}`,
-    );
-    await promise;
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost', 2),
+        mattermostClient.delete(
+            `/channels/${MATTERMOST_CHANNEL_IDS['off-topic']}/members/${mattermostClient.userid}`,
+        ),
+    ]);
 
     const members = await matrixClient.getJoinedRoomMembers(
         MATRIX_ROOM_IDS['off-topic'],
@@ -117,14 +119,16 @@ test('Sync mattermost join', async t => {
     const matrixClient = getMatrixClient('admin');
     const mattermostClient = getMattermostClient('mattermost_a');
 
-    const promise = waitEvent(main(), 'mattermost', 2);
-    await mattermostClient.post(
-        `/channels/${MATTERMOST_CHANNEL_IDS['off-topic']}/members`,
-        {
-            user_id: mattermostClient.userid,
-        },
-    );
-    await promise;
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost', 2),
+        mattermostClient.post(
+            `/channels/${MATTERMOST_CHANNEL_IDS['off-topic']}/members`,
+            {
+                user_id: mattermostClient.userid,
+            },
+        ),
+    ]);
 
     const members = await matrixClient.getJoinedRoomMembers(
         MATRIX_ROOM_IDS['off-topic'],

@@ -16,8 +16,9 @@ test('Start bridge', async t => {
 test('Delete from mattermost', async t => {
     const client = getMattermostClient('mattermost_a');
 
-    const [, post] = await Promise.all([
+    const [, , post] = await Promise.all([
         waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'matrix'),
         client.post('/posts', {
             channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
             message: 'mm to delete',
@@ -29,6 +30,7 @@ test('Delete from mattermost', async t => {
 
     await Promise.all([
         waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'matrix'),
         client.delete(`/posts/${post.id}`),
     ]);
 
@@ -68,7 +70,10 @@ test('Delete from matrix', async t => {
 test('Delete thread', async t => {
     const client = getMattermostClient('mattermost_a');
 
-    const promise = waitEvent(main(), 'mattermost', 3);
+    const promise = Promise.all([
+        waitEvent(main(), 'mattermost', 3),
+        waitEvent(main(), 'matrix', 3),
+    ]);
     await client.post('/posts', {
         channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
         message: 'pre-thread message',
@@ -92,6 +97,7 @@ test('Delete thread', async t => {
 
     await Promise.all([
         waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'matrix', 2),
         client.delete(`/posts/${root.id}`),
     ]);
 

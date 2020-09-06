@@ -391,18 +391,6 @@ export default class Main extends EventEmitter {
     }
 
     private async onMattermostMessage(m: MattermostMessage): Promise<void> {
-        const userid = m.data.user_id ?? m.data.user?.id;
-
-        if (userid) {
-            if (
-                this.skipMattermostUser(userid) ||
-                !(await this.isMattermostUser(userid))
-            ) {
-                log.debug(`Skipping echoed message: ${JSON.stringify(m)}`);
-                return;
-            }
-        }
-
         log.debug(`Mattermost message: ${JSON.stringify(m)}`);
         const handler = MattermostMainHandlers[m.event];
         if (handler !== undefined) {
@@ -432,9 +420,6 @@ export default class Main extends EventEmitter {
     }
 
     private async onMatrixEvent(event: MatrixEvent): Promise<void> {
-        if (this.isRemoteUser(event.sender)) {
-            return;
-        }
         log.debug(`Matrix event: ${JSON.stringify(event)}`);
 
         const channel = this.channelsByMatrix.get(event.room_id);

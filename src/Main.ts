@@ -1,6 +1,5 @@
 import { AppService, AppServiceRegistration } from 'matrix-appservice';
 import { createConnection, ConnectionOptions, getConnection } from 'typeorm';
-import * as sdk from 'matrix-js-sdk';
 import { Client, ClientWebsocket } from './mattermost/Client';
 import {
     Config,
@@ -16,6 +15,7 @@ import { Post } from './entities/Post';
 import { MattermostMessage, MatrixClient, MatrixEvent } from './Interfaces';
 import AdminEndpoint from './AdminEndpoint';
 import MatrixUserStore from './matrix/MatrixUserStore';
+import { getMatrixClient } from './matrix/Utils';
 import MattermostUserStore from './mattermost/MattermostUserStore';
 import Channel from './Channel';
 import EventQueue from './utils/EventQueue';
@@ -75,7 +75,8 @@ export default class Main extends EventEmitter {
             homeserverToken: registration.getHomeserverToken() || '',
         });
 
-        this.botClient = this.getMatrixClient(
+        this.botClient = getMatrixClient(
+            this.registration,
             `@${config.matrix_bot.username}:${config.homeserver.server_name}`,
         );
 
@@ -174,6 +175,14 @@ export default class Main extends EventEmitter {
     public async init(): Promise<void> {
         log.time.info('Bridge initialized');
 
+        try {
+            await this.botClient.register(config().matrix_bot.username);
+        } catch (e) {
+            if (e.errcode !== 'M_USER_IN_USE') {
+                throw e;
+            }
+        }
+
         const botProfile = this.updateBotProfile().catch(e =>
             log.warn(`Error when updating bot profile\n${e.stack}`),
         );
@@ -255,7 +264,10 @@ export default class Main extends EventEmitter {
                 await Promise.all(
                     members.map(async userid => {
                         if (this.isRemoteUser(userid)) {
-                            await this.getMatrixClient(userid).leave(room);
+                            await getMatrixClient(
+                                this.registration,
+                                userid,
+                            ).leave(room);
                         }
                     }),
                 );
@@ -275,7 +287,9 @@ export default class Main extends EventEmitter {
             );
             await Promise.all(
                 members.map(async member => {
-                    const user = await this.getPuppetMatrixUser(member.user_id);
+                    const user = await this.matrixUserStore.getByMattermost(
+                        member.user_id,
+                    );
                     if (user !== null) {
                         await user.client.delete(
                             `/${type}s/${id}/members/${member.user_id}`,
@@ -370,14 +384,6 @@ export default class Main extends EventEmitter {
     }
 
     private async updateBotProfile(): Promise<void> {
-        try {
-            await this.botClient.register(config().matrix_bot.username);
-        } catch (e) {
-            if (e.errcode !== 'M_USER_IN_USE') {
-                throw e;
-            }
-        }
-
         const targetProfile = config().matrix_bot;
         const profile = await this.botClient
             .getProfileInfo(this.botClient.getUserId())
@@ -433,7 +439,7 @@ export default class Main extends EventEmitter {
                 this.isRemoteUser(event.state_key)) &&
             event.content.is_direct
         ) {
-            const client = this.getMatrixClient(event.state_key);
+            const client = getMatrixClient(this.registration, event.state_key);
             await client.sendEvent(event.room_id, 'm.room.message', {
                 body:
                     'Private messaging is not supported for this bridged user',
@@ -446,26 +452,7 @@ export default class Main extends EventEmitter {
     }
 
     public async isMattermostUser(userid: string): Promise<boolean> {
-        return (await this.getPuppetMatrixUser(userid)) === null;
-    }
-
-    public async getPuppetMatrixUser(
-        mattermostUserId: string,
-    ): Promise<User | null> {
-        const cached = this.matrixUserStore.byMattermostUserId.get(
-            mattermostUserId,
-        );
-        if (cached !== undefined) {
-            return cached;
-        }
-        const response = await User.findOne({
-            mattermost_userid: mattermostUserId,
-        });
-        if (response === undefined || response.is_matrix_user === false) {
-            return null;
-        } else {
-            return response;
-        }
+        return (await this.matrixUserStore.getByMattermost(userid)) === null;
     }
 
     public isRemoteUser(userid: string): boolean {
@@ -485,19 +472,5 @@ export default class Main extends EventEmitter {
         const botMatrixUser = this.botClient.getUserId();
         const ignoredMatrixUsers = config().ignored_matrix_users ?? [];
         return userid === botMatrixUser || ignoredMatrixUsers.includes(userid);
-    }
-
-    public getMatrixClient(userId: string): MatrixClient {
-        return sdk.createClient({
-            accessToken: this.registration.getAppServiceToken(),
-            baseUrl: config().homeserver.url,
-            userId,
-            queryParams: {
-                user_id: userId,
-                access_token: this.registration.getAppServiceToken(),
-            },
-            scheduler: new (sdk as any).MatrixScheduler(),
-            localTimeoutMs: 1000 * 60 * 2,
-        } as any);
     }
 }

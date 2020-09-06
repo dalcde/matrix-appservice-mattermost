@@ -1,11 +1,14 @@
-import { ClientError } from './mattermost/Client';
 import { MatrixEvent, MattermostMessage } from './Interfaces';
 import log from './Logging';
 import Main from './Main';
 import MatrixHandlers from './matrix/MatrixHandler';
+import { getMatrixUsers, getMatrixClient } from './matrix/Utils';
+import {
+    getMattermostUsers,
+    joinMattermostChannel,
+    leaveMattermostChannel,
+} from './mattermost/Utils';
 import { MattermostHandlers } from './mattermost/MattermostHandler';
-
-const MAX_MEMBERS: number = 10000;
 
 export default class Channel {
     private team?: string;
@@ -15,43 +18,6 @@ export default class Channel {
         public readonly matrixRoom: string,
         public readonly mattermostChannel: string,
     ) {}
-
-    private async getMatrixUsers(): Promise<{
-        real: Set<string>;
-        remote: Set<string>;
-    }> {
-        const realMatrixUsers: Set<string> = new Set();
-        const remoteMatrixUsers: Set<string> = new Set();
-
-        const allMatrixUsers = Object.keys(
-            (await this.main.botClient.getJoinedRoomMembers(this.matrixRoom))
-                .joined,
-        );
-        for (const matrixUser of allMatrixUsers) {
-            if (this.main.isRemoteUser(matrixUser)) {
-                remoteMatrixUsers.add(matrixUser);
-            } else {
-                realMatrixUsers.add(matrixUser);
-            }
-        }
-        return {
-            real: realMatrixUsers,
-            remote: remoteMatrixUsers,
-        };
-    }
-
-    private async getMattermostUsers(): Promise<Set<string>> {
-        const mattermostUsers: Set<string> = new Set();
-        const query = await this.main.client.send(
-            'GET',
-            `/channels/${this.mattermostChannel}/members?page=0&per_page=${MAX_MEMBERS}`,
-        );
-
-        for (const member of query) {
-            mattermostUsers.add(member.user_id);
-        }
-        return mattermostUsers;
-    }
 
     public async getTeam(): Promise<string> {
         if (this.team === undefined) {
@@ -64,79 +30,15 @@ export default class Channel {
         return this.team;
     }
 
-    public async joinMattermost(userid: string): Promise<void> {
-        const team = await this.getTeam();
-        try {
-            await this.main.client.post(`/teams/${team}/members`, {
-                user_id: userid,
-                team_id: team,
-            });
-        } catch (e) {}
-        try {
-            await this.main.client.post(
-                `/channels/${this.mattermostChannel}/members`,
-                {
-                    user_id: userid,
-                },
-            );
-        } catch (e) {
-            // Mattermost has a race condition where if a member is added twice
-            // in quick succession, then it returns an error. If we receive an
-            // error, we check if the member is in the member. If so, we do
-            // nothing.  c.f.
-            // https://github.com/mattermost/mattermost-server/issues/15366 .
-            // This would be triggered by default channels, where two different
-            // join events end up causing the user to join the same channel
-            // twice.
-            if (e instanceof ClientError && e.m.status_code === 500) {
-                try {
-                    await this.main.client.get(
-                        `/channels/${this.mattermostChannel}/members/${userid}`,
-                    );
-                } catch (e_) {
-                    throw e;
-                }
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    public async leaveMattermost(userid: string): Promise<void> {
-        try {
-            await this.main.client.delete(
-                `/channels/${this.mattermostChannel}/members/${userid}`,
-            );
-        } catch (e) {
-            if (
-                e instanceof ClientError &&
-                e.m.id === 'api.channel.remove.default.app_error'
-            ) {
-                log.debug(
-                    `Cannot remove user ${userid} from default town-square channel`,
-                );
-            } else if (
-                e instanceof ClientError &&
-                e.m.id === 'store.sql_channel.get_member.missing.app_error'
-            ) {
-                log.debug(
-                    `User ${userid} already removed from channel ${this.mattermostChannel}`,
-                );
-            } else {
-                throw e;
-            }
-        }
-    }
-
     public async syncChannel(): Promise<void> {
         await Promise.all([
             this.main.botClient.joinRoom(this.matrixRoom),
-            this.joinMattermost(this.main.client.userid),
+            joinMattermostChannel(this, this.main.client.userid),
         ]);
 
         const [matrixUsers, mattermostUsers] = await Promise.all([
-            this.getMatrixUsers(),
-            this.getMattermostUsers(),
+            getMatrixUsers(this.main, this.matrixRoom),
+            getMattermostUsers(this.main.client, this.mattermostChannel),
         ]);
 
         await Promise.all(
@@ -149,7 +51,7 @@ export default class Channel {
                     true,
                 );
                 mattermostUsers.delete(user.mattermost_userid);
-                await this.joinMattermost(user.mattermost_userid);
+                await joinMattermostChannel(this, user.mattermost_userid);
             }),
         );
 
@@ -159,7 +61,11 @@ export default class Channel {
                     return;
                 }
                 if (!(await this.main.isMattermostUser(userid))) {
-                    await this.leaveMattermost(userid);
+                    await leaveMattermostChannel(
+                        this.main.client,
+                        this.mattermostChannel,
+                        userid,
+                    );
                 } else {
                     const user = await this.main.mattermostUserStore.getOrCreate(
                         userid,
@@ -174,7 +80,10 @@ export default class Channel {
 
         await Promise.all(
             Array.from(matrixUsers.remote, async matrix_userid => {
-                const client = this.main.getMatrixClient(matrix_userid);
+                const client = getMatrixClient(
+                    this.main.registration,
+                    matrix_userid,
+                );
                 await client.leave(this.matrixRoom);
             }),
         );

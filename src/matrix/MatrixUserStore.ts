@@ -124,4 +124,25 @@ export default class MatrixUserStore {
             last_name: '',
         });
     }
+
+    /**
+     * Given a mattermost userid, return the corresponding User if it is a
+     * puppet of a matrix user, or null otherwise.
+     */
+    public async getByMattermost(
+        mattermostUserId: string,
+    ): Promise<User | null> {
+        const cached = this.byMattermostUserId.get(mattermostUserId);
+        if (cached !== undefined) {
+            return cached;
+        }
+        const response = await User.findOne({
+            mattermost_userid: mattermostUserId,
+        });
+        if (response === undefined || response.is_matrix_user === false) {
+            return null;
+        } else {
+            return response;
+        }
+    }
 }

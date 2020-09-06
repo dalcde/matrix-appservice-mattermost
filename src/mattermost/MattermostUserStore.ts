@@ -4,6 +4,7 @@ import Mutex from '../utils/Mutex';
 import Main from '../Main';
 import { findFirstAvailable } from '../utils/Functions';
 import { MattermostUserInfo, MatrixClient } from '../Interfaces';
+import { getMatrixClient } from '../matrix/Utils';
 import log from '../Logging';
 
 export default class MattermostUserStore {
@@ -118,7 +119,10 @@ export default class MattermostUserStore {
     public client(user: User): MatrixClient {
         let client = this.clients.get(user.matrix_userid);
         if (client === undefined) {
-            client = this.main.getMatrixClient(user.matrix_userid);
+            client = getMatrixClient(
+                this.main.registration,
+                user.matrix_userid,
+            );
             this.clients.set(user.matrix_userid, client);
         }
         return client;

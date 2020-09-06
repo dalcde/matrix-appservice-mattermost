@@ -2,6 +2,10 @@ import Channel from '../Channel';
 import { User } from '../entities/User';
 import { Post } from '../entities/Post';
 import { ClientError } from '../mattermost/Client';
+import {
+    joinMattermostChannel,
+    leaveMattermostChannel,
+} from '../mattermost/Utils';
 import { handlePostError, none } from '../utils/Functions';
 import { matrixToMattermost } from '../utils/Formatting';
 import { MatrixEvent } from '../Interfaces';
@@ -149,7 +153,7 @@ const MatrixMembershipHandler = {
         }
 
         const user = await this.main.matrixUserStore.getOrCreate(userid, true);
-        await this.joinMattermost(user.mattermost_userid);
+        await joinMattermostChannel(this, user.mattermost_userid);
     },
     leave: async function (this: Channel, userid: string) {
         const user = await this.main.matrixUserStore.get(userid);
@@ -157,7 +161,11 @@ const MatrixMembershipHandler = {
             log.info(`Removing untracked matrix user ${userid}`);
             return;
         }
-        await this.leaveMattermost(user.mattermost_userid);
+        await leaveMattermostChannel(
+            this.main.client,
+            this.mattermostChannel,
+            user.mattermost_userid,
+        );
 
         // Check if we have left all channels in the team. If so, leave the
         // team. This is useful because this is the only way to leave Town

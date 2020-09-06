@@ -1,12 +1,12 @@
-import Channel from './Channel';
-import { User } from './entities/User';
-import { Post } from './entities/Post';
-import { ClientError } from './mattermost/Client';
-import { handlePostError, none } from './utils/Functions';
-import { matrixToMattermost } from './utils/Formatting';
-import { MatrixEvent } from './Interfaces';
+import Channel from '../Channel';
+import { User } from '../entities/User';
+import { Post } from '../entities/Post';
+import { ClientError } from '../mattermost/Client';
+import { handlePostError, none } from '../utils/Functions';
+import { matrixToMattermost } from '../utils/Formatting';
+import { MatrixEvent } from '../Interfaces';
 import * as FormData from 'form-data';
-import log from './Logging';
+import log from '../Logging';
 import fetch from 'node-fetch';
 
 interface Metadata {

@@ -1,16 +1,16 @@
-import Channel from './Channel';
-import { Post } from './entities/Post';
-import Main from './Main';
-import log from './Logging';
+import Channel from '../Channel';
+import { Post } from '../entities/Post';
+import Main from '../Main';
+import log from '../Logging';
 import {
     MattermostMessage,
     MattermostPost,
     MatrixMessage,
     MatrixEvent,
     MatrixClient,
-} from './Interfaces';
-import { handlePostError, none } from './utils/Functions';
-import { mattermostToMatrix, constructMatrixReply } from './utils/Formatting';
+} from '../Interfaces';
+import { handlePostError, none } from '../utils/Functions';
+import { mattermostToMatrix, constructMatrixReply } from '../utils/Formatting';
 
 interface Metadata {
     replyTo?: {

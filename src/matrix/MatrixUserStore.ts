@@ -1,10 +1,10 @@
-import { User } from './entities/User';
-import Mutex from './utils/Mutex';
-import Main from './Main';
-import { localpart, sanitizeMattermostUsername } from './utils/Functions';
-import { config } from './Config';
-import { findFirstAvailable } from './utils/Functions';
-import log from './Logging';
+import { User } from '../entities/User';
+import Mutex from '../utils/Mutex';
+import Main from '../Main';
+import { localpart, sanitizeMattermostUsername } from '../utils/Functions';
+import { config } from '../Config';
+import { findFirstAvailable } from '../utils/Functions';
+import log from '../Logging';
 
 export default class MatrixUserStore {
     public readonly byMatrixUserId: Map<string, User>;

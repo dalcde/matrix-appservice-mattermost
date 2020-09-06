@@ -1,9 +1,9 @@
 import * as test from 'tape';
 import MattermostUserStore from './MattermostUserStore';
-import Main from './Main';
+import Main from '../Main';
 
-import { setConfig, setupDb } from './utils/TestUtils';
-import { User } from './entities/User';
+import { setConfig, setupDb } from '../utils/TestUtils';
+import { User } from '../entities/User';
 
 test('display name', async t => {
     await setupDb();

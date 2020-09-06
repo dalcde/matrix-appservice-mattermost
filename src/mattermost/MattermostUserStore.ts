@@ -1,10 +1,10 @@
-import { User } from './entities/User';
-import { config } from './Config';
-import Mutex from './utils/Mutex';
-import Main from './Main';
-import { findFirstAvailable } from './utils/Functions';
-import { MattermostUserInfo, MatrixClient } from './Interfaces';
-import log from './Logging';
+import { User } from '../entities/User';
+import { config } from '../Config';
+import Mutex from '../utils/Mutex';
+import Main from '../Main';
+import { findFirstAvailable } from '../utils/Functions';
+import { MattermostUserInfo, MatrixClient } from '../Interfaces';
+import log from '../Logging';
 
 export default class MattermostUserStore {
     private users: Map<string, User>;

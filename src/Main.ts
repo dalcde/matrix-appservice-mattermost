@@ -15,13 +15,13 @@ import { User } from './entities/User';
 import { Post } from './entities/Post';
 import { MattermostMessage, MatrixClient, MatrixEvent } from './Interfaces';
 import AdminEndpoint from './AdminEndpoint';
-import MatrixUserStore from './MatrixUserStore';
-import MattermostUserStore from './MattermostUserStore';
+import MatrixUserStore from './matrix/MatrixUserStore';
+import MattermostUserStore from './mattermost/MattermostUserStore';
 import Channel from './Channel';
 import EventQueue from './utils/EventQueue';
 import log from './Logging';
 import { EventEmitter } from 'events';
-import { MattermostMainHandlers } from './MattermostHandler';
+import { MattermostMainHandlers } from './mattermost/MattermostHandler';
 
 export default class Main extends EventEmitter {
     private readonly ws: ClientWebsocket;

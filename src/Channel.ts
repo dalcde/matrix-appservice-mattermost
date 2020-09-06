@@ -2,8 +2,8 @@ import { ClientError } from './mattermost/Client';
 import { MatrixEvent, MattermostMessage } from './Interfaces';
 import log from './Logging';
 import Main from './Main';
-import MatrixHandlers from './MatrixHandler';
-import { MattermostHandlers } from './MattermostHandler';
+import MatrixHandlers from './matrix/MatrixHandler';
+import { MattermostHandlers } from './mattermost/MattermostHandler';
 
 const MAX_MEMBERS: number = 10000;
 

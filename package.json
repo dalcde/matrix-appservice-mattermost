@@ -11,7 +11,7 @@
     "preinstall": "git config core.hooksPath .githooks",
     "build": "tsc && typescript-json-schema --noExtraProps --required src/Config.ts Config -o build/config-schema.json",
     "test": "tape build{,/**}/*.test.js",
-    "integration": "node build/index.js -r -c config.sample.yaml -f docker/synapse/registration.yaml && tape build/tests/**.js && rm docker/synapse/registration.yaml",
+    "integration": "node build/index.js -r -c config.sample.yaml -f docker/synapse/registration.yaml && tape build/tests/**.js",
     "lint": "prettier -c . && eslint --max-warnings=0 '*/**/*.ts'",
     "fmt": "prettier --write .",
     "fix": "eslint '*/**/*.ts' --fix"

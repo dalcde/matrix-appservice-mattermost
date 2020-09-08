@@ -16,6 +16,42 @@ export async function getMattermostUsers(
     return new Set(query.map(member => member.user_id));
 }
 
+/* Joining a mattermost channel that we have already joined should not result
+ * in an error. However, if a second join request is made before the first join
+ * request is processed, the servers gets an internal error. In practice, this
+ * happens when one of the "join requests" come from joining default channels
+ * when joining a team.
+ *
+ * To get around this, when we receive 500 response, we retry the join with
+ * exponential backoff.
+ *
+ * See https://github.com/mattermost/mattermost-server/issues/15366 .
+ */
+async function retryJoinMattermostChannel(
+    client: Client,
+    channelid: string,
+    userid: string,
+): Promise<void> {
+    // Time before next retry
+    let retry = 10;
+    while (true) {
+        try {
+            return await client.post(`/channels/${channelid}/members`, {
+                user_id: userid,
+            });
+        } catch (e: unknown) {
+            if (
+                retry > 1280 ||
+                !(e instanceof ClientError && e.m.status_code === 500)
+            ) {
+                throw e;
+            }
+        }
+        await new Promise(r => setTimeout(r, retry));
+        retry *= 2;
+    }
+}
+
 export async function joinMattermostChannel(
     channel: Channel,
     user: User,
@@ -24,27 +60,13 @@ export async function joinMattermostChannel(
     const client = channel.main.client;
 
     try {
-        await client.post(`/channels/${channel.mattermostChannel}/members`, {
-            user_id: userid,
-        });
+        await retryJoinMattermostChannel(
+            client,
+            channel.mattermostChannel,
+            userid,
+        );
     } catch (e) {
-        // Mattermost has a race condition where if a member is added twice
-        // in quick succession, then it returns an error. If we receive an
-        // error, we check if the member is in the member. If so, we do
-        // nothing.  c.f.
-        // https://github.com/mattermost/mattermost-server/issues/15366 .
-        // This would be triggered by default channels, where two different
-        // join events end up causing the user to join the same channel
-        // twice.
-        if (e instanceof ClientError && e.m.status_code === 500) {
-            try {
-                await client.get(
-                    `/channels/${channel.mattermostChannel}/members/${userid}`,
-                );
-            } catch (e_) {
-                throw e;
-            }
-        } else if (
+        if (
             e instanceof ClientError &&
             (e.m.id === 'store.sql_team.get_member.missing.app_error' ||
                 e.m.id ===
@@ -109,12 +131,10 @@ export async function joinMattermostChannel(
                 }),
             );
 
-            // Now that we have finished joining the team, the above race condition cannot happen.
-            await channel.main.client.post(
-                `/channels/${channel.mattermostChannel}/members`,
-                {
-                    user_id: userid,
-                },
+            await retryJoinMattermostChannel(
+                client,
+                channel.mattermostChannel,
+                userid,
             );
         } else {
             throw e;

@@ -7,12 +7,15 @@ import * as FormData from 'form-data';
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export class Client {
+    private joinTeamPromises: Map<string, Promise<any>>;
+
     constructor(
         public domain: string,
         public userid: string,
         public token: string,
     ) {
         this.domain = domain.replace(/\/*$/, '');
+        this.joinTeamPromises = new Map();
     }
 
     public async send_raw(
@@ -94,6 +97,23 @@ export class Client {
 
     public websocket(): ClientWebsocket {
         return new ClientWebsocket(this);
+    }
+
+    public async joinTeam(userid: string, teamid: string): Promise<any> {
+        // Since ids are fixed length, it is okay to just concatenate.
+        const key = userid + teamid;
+        const sent = this.joinTeamPromises.get(key);
+        if (sent !== undefined) {
+            return sent;
+        }
+        const promise = this.post(`/teams/${teamid}/members`, {
+            user_id: userid,
+            team_id: teamid,
+        });
+        this.joinTeamPromises.set(key, promise);
+        const result = await promise;
+        this.joinTeamPromises.delete(key);
+        return result;
     }
 }
 

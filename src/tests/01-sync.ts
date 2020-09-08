@@ -221,15 +221,47 @@ test('Leave mattermost team when all channels left', async t => {
         ]),
     );
 
+    t.end();
+});
+
+test('Do not automatically join default channels ', async t => {
+    const matrixClient = getMatrixClient('matrix_a');
+
     await Promise.all([
         waitEvent(main(), 'matrix'),
-        waitEvent(main(), 'mattermost', 3),
-        matrixClient.joinRoom(MATRIX_ROOM_IDS['off-topic']),
-    ]);
-    await Promise.all([
-        waitEvent(main(), 'matrix'),
-        waitEvent(main(), 'mattermost'),
+        waitEvent(main(), 'mattermost', 5),
         matrixClient.joinRoom(MATRIX_ROOM_IDS['town-square']),
+    ]);
+
+    t.deepEqual(
+        await getMattermostMembers('town-square'),
+        new Set([
+            'admin',
+            'mattermost_a',
+            'mattermost_b',
+            'ignored_user',
+            'matrix_matrix_a',
+            'matrix_matrix_b',
+        ]),
+        'Mattermost puppet in channel after joining',
+    );
+
+    t.deepEqual(
+        await getMattermostMembers('off-topic'),
+        new Set([
+            'admin',
+            'mattermost_a',
+            'mattermost_b',
+            'ignored_user',
+            'matrix_matrix_b',
+        ]),
+        'Mattermost puppet not in off-topic after joining town-square',
+    );
+
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost', 2),
+        matrixClient.joinRoom(MATRIX_ROOM_IDS['off-topic']),
     ]);
 
     t.deepEqual(

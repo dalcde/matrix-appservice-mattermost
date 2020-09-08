@@ -31,11 +31,6 @@ export default class Channel {
     }
 
     public async syncChannel(): Promise<void> {
-        await Promise.all([
-            this.main.botClient.joinRoom(this.matrixRoom),
-            joinMattermostChannel(this, this.main.client.userid),
-        ]);
-
         const [matrixUsers, mattermostUsers] = await Promise.all([
             getMatrixUsers(this.main, this.matrixRoom),
             getMattermostUsers(this.main.client, this.mattermostChannel),
@@ -51,7 +46,7 @@ export default class Channel {
                     true,
                 );
                 mattermostUsers.delete(user.mattermost_userid);
-                await joinMattermostChannel(this, user.mattermost_userid);
+                await joinMattermostChannel(this, user);
             }),
         );
 

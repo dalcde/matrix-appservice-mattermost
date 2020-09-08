@@ -16,6 +16,8 @@ Bug fixes:
 - Fix overzealous registration namespace. Restrict to local server only
 - Fix a deadlock that prevents the bridge from exiting if there are no channels
   bridged
+- Puppets now leave default mattermost channels if they are not in the
+  corresponding matrix room.
 
 New features:
 

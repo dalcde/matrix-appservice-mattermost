@@ -1,4 +1,5 @@
 import { Client, ClientError } from './Client';
+import { User } from '../entities/User';
 import Channel from '../Channel';
 import log from '../Logging';
 
@@ -17,15 +18,15 @@ export async function getMattermostUsers(
 
 export async function joinMattermostChannel(
     channel: Channel,
-    userid: string,
+    user: User,
 ): Promise<void> {
+    const userid = user.mattermost_userid;
+    const client = channel.main.client;
+
     try {
-        await channel.main.client.post(
-            `/channels/${channel.mattermostChannel}/members`,
-            {
-                user_id: userid,
-            },
-        );
+        await client.post(`/channels/${channel.mattermostChannel}/members`, {
+            user_id: userid,
+        });
     } catch (e) {
         // Mattermost has a race condition where if a member is added twice
         // in quick succession, then it returns an error. If we receive an
@@ -37,7 +38,7 @@ export async function joinMattermostChannel(
         // twice.
         if (e instanceof ClientError && e.m.status_code === 500) {
             try {
-                await channel.main.client.get(
+                await client.get(
                     `/channels/${channel.mattermostChannel}/members/${userid}`,
                 );
             } catch (e_) {
@@ -50,10 +51,63 @@ export async function joinMattermostChannel(
                     'api.channel.add_user.to.channel.failed.deleted.app_error')
         ) {
             const teamid = await channel.getTeam();
-            await channel.main.client.post(`/teams/${teamid}/members`, {
-                user_id: userid,
-                team_id: teamid,
-            });
+            await client.joinTeam(userid, teamid);
+            // If the team has default channels, we leave the ones we are not
+            // supposed to be in.
+            const channels = await client.get(
+                `/users/${userid}/teams/${teamid}/channels`,
+            );
+            await Promise.all(
+                channels.map(async c => {
+                    const channelid = c.id;
+
+                    // We can't leave town square. Don't bother.
+                    if (c.name === 'town-square') {
+                        return;
+                    }
+
+                    // We want to join this room!
+                    if (channelid === channel.mattermostChannel) {
+                        return;
+                    }
+
+                    const matrixRoom = channel.main.mappingsByMattermost.get(
+                        channelid,
+                    )?.matrix;
+
+                    // The mattermost room is not bridged at all. Just leave.
+                    if (matrixRoom === undefined) {
+                        await leaveMattermostChannel(client, channelid, userid);
+                        return;
+                    }
+
+                    // This happens only when the user is the bot user, in which
+                    // case the existence of a mapping indicates we should remain.
+                    if (user.matrix_userid === undefined) {
+                        return;
+                    }
+
+                    // We query the current state in matrix, not the state when the
+                    // call originally happened. This is fine because we are
+                    // blocked on processing events. If the user left matrix in
+                    // between, the puppet will leave the mattermost room again,
+                    // which is fine. If they joined in between, we would have a
+                    // leave followed by a join, which is not disasterous.
+                    const matrixMembers = Object.keys(
+                        (
+                            await channel.main.botClient.getJoinedRoomMembers(
+                                matrixRoom,
+                            )
+                        ).joined,
+                    );
+
+                    // If the matrix user is not in the corresponding room, leave
+                    // the mattermost channel.
+                    if (!matrixMembers.includes(user.matrix_userid)) {
+                        await leaveMattermostChannel(client, channelid, userid);
+                    }
+                }),
+            );
 
             // Now that we have finished joining the team, the above race condition cannot happen.
             await channel.main.client.post(

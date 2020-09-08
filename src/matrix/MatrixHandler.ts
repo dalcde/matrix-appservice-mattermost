@@ -153,7 +153,7 @@ const MatrixMembershipHandler = {
         }
 
         const user = await this.main.matrixUserStore.getOrCreate(userid, true);
-        await joinMattermostChannel(this, user.mattermost_userid);
+        await joinMattermostChannel(this, user);
     },
     leave: async function (this: Channel, userid: string) {
         const user = await this.main.matrixUserStore.get(userid);

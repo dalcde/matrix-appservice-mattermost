@@ -17,6 +17,7 @@ import AdminEndpoint from './AdminEndpoint';
 import MatrixUserStore from './matrix/MatrixUserStore';
 import { getMatrixClient } from './matrix/Utils';
 import MattermostUserStore from './mattermost/MattermostUserStore';
+import { joinMattermostChannel } from './mattermost/Utils';
 import Channel from './Channel';
 import EventQueue from './utils/EventQueue';
 import log from './Logging';
@@ -199,6 +200,38 @@ export default class Main extends EventEmitter {
 
         await createConnection(db as ConnectionOptions);
 
+        const onChannelError = async (e: Error, channel: Channel) => {
+            log.error(
+                `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}\n${e.stack}`,
+            );
+            if (config().forbid_bridge_failure) {
+                await this.killBridge(1);
+            }
+            this.channelsByMattermost.delete(channel.mattermostChannel);
+            this.channelsByMatrix.delete(channel.matrixRoom);
+        };
+
+        // joinMattermostChannel on actual users queries the status of the
+        // corresponding matrix room. Thus, we must make sure our bot has
+        // already joined.
+        await Promise.all(
+            Array.from(this.channelsByMattermost, async ([, channel]) => {
+                try {
+                    await Promise.all([
+                        this.botClient.joinRoom(channel.matrixRoom),
+                        joinMattermostChannel(
+                            channel,
+                            User.create({
+                                mattermost_userid: this.client.userid,
+                            }),
+                        ),
+                    ]);
+                } catch (e) {
+                    await onChannelError(e, channel);
+                }
+            }),
+        );
+
         await Promise.all(
             Array.from(this.channelsByMattermost, async ([, channel]) => {
                 try {
@@ -211,14 +244,7 @@ export default class Main extends EventEmitter {
                         channels.push(channel);
                     }
                 } catch (e) {
-                    log.error(
-                        `Error when syncing ${channel.matrixRoom} with ${channel.mattermostChannel}\n${e.stack}`,
-                    );
-                    if (config().forbid_bridge_failure) {
-                        await this.killBridge(1);
-                    }
-                    this.channelsByMattermost.delete(channel.mattermostChannel);
-                    this.channelsByMatrix.delete(channel.matrixRoom);
+                    await onChannelError(e, channel);
                 }
             }),
         );

@@ -35,11 +35,11 @@ test('fail when changin non-reloadable config', async t => {
                 t.equals(
                     e.message,
                     'Cannot hot reload config mattermost_url',
-                    'Error when hot reloading config with non-reloadable key changed',
+                    'Do not hot reload config mattermost_url ',
                 ),
         );
 
-    t.equals(config(), oldConfig, 'Changed config on failed hot reload');
+    t.equals(config(), oldConfig, 'Do not change config on failed hot reload');
     t.end();
 });
 

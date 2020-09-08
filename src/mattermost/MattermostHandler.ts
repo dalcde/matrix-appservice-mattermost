@@ -259,15 +259,6 @@ export const MattermostHandlers = {
             await client.leave(this.matrixRoom);
         }
     },
-    user_updated: async function (
-        this: Channel,
-        m: MattermostMessage,
-    ): Promise<void> {
-        const user = await this.main.mattermostUserStore.get(m.data.user.id);
-        if (user !== undefined) {
-            await this.main.mattermostUserStore.updateUser(m.data.user, user);
-        }
-    },
     leave_team: async function (
         this: Channel,
         m: MattermostMessage,

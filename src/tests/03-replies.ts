@@ -188,6 +188,51 @@ test('Interleaved thread', async t => {
     t.end();
 });
 
+test('Reply to deleted thread', async t => {
+    // Create a thread, delete the root in matrix. The thread is deleted in
+    // mattermost, but only the root is gone in matrix. Replying to the second
+    // message should result in a non-reply in mattermost.
+    const client = getMatrixClient('matrix_a');
+    const roomId = MATRIX_ROOM_IDS['off-topic'];
+
+    const promise = Promise.all([
+        waitEvent(main(), 'matrix', 4),
+        waitEvent(main(), 'mattermost', 4),
+    ]);
+    const first = await client.sendMessage(roomId, {
+        msgtype: 'm.text',
+        body: 'root message',
+    });
+    const second = await client.sendMessage(roomId, {
+        msgtype: 'm.text',
+        body: '> <@matrix_a> root message\n\nreply message',
+        format: 'org.matrix.custom.html',
+        formatted_body: '<mx-reply>Dummy content</mx-reply>reply message',
+        'm.relates_to': {
+            'm.in_reply_to': {
+                event_id: first.event_id,
+            },
+        },
+    });
+    client.redactEvent(roomId, first.event_id);
+    await client.sendMessage(roomId, {
+        msgtype: 'm.text',
+        body: '> <@matrix_a> reply message\n\nlast message',
+        format: 'org.matrix.custom.html',
+        formatted_body: '<mx-reply>Dummy content</mx-reply>last message',
+        'm.relates_to': {
+            'm.in_reply_to': {
+                event_id: second.event_id,
+            },
+        },
+    });
+    await promise;
+
+    const mattermostMessage = (await getMattermostMessages('off-topic'))[0];
+    t.equal(mattermostMessage.message, 'last message', 'Received last message');
+    t.equal(mattermostMessage.root_id, '', 'Last message is not a reply');
+});
+
 test('Kill bridge', async t => {
     await main().killBridge(0);
     t.end();

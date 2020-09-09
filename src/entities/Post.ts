@@ -25,13 +25,9 @@ export class Post extends BaseEntity {
     public rootid!: string;
 
     public static async removeAll(postid: string): Promise<void> {
-        await getConnection()
-            .createQueryBuilder()
-            .delete()
-            .from(Post)
-            .where('postid = :postid OR rootid = :postid', {
-                postid: postid,
-            })
-            .execute();
+        await getConnection().query(
+            'DELETE FROM posts WHERE postid = $1 OR rootid = $1',
+            [postid],
+        );
     }
 }

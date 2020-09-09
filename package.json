@@ -35,7 +35,7 @@
     "typeorm": "^0.2.25",
     "utf-8-validate": "^5.0.2",
     "ws": "^7.3.1",
-    "yargs": "^15.4.1"
+    "yargs": "^16.0.0"
   },
   "devDependencies": {
     "@types/node": "^14.6.0",

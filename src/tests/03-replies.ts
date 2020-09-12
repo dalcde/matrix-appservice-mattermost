@@ -214,7 +214,7 @@ test('Reply to deleted thread', async t => {
             },
         },
     });
-    client.redactEvent(roomId, first.event_id);
+    await client.redactEvent(roomId, first.event_id);
     await client.sendMessage(roomId, {
         msgtype: 'm.text',
         body: '> <@matrix_a> reply message\n\nlast message',

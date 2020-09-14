@@ -35,7 +35,7 @@ export function getMatrixClient(
     userId: string,
 ): MatrixClient {
     return sdk.createClient({
-        accessToken: registration.getAppServiceToken(),
+        accessToken: registration.getAppServiceToken() || '',
         baseUrl: config().homeserver.url,
         userId,
         queryParams: {
@@ -44,5 +44,5 @@ export function getMatrixClient(
         },
         scheduler: new (sdk as any).MatrixScheduler(),
         localTimeoutMs: 1000 * 60 * 2,
-    } as any);
+    });
 }

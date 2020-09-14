@@ -28,7 +28,7 @@ export function getMatrixClient(username: MatrixUsername): MatrixClient {
         baseUrl: `http://localhost:${SYNAPSE_PORT}`,
         accessToken: MATRIX_TOKENS[username],
         userId: `@${username}:localhost`,
-    } as any);
+    });
 }
 
 export async function getMatrixMessages(

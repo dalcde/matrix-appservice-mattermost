@@ -7,7 +7,11 @@ import {
     getMattermostUsername,
 } from './utils/Client';
 import { waitEvent } from '../utils/Functions';
-import { MATTERMOST_CHANNEL_IDS, MATRIX_ROOM_IDS } from './utils/Data';
+import {
+    MATTERMOST_CHANNEL_IDS,
+    MATRIX_ROOM_IDS,
+    MATTERMOST_TEAM_ID,
+} from './utils/Data';
 
 test('Start bridge', async t => {
     await startBridge();
@@ -101,6 +105,48 @@ test('Matrix -> Mattermost formatted', async t => {
     const posts = await getMattermostMessages('town-square', 1);
     t.equal(posts[0].type, '');
     t.equal(posts[0].message, 'Header\n======\n\n**Bolded text**');
+
+    t.end();
+});
+
+test('Mattermost -> Matrix text /me', async t => {
+    const mattermostClient = getMattermostClient('mattermost_a');
+
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost'),
+        mattermostClient.post('/commands/execute', {
+            channel_id: MATTERMOST_CHANNEL_IDS['off-topic'],
+            team_id: MATTERMOST_TEAM_ID,
+            command: '/me hi me',
+        }),
+    ]);
+
+    const messages = await getMatrixMessages('off-topic');
+    t.equal(messages[0].sender, '@mm_mattermost_a:localhost');
+    t.deepEqual(messages[0].content, {
+        msgtype: 'm.emote',
+        body: 'hi me',
+    });
+
+    t.end();
+});
+
+test('Mattermost -> Matrix text /me', async t => {
+    const matrixClient = getMatrixClient('matrix_a');
+
+    await Promise.all([
+        waitEvent(main(), 'matrix'),
+        waitEvent(main(), 'mattermost'),
+        matrixClient.sendMessage(MATRIX_ROOM_IDS['town-square'], {
+            msgtype: 'm.emote',
+            body: 'test',
+        }),
+    ]);
+
+    const posts = await getMattermostMessages('town-square');
+    t.equal(posts[0].type, 'me');
+    t.deepEqual(posts[0].props.message, 'test');
 
     t.end();
 });

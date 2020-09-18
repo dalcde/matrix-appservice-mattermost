@@ -90,3 +90,19 @@ export interface MatrixClient {
     fetchRoomEvent: (room: string, eventid: string) => Promise<MatrixEvent>;
     [propName: string]: any;
 }
+
+export interface Registration {
+    id: string;
+    hs_token: string;
+    as_token: string;
+    namespaces: {
+        users: {
+            exclusive: boolean;
+            regex: string;
+        }[];
+    };
+    url: string;
+    sender_localpart: string;
+    rate_limited: boolean;
+    protocols: string[];
+}

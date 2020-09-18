@@ -25,10 +25,6 @@ appservice:
 # URL to the mattermost instance.
 mattermost_url: http://localhost:8065/
 
-# The port the admin endpoint listens to, which lets the administrator interact
-# with the bridge. If unset, there will not be an admin endpoint.
-# admin_port: 9000
-
 # If true, the bridge exits if it fails to bridge any channel. Otherwise, it
 # will go on bridging the channels it can bridge. The default is false.
 forbid_bridge_failure: true

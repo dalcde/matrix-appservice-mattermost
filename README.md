@@ -18,8 +18,8 @@ production system (with understanding users) by the author.
 
 - Node **10.16.0**
 
-  - The transitive dependency `matrix-appservice-bridge -> matrix-js-sdk` uses
-    `EventEmitter.once`, which was introduced in 10.16.0.
+  - The dependency `matrix-js-sdk` uses `EventEmitter.once`, which was
+    introduced in 10.16.0.
 
 - Matrix
   - A matrix server supporting the Application Services API is needed. No
@@ -125,13 +125,13 @@ bridge has joined all channels to be bridged.
 
 ## Admin endpoint
 
-There is an admin endpoint that lets users interact with the bridge. The port
-is set by the `admin_port` config item.
+There is an admin endpoint that lets users interact with the bridge. This is
+accessed in the same way as the appservice.
 
 ### Status endpoint
 
 ```
-GET /status
+GET /bridge/status
 ```
 
 The possible replies are
@@ -145,10 +145,11 @@ would be no response at all.
 ### Rename endpoint
 
 ```
-POST /rename/:oldName/:newName
+POST /bridge/rename/:oldName/:newName?access_token=<hs_token>
 ```
 
-This renames the mattermost puppet with username `:oldName` to `:newName`.
+This renames the mattermost puppet with username `:oldName` to `:newName`. The
+`hs_token` is the token specified in the registration file.
 
 ## Remarks
 

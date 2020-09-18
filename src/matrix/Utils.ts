@@ -1,7 +1,6 @@
 import Main from '../Main';
-import { AppServiceRegistration } from 'matrix-appservice';
 import * as sdk from 'matrix-js-sdk';
-import { MatrixClient } from '../Interfaces';
+import { MatrixClient, Registration } from '../Interfaces';
 import { config } from '../Config';
 
 export async function getMatrixUsers(
@@ -31,16 +30,16 @@ export async function getMatrixUsers(
 }
 
 export function getMatrixClient(
-    registration: AppServiceRegistration,
+    registration: Registration,
     userId: string,
 ): MatrixClient {
     return sdk.createClient({
-        accessToken: registration.getAppServiceToken() || '',
+        accessToken: registration.as_token,
         baseUrl: config().homeserver.url,
         userId,
         queryParams: {
             user_id: userId,
-            access_token: registration.getAppServiceToken(),
+            access_token: registration.as_token,
         },
         scheduler: new (sdk as any).MatrixScheduler(),
         localTimeoutMs: 1000 * 60 * 2,

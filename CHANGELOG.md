@@ -41,8 +41,7 @@ Others:
 - Avoid accessing "private" properties of objects from `matrix-js-sdk`
   libraries in anticipation of typescript port.
 - Add integration tests
-- Remove `matrix-appservice-bridge` dependency. Use `matrix-appservice` and
-  `matrix-js-sdk` directly.
+- Remove `matrix-appservice-bridge` dependency. Use `matrix-js-sdk` directly.
 - Automatically generate config file schema from typescript interface
 - Log echoed matrix events
 

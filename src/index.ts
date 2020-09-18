@@ -1,9 +1,12 @@
 console.time('Bridge loaded');
 import * as yargs from 'yargs';
-import { AppServiceRegistration } from 'matrix-appservice';
+import { writeFileSync } from 'fs';
+import * as yaml from 'js-yaml';
 
-import { loadYaml } from './utils/Functions';
+import { loadYaml, randomString } from './utils/Functions';
 import { validate } from './Config';
+import { Registration } from './Interfaces';
+
 import Main from './Main';
 import log from './Logging';
 
@@ -46,19 +49,26 @@ if (argv.r === undefined) {
     const config = loadYaml(argv.c);
     validate(config);
 
-    const reg = new AppServiceRegistration(
-        `${config.appservice.schema}://${config.appservice.hostname}:${config.appservice.port}`,
-    );
-    reg.setId(AppServiceRegistration.generateToken());
-    reg.setHomeserverToken(AppServiceRegistration.generateToken());
-    reg.setAppServiceToken(AppServiceRegistration.generateToken());
-    reg.setSenderLocalpart(`${config.matrix_bot.username}`);
-    reg.addRegexPattern(
-        'users',
-        `@${config.matrix_localpart_prefix}.*:${config.homeserver.server_name}`,
-        true,
-    );
-    reg.outputAsYaml(argv.f);
+    const registration: Registration = {
+        id: randomString(64),
+        hs_token: randomString(64),
+        as_token: randomString(64),
+        namespaces: {
+            users: [
+                {
+                    exclusive: true,
+                    regex: `@${config.matrix_localpart_prefix}.*:${config.homeserver.server_name}`,
+                },
+            ],
+        },
+        url: `${config.appservice.schema}://${config.appservice.hostname}:${config.appservice.port}`,
+        sender_localpart: config.matrix_bot.username,
+        rate_limited: true,
+        protocols: ['mattermost'],
+    };
+
+    writeFileSync(argv.f, yaml.safeDump(registration));
+
     log.info(`Output registration to: ${argv.f}`);
     process.exit(0);
 }

@@ -1,4 +1,4 @@
-import { AppService, AppServiceRegistration } from 'matrix-appservice';
+import AppService from './matrix/AppService';
 import { createConnection, ConnectionOptions, getConnection } from 'typeorm';
 import { Client, ClientWebsocket } from './mattermost/Client';
 import {
@@ -12,8 +12,12 @@ import { isDeepStrictEqual } from 'util';
 import { notifySystemd, allSettled, loadYaml } from './utils/Functions';
 import { User } from './entities/User';
 import { Post } from './entities/Post';
-import { MattermostMessage, MatrixClient, MatrixEvent } from './Interfaces';
-import AdminEndpoint from './AdminEndpoint';
+import {
+    MattermostMessage,
+    MatrixClient,
+    MatrixEvent,
+    Registration,
+} from './Interfaces';
 import MatrixUserStore from './matrix/MatrixUserStore';
 import { getMatrixClient } from './matrix/Utils';
 import MattermostUserStore from './mattermost/MattermostUserStore';
@@ -27,12 +31,10 @@ import { MattermostMainHandlers } from './mattermost/MattermostHandler';
 export default class Main extends EventEmitter {
     private readonly ws: ClientWebsocket;
     private readonly appService: AppService;
-    public readonly registration: AppServiceRegistration;
+    public readonly registration: Registration;
 
     private matrixQueue: EventQueue<MatrixEvent>;
     private mattermostQueue: EventQueue<MattermostMessage>;
-
-    private adminEndpoint?: AdminEndpoint;
 
     public botClient: MatrixClient;
 
@@ -63,18 +65,9 @@ export default class Main extends EventEmitter {
         setConfig(config);
         log.setLevel(config.logging);
 
-        const registration = AppServiceRegistration.fromObject(
-            loadYaml(registrationPath),
-        );
-        if (!registration) {
-            throw new Error('Invalid registration file');
-        }
-        this.registration = registration;
+        this.registration = loadYaml(registrationPath);
 
-        this.appService = new AppService({
-            // It shouldn't be null but TypeScript complains
-            homeserverToken: registration.getHomeserverToken() || '',
-        });
+        this.appService = new AppService(this);
 
         this.botClient = getMatrixClient(
             this.registration,
@@ -167,10 +160,6 @@ export default class Main extends EventEmitter {
             log.error('Mattermost websocket closed. Shutting down bridge');
             void this.killBridge(1);
         });
-
-        if (config.admin_port !== undefined) {
-            this.adminEndpoint = new AdminEndpoint(this);
-        }
     }
 
     public async init(): Promise<void> {
@@ -190,7 +179,6 @@ export default class Main extends EventEmitter {
         const appservice = this.appService.listen(
             config().appservice.port,
             config().appservice.bind || config().appservice.hostname,
-            511,
         );
 
         const db = Object.assign({}, config().database);
@@ -371,7 +359,6 @@ export default class Main extends EventEmitter {
         const results = await allSettled([
             this.ws.close(),
             this.appService.close(),
-            this.adminEndpoint?.kill(),
             this.matrixQueue.kill(),
             this.mattermostQueue.kill(),
             getConnection().close(),
@@ -482,7 +469,8 @@ export default class Main extends EventEmitter {
     }
 
     public isRemoteUser(userid: string): boolean {
-        return this.registration.isUserMatch(userid, true);
+        const re = this.registration.namespaces.users[0].regex;
+        return new RegExp(re).test(userid);
     }
 
     public skipMattermostUser(userid: string): boolean {

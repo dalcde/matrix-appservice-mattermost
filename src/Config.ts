@@ -66,11 +66,6 @@ export interface Config {
         schema: 'https' | 'http';
     };
     /**
-     * @minimum 0
-     * @maximum 65535
-     */
-    admin_port?: number;
-    /**
      * @default 'mm_'
      */
     matrix_localpart_prefix: string;

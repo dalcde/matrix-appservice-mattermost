@@ -8,7 +8,7 @@ import Main from './Main';
 import log from './Logging';
 
 const argv = yargs
-    .scriptName('matrix-appservice-bridge')
+    .scriptName('matrix-appservice-mattermost')
     .help('help')
     .alias('h', 'help')
     .option('r', { describe: 'generate registration file' })

@@ -2,7 +2,11 @@ import { MatrixEvent, MattermostMessage } from './Interfaces';
 import log from './Logging';
 import Main from './Main';
 import MatrixHandlers from './matrix/MatrixHandler';
-import { getMatrixUsers, getMatrixClient } from './matrix/Utils';
+import {
+    getMatrixUsers,
+    getMatrixClient,
+    joinMatrixRoom,
+} from './matrix/Utils';
 import {
     getMattermostUsers,
     joinMattermostChannel,
@@ -68,11 +72,11 @@ export default class Channel {
                     );
                     matrixUsers.remote.delete(user.matrix_userid);
                     const client = this.main.mattermostUserStore.client(user);
-                    await this.main.botClient.invite(
+                    await joinMatrixRoom(
+                        this.main.botClient,
+                        client,
                         this.matrixRoom,
-                        user.matrix_userid,
                     );
-                    await client.joinRoom(this.matrixRoom);
                 }
             }),
         );

@@ -9,6 +9,7 @@ import {
     MatrixEvent,
     MatrixClient,
 } from '../Interfaces';
+import { joinMatrixRoom } from '../matrix/Utils';
 import { handlePostError, none } from '../utils/Functions';
 import { mattermostToMatrix, constructMatrixReply } from '../utils/Formatting';
 
@@ -248,8 +249,7 @@ export const MattermostHandlers = {
         const client = await this.main.mattermostUserStore.getOrCreateClient(
             m.data.user_id,
         );
-        await this.main.botClient.invite(this.matrixRoom, client.getUserId());
-        await client.joinRoom(this.matrixRoom);
+        await joinMatrixRoom(this.main.botClient, client, this.matrixRoom);
     },
     user_removed: async function (
         this: Channel,

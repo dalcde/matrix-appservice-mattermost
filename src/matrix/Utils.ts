@@ -45,3 +45,23 @@ export function getMatrixClient(
         localTimeoutMs: 1000 * 60 * 2,
     });
 }
+
+export async function joinMatrixRoom(
+    botClient: MatrixClient,
+    client: MatrixClient,
+    roomId: string,
+): Promise<void> {
+    try {
+        await botClient.invite(roomId, client.getUserId());
+    } catch (e) {
+        if (
+            !(
+                e.data.errcode === 'M_FORBIDDEN' &&
+                e.data.error.endsWith('is already in the room.')
+            )
+        ) {
+            throw e;
+        }
+    }
+    await client.joinRoom(roomId);
+}

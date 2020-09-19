@@ -68,6 +68,10 @@ export default class Channel {
                     );
                     matrixUsers.remote.delete(user.matrix_userid);
                     const client = this.main.mattermostUserStore.client(user);
+                    await this.main.botClient.invite(
+                        this.matrixRoom,
+                        user.matrix_userid,
+                    );
                     await client.joinRoom(this.matrixRoom);
                 }
             }),

@@ -248,6 +248,7 @@ export const MattermostHandlers = {
         const client = await this.main.mattermostUserStore.getOrCreateClient(
             m.data.user_id,
         );
+        await this.main.botClient.invite(this.matrixRoom, client.getUserId());
         await client.joinRoom(this.matrixRoom);
     },
     user_removed: async function (

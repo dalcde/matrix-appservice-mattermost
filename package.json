@@ -3,7 +3,8 @@
   "version": "0.1.2",
   "description": "",
   "repository": "https://github.com/dalcde/matrix-appservice-mattermost",
-  "main": "index.js",
+  "main": "build/Main.js",
+  "bin": "build/index.js",
   "engines": {
     "node": ">=10.16"
   },

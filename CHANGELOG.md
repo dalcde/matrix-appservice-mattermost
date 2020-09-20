@@ -44,6 +44,7 @@ Others:
 - Remove `matrix-appservice-bridge` dependency. Use `matrix-js-sdk` directly.
 - Automatically generate config file schema from typescript interface
 - Log echoed matrix events
+- Don't throw errors when mattermost websocket message contains invalid UTF-8
 
 # 0.1.2 (2020-08-25)
 

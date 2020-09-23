@@ -57,6 +57,14 @@ production system (with understanding users) by the author.
    node build/index.js -c config.yaml -f registration.yaml
    ```
 
+### Packaging and distribution
+
+After building, only the contents of `build/` are needed for the bridge to run.
+Of course, the dependencies are also needed. ONe can use system dependencies,
+or one can vendor the dependencies by moving the `node_modules` folder into
+`build/` after `npm ci --proudction`. All runtime dependencies are portable and
+do not require platform-specific building.
+
 ### sd_notify
 
 The bridge attempts to notify `systemd` when it has initialized.

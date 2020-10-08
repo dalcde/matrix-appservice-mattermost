@@ -3,7 +3,7 @@ import { User } from '../entities/User';
 import { replaceAsync } from './Functions';
 import { config } from '../Config';
 import * as marked from 'marked';
-import * as Turndown from 'turndown-performance-fixed';
+import * as Turndown from 'turndown';
 
 const MARKED_OPTIONS = {
     gfm: true,

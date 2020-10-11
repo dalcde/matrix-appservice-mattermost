@@ -237,3 +237,35 @@ test('Kill bridge', async t => {
     await main().killBridge(0);
     t.end();
 });
+
+test('Mattermost reply to messages sent while bridge is down', async t => {
+    const mattermostClient = getMattermostClient('mattermost_a');
+    const mattermostPost = await mattermostClient.post('/posts', {
+        channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
+        message: 'hidden message',
+    });
+
+    await startBridge();
+
+    await Promise.all([
+        // There is a lot of noise from bridge startup. We only listen for the
+        // matrix echo.
+        waitEvent(main(), 'matrix'),
+        mattermostClient.post('/posts', {
+            channel_id: MATTERMOST_CHANNEL_IDS['town-square'],
+            root_id: mattermostPost.id,
+            message: 'new message',
+        }),
+    ]);
+
+    const matrixReply = (await getMatrixMessages('town-square'))[0];
+    t.equal(matrixReply.content.body, 'new message', 'Received last message');
+    t.equal(
+        matrixReply.content['m.relates_to'],
+        undefined,
+        'Mattermost message is not a reply',
+    );
+
+    await main().killBridge(0);
+    t.end();
+});

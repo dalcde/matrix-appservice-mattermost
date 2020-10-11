@@ -155,3 +155,26 @@ test('Kill bridge', async t => {
     await main().killBridge(0);
     t.end();
 });
+
+test('Process matrix messages sent when bridge is down', async t => {
+    const matrixClient = getMatrixClient('matrix_a');
+    await matrixClient.sendMessage(MATRIX_ROOM_IDS['off-topic'], {
+        msgtype: 'm.text',
+        body: 'hidden message',
+    });
+    await Promise.all([
+        // There is a lot of noise from bridge startup. We only listen for the
+        // matrix message. We are killing the bridge afterwards anyway.
+        startBridge(),
+        waitEvent(main(), 'matrix'),
+    ]);
+
+    const mattermostReply = (await getMattermostMessages('off-topic'))[0];
+    t.equal(
+        mattermostReply.message,
+        'hidden message',
+        'Received message sent while bridge is down',
+    );
+    await main().killBridge(0);
+    t.end();
+});

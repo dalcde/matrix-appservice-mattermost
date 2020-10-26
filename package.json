@@ -15,6 +15,7 @@
     "integration": "node build/index.js -r -c config.sample.yaml -f docker/synapse/registration.yaml && tape build/tests/**.js",
     "lint": "prettier -c . && eslint --max-warnings=0 '*/**/*.ts'",
     "fmt": "prettier --write .",
+    "fmt-lint": "prettier --write . && eslint --max-warnings=0 '*/**/*.ts'",
     "fix": "eslint '*/**/*.ts' --fix"
   },
   "author": "Dexter Chua",

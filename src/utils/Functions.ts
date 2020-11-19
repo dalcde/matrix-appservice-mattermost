@@ -120,7 +120,7 @@ export async function waitEvent(
     event: string,
     n: number = 1,
 ): Promise<void> {
-    await new Promise(resolve => {
+    await new Promise<void>(resolve => {
         let counter = 0;
         function onEvent() {
             counter += 1;

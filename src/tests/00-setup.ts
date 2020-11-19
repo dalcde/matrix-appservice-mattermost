@@ -15,7 +15,7 @@ function query(port: number, resolve: () => void): void {
 }
 
 async function healthCheck(port: number): Promise<void> {
-    await new Promise(resolve => query(port, resolve));
+    await new Promise<void>(resolve => query(port, resolve));
 }
 
 function spawn(args: string[]): void {

@@ -8,7 +8,7 @@ export default class Mutex {
 
     public async lock(): Promise<void> {
         if (this.locked) {
-            await new Promise(resolve => this.queue.push(resolve));
+            await new Promise<void>(resolve => this.queue.push(resolve));
         } else {
             this.locked = true;
         }

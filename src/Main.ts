@@ -237,7 +237,14 @@ export default class Main extends EventEmitter {
             }),
         );
 
-        await this.leaveUnbridgedChannels();
+        try {
+            await this.leaveUnbridgedChannels();
+        } catch (e) {
+            log.error(`Error when leaving unbridged channels\n${e.stack}`);
+            if (config().forbid_bridge_failure) {
+                await this.killBridge(1);
+            }
+        }
 
         if (this.channelsByMattermost.size === 0) {
             log.info('No channels bridged successfully. Shutting down bridge.');

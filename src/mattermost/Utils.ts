@@ -69,6 +69,7 @@ export async function joinMattermostChannel(
         if (
             e instanceof ClientError &&
             (e.m.id === 'store.sql_team.get_member.missing.app_error' ||
+                e.m.id === 'app.team.get_member.missing.app_error' ||
                 e.m.id ===
                     'api.channel.add_user.to.channel.failed.deleted.app_error')
         ) {

@@ -3,3 +3,4 @@ node_modules
 Makefile
 build
 docker/synapse/registration.yaml
+matrix-appservice-mattermost.tar.gz

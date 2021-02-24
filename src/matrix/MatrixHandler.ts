@@ -41,12 +41,6 @@ async function uploadFile(
     });
     form.append('channel_id', this.mattermostChannel);
 
-    // FormData incorrectly reports that hasKnownLength is `true` when
-    // we pass in a `body` from `node-fetch`. This results in an
-    // incorrect `Content-Length`. c.f.
-    // https://github.com/form-data/form-data/issues/399
-    form.hasKnownLength = () => false;
-
     const fileInfos = await user.client.post('/files', form);
     const fileid = fileInfos.file_infos[0].id;
     const post = await user.client.post('/posts', {

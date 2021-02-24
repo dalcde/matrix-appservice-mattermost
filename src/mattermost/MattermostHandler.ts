@@ -65,9 +65,10 @@ const MattermostPostHandlers = {
 
         if (post.metadata.files !== undefined) {
             for (const file of post.metadata.files) {
-                const body = (
+                // Read everything into memory to compute content-length
+                const body = await (
                     await this.main.client.send_raw('GET', `/files/${file.id}`)
-                ).body;
+                ).buffer();
                 const mimetype = file.mime_type;
 
                 const url = await client.uploadContent(body, {

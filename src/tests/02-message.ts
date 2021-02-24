@@ -12,6 +12,8 @@ import {
     MATRIX_ROOM_IDS,
     MATTERMOST_TEAM_ID,
 } from './utils/Data';
+import * as FormData from 'form-data';
+import fetch from 'node-fetch';
 
 test('Start bridge', async t => {
     await startBridge();
@@ -132,7 +134,7 @@ test('Mattermost -> Matrix text /me', async t => {
     t.end();
 });
 
-test('Mattermost -> Matrix text /me', async t => {
+test('Matrix -> Mattermost text /me', async t => {
     const matrixClient = getMatrixClient('matrix_a');
 
     await Promise.all([
@@ -147,6 +149,93 @@ test('Mattermost -> Matrix text /me', async t => {
     const posts = await getMattermostMessages('town-square');
     t.equal(posts[0].type, 'me');
     t.deepEqual(posts[0].props.message, 'test');
+
+    t.end();
+});
+
+test('Mattermost -> Matrix file upload', async t => {
+    const mattermostClient = getMattermostClient('mattermost_b');
+    const data = 'abracadabra';
+
+    const form = new FormData();
+    form.append('files', data, {
+        filename: 'filename',
+        contentType: 'text/plain',
+    });
+    form.append('channel_id', MATTERMOST_CHANNEL_IDS['off-topic']);
+
+    await Promise.all([
+        waitEvent(main(), 'matrix', 2),
+        waitEvent(main(), 'mattermost', 1),
+        mattermostClient.post('/files', form).then(data =>
+            mattermostClient.post('/posts', {
+                channel_id: MATTERMOST_CHANNEL_IDS['off-topic'],
+                message: 'filename',
+                file_ids: [data.file_infos[0].id],
+            }),
+        ),
+    ]);
+
+    const messages = await getMatrixMessages('off-topic', 2);
+    t.equal(messages[0].sender, '@mm_mattermost_b:localhost');
+    t.deepEqual(messages[0].content, {
+        msgtype: 'm.text',
+        body: 'filename',
+    });
+
+    t.equal(messages[1].sender, '@mm_mattermost_b:localhost');
+    t.deepEqual(messages[1].content.msgtype, 'm.file');
+    const url = messages[1].content.url;
+    const downloaded = await fetch(
+        `${main().botClient.baseUrl}/_matrix/media/r0/download/${url.slice(6)}`,
+    );
+    t.equal(await downloaded.text(), data);
+
+    t.end();
+});
+
+test('Matrix -> Mattermost file upload', async t => {
+    const matrixClient = getMatrixClient('matrix_a');
+    const data = 'miscdata';
+
+    await Promise.all([
+        waitEvent(main(), 'matrix', 1),
+        waitEvent(main(), 'mattermost', 1),
+        matrixClient
+            .uploadContent(data, {
+                name: 'mydata',
+                type: 'text/plain',
+                rawResponse: false,
+                onlyContentUri: true,
+            })
+            .then(url =>
+                matrixClient.sendMessage(MATRIX_ROOM_IDS['town-square'], {
+                    msgtype: 'm.file',
+                    body: 'mydata',
+                    url,
+                    info: {
+                        mimetype: 'text/plain',
+                    },
+                }),
+            ),
+    ]);
+
+    const posts = await getMattermostMessages('town-square');
+    t.equal(posts[0].type, '');
+    t.equal(posts[0].message, '');
+    const files = posts[0].metadata.files;
+    if (files === undefined) {
+        t.fail('No files found');
+        return;
+    }
+    const fileid = files[0].id;
+
+    const mattermostClient = getMattermostClient('mattermost_b');
+    const downloaded = await mattermostClient.send_raw(
+        'GET',
+        `/files/${fileid}`,
+    );
+    t.equal(await downloaded.text(), data);
 
     t.end();
 });

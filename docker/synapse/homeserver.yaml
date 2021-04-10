@@ -31,12 +31,12 @@ report_stats: false
 enable_registration: true
 
 rc_registration:
-  per_second: 10
-  burst_count: 10
+  per_second: 100
+  burst_count: 100
 
 rc_message:
-  per_second: 10
-  burst_count: 10
+  per_second: 100
+  burst_count: 100
 
 app_service_config_files:
   - /etc/synapse/registration.yaml

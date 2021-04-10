@@ -38,6 +38,14 @@ rc_message:
   per_second: 100
   burst_count: 100
 
+rc_login:
+  address:
+    per_second: 100
+    burst_count: 100
+  account:
+    per_second: 100
+    burst_count: 100
+
 app_service_config_files:
   - /etc/synapse/registration.yaml
 

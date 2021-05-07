@@ -1,7 +1,7 @@
 version: '3.0'
 services:
   postgres:
-    image: postgres:12.5-alpine
+    image: postgres:13.2-alpine
     volumes:
       - ./postgres/mattermost.sql:/docker-entrypoint-initdb.d/00-mattermost.sql
       - ./postgres/setup-synapse.sql:/docker-entrypoint-initdb.d/01-setup-synapse.sql

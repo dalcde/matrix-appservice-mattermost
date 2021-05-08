@@ -27,7 +27,7 @@
     "js-yaml": "^3.14.1",
     "loglevel": "^1.7.1",
     "marked": "^2.0.0",
-    "matrix-js-sdk": "^8.2.0",
+    "matrix-js-sdk": "^10.0.0",
     "node-fetch": "^2.6.0",
     "pg": "^8.5.1",
     "turndown": "^7.0.0",

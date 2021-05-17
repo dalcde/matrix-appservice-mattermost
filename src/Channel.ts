@@ -66,10 +66,11 @@ export default class Channel {
                         userid,
                     );
                 } else {
-                    const user = await this.main.mattermostUserStore.getOrCreate(
-                        userid,
-                        true,
-                    );
+                    const user =
+                        await this.main.mattermostUserStore.getOrCreate(
+                            userid,
+                            true,
+                        );
                     matrixUsers.remote.delete(user.matrix_userid);
                     const client = this.main.mattermostUserStore.client(user);
                     await joinMatrixRoom(

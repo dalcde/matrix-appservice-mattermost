@@ -16,8 +16,11 @@ const argv = yargs
     .alias('h', 'help')
     .option('r', { describe: 'generate registration file' })
     .option('c', { describe: 'configuration file', nargs: 1, demand: true })
-    .option('f', { describe: 'registration file', nargs: 1, demand: true })
-    .argv;
+    .option('f', {
+        describe: 'registration file',
+        nargs: 1,
+        demand: true,
+    }).argv;
 
 if (argv.r === undefined) {
     const main = new Main(loadYaml(argv.c), argv.f);

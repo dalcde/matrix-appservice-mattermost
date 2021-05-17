@@ -461,8 +461,7 @@ export default class Main extends EventEmitter {
         ) {
             const client = getMatrixClient(this.registration, event.state_key);
             await client.sendEvent(event.room_id, 'm.room.message', {
-                body:
-                    'Private messaging is not supported for this bridged user',
+                body: 'Private messaging is not supported for this bridged user',
                 msgtype: 'm.notice',
             });
             await client.leave(event.room_id);

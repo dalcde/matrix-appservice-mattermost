@@ -106,9 +106,10 @@ test('Matrix -> Mattermost thread', async t => {
     await promise;
 
     const posts = await getMattermostMessages('off-topic', 3);
-    const [usera, userb] = await getMattermostClient(
-        'admin',
-    ).post('/users/usernames', ['matrix_matrix_a', 'matrix_matrix_b']);
+    const [usera, userb] = await getMattermostClient('admin').post(
+        '/users/usernames',
+        ['matrix_matrix_a', 'matrix_matrix_b'],
+    );
 
     t.equal(posts[0].root_id, posts[2].id);
     t.equal(posts[1].root_id, posts[2].id);

@@ -94,9 +94,10 @@ export async function joinMattermostChannel(
                         return;
                     }
 
-                    const matrixRoom = channel.main.mappingsByMattermost.get(
-                        channelid,
-                    )?.matrix;
+                    const matrixRoom =
+                        channel.main.mappingsByMattermost.get(
+                            channelid,
+                        )?.matrix;
 
                     // The mattermost room is not bridged at all. Just leave.
                     if (matrixRoom === undefined) {

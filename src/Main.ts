@@ -166,7 +166,10 @@ export default class Main extends EventEmitter {
         log.time.info('Bridge initialized');
 
         try {
-            await this.botClient.register(config().matrix_bot.username);
+            await this.botClient.registerRequest({
+                username: config().matrix_bot.username,
+                type: 'm.login.application_service',
+            });
         } catch (e) {
             if (e.errcode !== 'M_USER_IN_USE') {
                 throw e;

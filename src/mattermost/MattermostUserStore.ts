@@ -58,7 +58,10 @@ export default class MattermostUserStore {
                 `${config().matrix_localpart_prefix}${data.username}`,
                 async s => {
                     try {
-                        await this.main.botClient.register(s);
+                        await this.main.botClient.registerRequest({
+                            username: s,
+                            type: 'm.login.application_service',
+                        });
                         return true;
                     } catch (e) {
                         if (e.errcode === 'M_USER_IN_USE') {

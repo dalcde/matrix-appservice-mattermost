@@ -70,7 +70,7 @@ if (argv.r === undefined) {
         protocols: ['mattermost'],
     };
 
-    writeFileSync(argv.f, yaml.safeDump(registration));
+    writeFileSync(argv.f, yaml.dump(registration));
 
     log.info(`Output registration to: ${argv.f}`);
     process.exit(0);

@@ -32,6 +32,8 @@ jobs:
         run: npm run build
 
       - name: Run linter
+        # eslint dropped node 10 support
+        if: ${{ matrix.node-version != "10.19" }}
         run: npm run lint
 
       - name: Run unit tests

@@ -1,4 +1,5 @@
-import * as Ajv from 'ajv';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -11,6 +12,7 @@ const ajv = new Ajv({
     useDefaults: true,
     allErrors: true,
 });
+addFormats(ajv);
 export const validator = ajv.compile(schema);
 
 export function config(): Config {
@@ -36,7 +38,7 @@ export function validate(c: unknown): Config {
             validator.errors
                 ?.map(
                     e =>
-                        `${e.dataPath}: ${e.message} (${JSON.stringify(
+                        `${e.instancePath}: ${e.message} (${JSON.stringify(
                             e.params,
                         )})`,
                 )

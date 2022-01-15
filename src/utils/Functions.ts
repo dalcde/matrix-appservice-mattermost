@@ -3,7 +3,7 @@ import { ClientError } from '../mattermost/Client';
 import { randomBytes } from 'crypto';
 import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import { safeLoad } from 'js-yaml';
+import { load } from 'js-yaml';
 import { readFileSync } from 'fs';
 
 export function remove<T>(a: T[], x: T): void {
@@ -157,5 +157,5 @@ export async function allSettled(
 }
 
 export function loadYaml(path: string): any {
-    return safeLoad(readFileSync(path, 'utf8'));
+    return load(readFileSync(path, 'utf8'));
 }

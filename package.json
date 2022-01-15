@@ -43,7 +43,7 @@
     "@types/tape": "^4.13.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
-    "eslint": "^7.16.0",
+    "eslint": "^8.0.0",
     "prettier": "^2.3.0",
     "sqlite3": "^5.0.0",
     "tape": "^5.0.1",

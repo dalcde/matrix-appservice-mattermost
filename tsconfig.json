@@ -9,7 +9,8 @@
     "incremental": true,
     "noImplicitAny": false,
     "experimentalDecorators": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "useUnknownInCatchVariables": false
   },
   "include": ["src/**/*"]
 }

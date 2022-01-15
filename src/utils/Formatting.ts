@@ -2,7 +2,7 @@ import { MatrixMessage, MatrixEvent } from '../Interfaces';
 import { User } from '../entities/User';
 import { replaceAsync } from './Functions';
 import { config } from '../Config';
-import * as marked from 'marked';
+import { marked } from 'marked';
 import * as Turndown from 'turndown';
 
 const MARKED_OPTIONS = {

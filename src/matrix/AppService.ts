@@ -69,13 +69,13 @@ export default class AppService extends EventEmitter {
         res: Response,
         next: () => void,
     ): void {
-        const providedToken = req.query.access_token;
+        const providedToken = req.header('Authorization');
         if (!providedToken) {
             res.status(401).send({
                 errcode: 'M_UNKNOWN_TOKEN',
                 error: 'No token supplied',
             });
-        } else if (providedToken !== this.main.registration.hs_token) {
+        } else if (providedToken !== `Bearer ${this.main.registration.hs_token}`) {
             res.status(403).send({
                 errcode: 'M_UNKNOWN_TOKEN',
                 error: 'Bad token supplied',
